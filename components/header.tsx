@@ -1,162 +1,132 @@
 "use client"
 
 import type React from "react"
-
-import { Search, Menu, Moon, Sun, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { Search, Menu, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useRouter, usePathname } from "next/navigation"
 
 export function Header() {
-  const [isDark, setIsDark] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const router = useRouter()
-
-  const toggleTheme = () => {
-    setIsDark(!isDark)
-    document.documentElement.classList.toggle("dark")
-  }
+  const pathname = usePathname()
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      setSearchQuery("")
     }
   }
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch(e as any)
-    }
-  }
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
-  }
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false)
-  }
+  const navItems = [
+    { href: "/", label: "Home" },
+    { href: "/categories", label: "Categories" },
+    { href: "/latest", label: "Latest" },
+    { href: "/contact", label: "Contact" },
+  ]
 
   return (
-    <>
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4">
+    <header className="bg-gray-800 border-b border-gray-700">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C8.5 2 6 4.5 6 8c0 2.5 1.5 4.5 3.5 5.5L8 16c-1 1-1 2.5 0 3.5s2.5 1 3.5 0L12 19l.5.5c1 1 2.5 1 3.5 0s1-2.5 0-3.5l-1.5-2.5C16.5 12.5 18 10.5 18 8c0-3.5-2.5-6-6-6z" />
-                <circle cx="9.5" cy="7.5" r="1" />
-                <circle cx="14.5" cy="7.5" r="1" />
-                <path d="M10 10h4c0 1-1 2-2 2s-2-1-2-2z" />
-              </svg>
+          <Link href="/" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center relative overflow-hidden">
+              <img src="/bull-logo.png" alt="BlackBullz Logo" className="w-full h-full object-cover rounded-full" />
             </div>
-            <span className="text-xl font-bold text-primary">Black Bulls</span>
+            <span className="text-white font-bold text-xl hover:text-red-400 transition-colors duration-200">
+              BlackBullz
+            </span>
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="text-sm font-medium hover:text-primary transition-colors">
-              Home
-            </Link>
-            <Link href="/categories" className="text-sm font-medium hover:text-primary transition-colors">
-              Categories
-            </Link>
-            <Link href="/latest" className="text-sm font-medium hover:text-primary transition-colors">
-              Latest
-            </Link>
-            <Link href="/contact" className="text-sm font-medium hover:text-primary transition-colors">
-              Contact
-            </Link>
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`transition-all duration-200 hover:scale-105 ${
+                  pathname === item.href ? "text-red-400 font-semibold" : "text-gray-300 hover:text-red-400"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
 
-          {/* Search and Actions */}
-          <div className="flex items-center space-x-4">
-            <form onSubmit={handleSearch} className="relative hidden sm:block">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="hidden md:flex items-center space-x-2">
+            <div className="relative">
               <Input
-                placeholder="Search games..."
-                className="w-64 pl-10 pr-12"
+                type="text"
+                placeholder="Search games, software..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
+                className="w-64 bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-red-500 transition-colors duration-200"
               />
               <Button
                 type="submit"
                 size="sm"
-                variant="ghost"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                className="absolute right-1 top-1 h-8 w-8 bg-red-600 hover:bg-red-700 hover:scale-105 transition-all duration-200"
               >
-                <Search className="h-3 w-3" />
+                <Search className="h-4 w-4" />
               </Button>
+            </div>
+          </form>
+
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden text-white hover:text-red-400 hover:scale-105 transition-all duration-200"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </Button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-700">
+            <nav className="flex flex-col space-y-4">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`transition-colors duration-200 ${
+                    pathname === item.href ? "text-red-400 font-semibold" : "text-gray-300 hover:text-red-400"
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <form onSubmit={handleSearch} className="mt-4">
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Search games, software..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-red-500 transition-colors duration-200"
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="absolute right-1 top-1 h-8 w-8 bg-red-600 hover:bg-red-700 transition-colors duration-200"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
             </form>
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleMobileMenu}>
-              {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </Button>
           </div>
-        </div>
-      </header>
-
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 top-16 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
-          <nav className="flex flex-col items-center justify-center h-full space-y-8">
-            <Link
-              href="/"
-              className="text-2xl font-medium hover:text-primary transition-colors"
-              onClick={closeMobileMenu}
-            >
-              Home
-            </Link>
-            <Link
-              href="/categories"
-              className="text-2xl font-medium hover:text-primary transition-colors"
-              onClick={closeMobileMenu}
-            >
-              Categories
-            </Link>
-            <Link
-              href="/latest"
-              className="text-2xl font-medium hover:text-primary transition-colors"
-              onClick={closeMobileMenu}
-            >
-              Latest
-            </Link>
-            <Link
-              href="/contact"
-              className="text-2xl font-medium hover:text-primary transition-colors"
-              onClick={closeMobileMenu}
-            >
-              Contact
-            </Link>
-
-            <form onSubmit={handleSearch} className="relative w-80 max-w-[90vw]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search games..."
-                className="w-full pl-10 pr-12"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-              />
-              <Button
-                type="submit"
-                size="sm"
-                variant="ghost"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
-              >
-                <Search className="h-3 w-3" />
-              </Button>
-            </form>
-          </nav>
-        </div>
-      )}
-    </>
+        )}
+      </div>
+    </header>
   )
 }

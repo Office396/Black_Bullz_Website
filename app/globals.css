@@ -1,79 +1,77 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to Black Bulls theme with black primary and red accents */
-  --background: oklch(0.98 0.005 0); /* Off-white background */
-  --foreground: oklch(0.15 0 0); /* Very dark gray/black */
-  --card: oklch(0.96 0.01 0); /* Light gray card background */
-  --card-foreground: oklch(0.15 0 0);
-  --popover: oklch(0.98 0.005 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.2 0 0); /* Black primary */
-  --primary-foreground: oklch(0.98 0.005 0);
-  --secondary: oklch(0.55 0.22 25); /* Red accent */
-  --secondary-foreground: oklch(0.98 0.005 0);
-  --muted: oklch(0.94 0 0);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.45 0.2 15); /* Dark red accent */
-  --accent-foreground: oklch(0.98 0.005 0);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.98 0.005 0);
-  --border: oklch(0.88 0 0);
-  --input: oklch(0.94 0 0);
-  --ring: oklch(0.2 0 0 / 0.5);
-  --chart-1: oklch(0.55 0.22 25);
-  --chart-2: oklch(0.2 0 0);
-  --chart-3: oklch(0.35 0.1 15);
-  --chart-4: oklch(0.45 0.2 15);
-  --chart-5: oklch(0.65 0.18 20);
-  --radius: 0.5rem;
-  --sidebar: oklch(0.96 0.01 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.2 0 0);
-  --sidebar-primary-foreground: oklch(0.98 0.005 0);
-  --sidebar-accent: oklch(0.55 0.22 25);
-  --sidebar-accent-foreground: oklch(0.98 0.005 0);
-  --sidebar-border: oklch(0.88 0 0);
-  --sidebar-ring: oklch(0.2 0 0 / 0.5);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
-  /* Fixed dark mode colors for better contrast - no black text on dark backgrounds */
-  --background: oklch(0.08 0 0); /* Very dark background */
-  --foreground: oklch(0.95 0 0); /* Light text for contrast */
-  --card: oklch(0.12 0.01 0);
-  --card-foreground: oklch(0.95 0 0); /* Light text on dark cards */
-  --popover: oklch(0.08 0 0);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.85 0 0); /* Light primary for dark mode */
-  --primary-foreground: oklch(0.08 0 0); /* Dark text on light primary */
-  --secondary: oklch(0.65 0.25 25); /* Bright red for visibility */
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.15 0.01 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.65 0.25 25); /* Bright red accent */
-  --accent-foreground: oklch(0.95 0 0);
-  --destructive: oklch(0.65 0.25 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.25 0.01 0);
-  --input: oklch(0.15 0.01 0);
-  --ring: oklch(0.65 0.25 25 / 0.5);
-  --chart-1: oklch(0.65 0.25 25);
-  --chart-2: oklch(0.85 0 0);
-  --chart-3: oklch(0.45 0.15 15);
-  --chart-4: oklch(0.55 0.2 20);
-  --chart-5: oklch(0.75 0.18 25);
-  --sidebar: oklch(0.1 0.01 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.85 0 0); /* Light for visibility */
-  --sidebar-primary-foreground: oklch(0.08 0 0);
-  --sidebar-accent: oklch(0.65 0.25 25); /* Bright red accent */
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.25 0.01 0);
-  --sidebar-ring: oklch(0.65 0.25 25 / 0.5);
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
 }
 
 @theme inline {
@@ -123,131 +121,5 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* Enhanced Black Bulls themed background with dark bull face silhouettes */
-    /* Bull face silhouette - main central feature */
-    background-image: radial-gradient(ellipse 120px 80px at 50% 30%, rgba(0, 0, 0, 0.15) 20%, transparent 60%),
-      /* Bull horns */
-      radial-gradient(ellipse 25px 40px at 35% 25%, rgba(0, 0, 0, 0.12) 0%, transparent 70%),
-      radial-gradient(ellipse 25px 40px at 65% 25%, rgba(0, 0, 0, 0.12) 0%, transparent 70%), /* Bull eyes */
-      radial-gradient(circle 8px at 45% 35%, rgba(220, 38, 38, 0.3) 0%, transparent 70%),
-      radial-gradient(circle 8px at 55% 35%, rgba(220, 38, 38, 0.3) 0%, transparent 70%), /* Bull nostrils */
-      radial-gradient(ellipse 6px 4px at 48% 45%, rgba(0, 0, 0, 0.2) 0%, transparent 70%),
-      radial-gradient(ellipse 6px 4px at 52% 45%, rgba(0, 0, 0, 0.2) 0%, transparent 70%), /* Gaming circuit patterns */
-      linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.03) 50%, transparent 100%),
-      linear-gradient(0deg, transparent 0%, rgba(220, 38, 38, 0.02) 50%, transparent 100%),
-      /* Bull-inspired geometric patterns */
-      repeating-conic-gradient(
-        from 0deg at 20% 80%,
-        transparent 0deg,
-        rgba(220, 38, 38, 0.05) 15deg,
-        transparent 30deg
-      ),
-      repeating-conic-gradient(from 180deg at 80% 20%, transparent 0deg, rgba(0, 0, 0, 0.08) 15deg, transparent 30deg),
-      /* Base gradient */
-      linear-gradient(135deg, rgba(220, 38, 38, 0.03) 0%, rgba(0, 0, 0, 0.05) 100%);
-    background-attachment: fixed;
-    background-size: 400px 400px, 150px 150px, 150px 150px, 400px 400px, 400px 400px, 400px 400px, 400px 400px, 100%
-      100%, 100% 100%, 300px 300px, 300px 300px, 100% 100%;
-    background-position: center 20%, 35% 25%, 65% 25%, 45% 35%, 55% 35%, 48% 45%, 52% 45%, 0 0, 0 0, 20% 80%, 80% 20%, 0
-      0;
   }
-
-  /* Enhanced dark mode background with more prominent Black Bulls face */
-  .dark body {
-    /* More prominent bull face silhouette in dark mode */
-    background-image: radial-gradient(ellipse 140px 90px at 50% 30%, rgba(0, 0, 0, 0.4) 20%, transparent 60%),
-      /* Enhanced bull horns with red glow */
-      radial-gradient(ellipse 30px 45px at 35% 25%, rgba(0, 0, 0, 0.3) 0%, rgba(220, 38, 38, 0.1) 50%, transparent 70%),
-      radial-gradient(ellipse 30px 45px at 65% 25%, rgba(0, 0, 0, 0.3) 0%, rgba(220, 38, 38, 0.1) 50%, transparent 70%),
-      /* Glowing red bull eyes */
-      radial-gradient(circle 10px at 45% 35%, rgba(220, 38, 38, 0.6) 0%, rgba(220, 38, 38, 0.2) 50%, transparent 70%),
-      radial-gradient(circle 10px at 55% 35%, rgba(220, 38, 38, 0.6) 0%, rgba(220, 38, 38, 0.2) 50%, transparent 70%),
-      /* Enhanced bull nostrils */
-      radial-gradient(ellipse 8px 5px at 48% 45%, rgba(0, 0, 0, 0.5) 0%, transparent 70%),
-      radial-gradient(ellipse 8px 5px at 52% 45%, rgba(0, 0, 0, 0.5) 0%, transparent 70%),
-      /* Gaming circuit patterns with red glow */
-      linear-gradient(90deg, transparent 0%, rgba(220, 38, 38, 0.08) 50%, transparent 100%),
-      linear-gradient(0deg, transparent 0%, rgba(0, 0, 0, 0.15) 50%, transparent 100%),
-      /* Enhanced bull-inspired geometric patterns */
-      repeating-conic-gradient(
-        from 0deg at 20% 80%,
-        transparent 0deg,
-        rgba(220, 38, 38, 0.12) 15deg,
-        transparent 30deg
-      ),
-      repeating-conic-gradient(
-        from 180deg at 80% 20%,
-        transparent 0deg,
-        rgba(220, 38, 38, 0.08) 15deg,
-        transparent 30deg
-      ), /* Dark base with red undertones */ linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(0, 0, 0, 0.2) 100%);
-    background-size: 450px 450px, 180px 180px, 180px 180px, 450px 450px, 450px 450px, 450px 450px, 450px 450px, 100%
-      100%, 100% 100%, 400px 400px, 400px 400px, 100% 100%;
-    background-position: center 20%, 35% 25%, 65% 25%, 45% 35%, 55% 35%, 48% 45%, 52% 45%, 0 0, 0 0, 20% 80%, 80% 20%, 0
-      0;
-  }
-}
-
-/* Enhanced Black Bulls themed animations and effects */
-@keyframes bull-charge {
-  0% {
-    box-shadow: 0 0 5px rgba(220, 38, 38, 0.3);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(220, 38, 38, 0.6), 0 0 30px rgba(0, 0, 0, 0.3);
-    transform: scale(1.02);
-  }
-  100% {
-    box-shadow: 0 0 5px rgba(220, 38, 38, 0.3);
-    transform: scale(1);
-  }
-}
-
-.bull-glow {
-  animation: bull-charge 2s ease-in-out infinite;
-}
-
-/* Enhanced card hover effects for Black Bulls theme */
-.gaming-card {
-  transition: all 0.3s ease;
-  border: 1px solid rgba(220, 38, 38, 0.2);
-  position: relative;
-  overflow: hidden;
-}
-
-.gaming-card::before {
-  content: "";
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, rgba(220, 38, 38, 0.1), transparent, rgba(220, 38, 38, 0.1));
-  z-index: -1;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.gaming-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 15px 35px rgba(220, 38, 38, 0.2), 0 0 20px rgba(0, 0, 0, 0.1);
-  border-color: rgba(220, 38, 38, 0.5);
-}
-
-.gaming-card:hover::before {
-  opacity: 1;
-}
-
-.dark .gaming-card:hover {
-  box-shadow: 0 15px 35px rgba(220, 38, 38, 0.3), 0 0 25px rgba(220, 38, 38, 0.15);
-}
-
-/* Black Bulls logo/text glow effect */
-.black-bulls-title {
-  text-shadow: 0 0 10px rgba(220, 38, 38, 0.5), 0 0 20px rgba(220, 38, 38, 0.3);
-}
-
-.dark .black-bulls-title {
-  text-shadow: 0 0 15px rgba(220, 38, 38, 0.7), 0 0 30px rgba(220, 38, 38, 0.4);
 }

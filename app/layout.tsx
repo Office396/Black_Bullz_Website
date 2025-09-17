@@ -4,12 +4,14 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+import { LoadingScreen } from "@/components/loading-screen"
+import { PageLoader } from "@/components/page-loader"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Black Bulls - Free PC Games, Android Games & Software Downloads",
-  description: "Download the latest PC games, Android games, and software for free. Your ultimate gaming destination.",
-  generator: "v0.app",
+  title: "BlackBullz - Download Games & Software",
+  description: "Download the latest PC games, Android games, and software for free",
+  generator: "BlackBullz",
 }
 
 export default function RootLayout({
@@ -18,8 +20,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="en" className="dark">
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-gray-900`}>
+        <LoadingScreen />
+        <PageLoader />
         <Suspense fallback={null}>{children}</Suspense>
         <Analytics />
       </body>

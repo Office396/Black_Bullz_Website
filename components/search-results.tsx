@@ -1,314 +1,212 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Download, Star, Calendar, Search, ChevronLeft, ChevronRight, Filter } from "lucide-react"
-import { getAllGames } from "@/lib/game-data"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import Image from "next/image"
+import { Calendar, Star, Search } from "lucide-react"
+import { useState } from "react"
+
+const allGames = [
+  {
+    id: 1,
+    title: "Grand Theft Auto V",
+    category: "PC Games",
+    image: "/gta-v-game-cover.jpg",
+    rating: 4.8,
+    size: "65 GB",
+    releaseDate: "2015-04-14",
+    description: "Open world action-adventure game set in Los Santos with heists, racing, and crime.",
+    tags: ["gta", "grand theft auto", "action", "open world", "crime", "heist", "racing", "rockstar"],
+    tab: "pc-games",
+  },
+  {
+    id: 2,
+    title: "Call of Duty: Modern Warfare",
+    category: "PC Games",
+    image: "/call-of-duty-game-cover.jpg",
+    rating: 4.6,
+    size: "175 GB",
+    releaseDate: "2019-10-25",
+    description: "First-person shooter with intense multiplayer action and campaign mode.",
+    tags: ["cod", "call of duty", "fps", "shooter", "multiplayer", "warfare", "modern", "activision"],
+    tab: "pc-games",
+  },
+  {
+    id: 3,
+    title: "Adobe Photoshop 2024",
+    category: "Software",
+    image: "/adobe-photoshop-icon.jpg",
+    rating: 4.9,
+    size: "3.2 GB",
+    releaseDate: "2023-10-10",
+    description: "Professional image editing and graphic design software with AI features.",
+    tags: ["photoshop", "adobe", "design", "editing", "graphics", "photo", "creative", "ai"],
+    tab: "software",
+  },
+  {
+    id: 4,
+    title: "PUBG Mobile",
+    category: "Android Games",
+    image: "/pubg-mobile-game-cover.jpg",
+    rating: 4.3,
+    size: "2.1 GB",
+    releaseDate: "2018-03-19",
+    description: "Battle royale game for mobile devices with 100 players.",
+    tags: ["pubg", "battle royale", "mobile", "shooter", "survival", "multiplayer", "tencent"],
+    tab: "android-games",
+  },
+  {
+    id: 5,
+    title: "Minecraft Java Edition",
+    category: "PC Games",
+    image: "/minecraft-game-cover.png",
+    rating: 4.7,
+    size: "1 GB",
+    releaseDate: "2011-11-18",
+    description: "Sandbox game with endless possibilities for building and exploration.",
+    tags: ["minecraft", "sandbox", "building", "survival", "creative", "mojang", "java"],
+    tab: "pc-games",
+  },
+]
+
+const tabs = [
+  { id: "all", label: "All" },
+  { id: "pc-games", label: "PC Games" },
+  { id: "android-games", label: "Android Games" },
+  { id: "software", label: "Software" },
+]
 
 interface SearchResultsProps {
   query: string
 }
 
 export function SearchResults({ query }: SearchResultsProps) {
-  const [currentPage, setCurrentPage] = useState(1)
-  const [searchInput, setSearchInput] = useState(query)
-  const [selectedCategory, setSelectedCategory] = useState<string>("all")
-  const router = useRouter()
-  const itemsPerPage = 12
+  const [activeFilter, setActiveFilter] = useState("all")
 
-  const allGames = getAllGames()
-
-  const filteredGames = useMemo(() => {
-    let results = allGames
-
-    // Filter by search query with enhanced intelligence
-    if (query.trim()) {
-      const searchTerm = query.toLowerCase().trim()
-      const searchWords = searchTerm.split(" ").filter((word) => word.length > 0)
-
-      results = results.filter((game) => {
-        const searchableText = [
-          game.title,
-          game.description,
-          game.category,
-          ...(game.features || []),
-          ...(game.requirements || []),
-          game.genre || "",
-          game.developer || "",
-          game.publisher || "",
-        ]
-          .join(" ")
-          .toLowerCase()
-
-        // Exact phrase match gets highest priority
-        if (searchableText.includes(searchTerm)) return true
-
-        // All words must be found somewhere in the searchable text
-        return searchWords.every((word) => searchableText.includes(word))
-      })
-
-      results.sort((a, b) => {
-        const aText = a.title.toLowerCase()
-        const bText = b.title.toLowerCase()
-
-        // Title exact match first
-        if (aText.includes(searchTerm) && !bText.includes(searchTerm)) return -1
-        if (!aText.includes(searchTerm) && bText.includes(searchTerm)) return 1
-
-        // Title starts with search term
-        if (aText.startsWith(searchTerm) && !bText.startsWith(searchTerm)) return -1
-        if (!aText.startsWith(searchTerm) && bText.startsWith(searchTerm)) return 1
-
-        // Sort by rating and downloads as secondary criteria
-        if (b.rating !== a.rating) return b.rating - a.rating
-        return Number.parseInt(b.downloads.replace(/[^\d]/g, "")) - Number.parseInt(a.downloads.replace(/[^\d]/g, ""))
-      })
-    }
-
-    // Filter by category
-    if (selectedCategory !== "all") {
-      results = results.filter((game) => game.category === selectedCategory)
-    }
-
-    return results
-  }, [query, selectedCategory, allGames])
-
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`h-3 w-3 ${i < Math.floor(rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-      />
-    ))
-  }
-
-  const getCurrentPageItems = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    return filteredGames.slice(startIndex, endIndex)
-  }
-
-  const getTotalPages = () => {
-    return Math.ceil(filteredGames.length / itemsPerPage)
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchInput.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`)
-    }
-  }
-
-  const handleCategoryFilter = (category: string) => {
-    setSelectedCategory(category)
-    setCurrentPage(1)
-  }
-
-  const getCategoryLabel = (category: string) => {
-    switch (category) {
-      case "pc-games":
-        return "PC Games"
-      case "android-games":
-        return "Android Games"
-      case "software":
-        return "Software"
-      default:
-        return category
-    }
-  }
-
-  const categories = [
-    { value: "all", label: "All Categories" },
-    { value: "pc-games", label: "PC Games" },
-    { value: "android-games", label: "Android Games" },
-    { value: "software", label: "Software" },
+  const adminItems = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("admin_items") || "[]") : []
+  const combinedGames = [
+    ...allGames,
+    ...adminItems.map((item: any) => ({
+      ...item,
+      rating: typeof item.rating === "number" && !isNaN(item.rating) ? item.rating : 4.0,
+      tab: item.category === "PC Games" ? "pc-games" : item.category === "Android Games" ? "android-games" : "software",
+      tags: item.tags || [],
+    })),
   ]
 
-  return (
-    <main className="flex-1 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Search Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-balance mb-4">
-            Search <span className="text-primary">Results</span>
-          </h1>
-          {query && (
-            <p className="text-lg text-muted-foreground mb-6">
-              {filteredGames.length > 0
-                ? `Found ${filteredGames.length} result${filteredGames.length === 1 ? "" : "s"} for "${query}"`
-                : `No results found for "${query}"`}
-            </p>
-          )}
+  const filteredGames = query
+    ? combinedGames
+        .filter((game) => {
+          const searchTerm = query.toLowerCase().trim()
+          const matchesSearch =
+            game.title.toLowerCase().includes(searchTerm) ||
+            game.description.toLowerCase().includes(searchTerm) ||
+            game.category.toLowerCase().includes(searchTerm) ||
+            game.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm)) ||
+            game.title
+              .toLowerCase()
+              .split(" ")
+              .some((word) => word.startsWith(searchTerm)) ||
+            game.tags.some((tag: string) => tag.toLowerCase().startsWith(searchTerm))
 
-          {/* Search Form */}
-          <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search games, software, genres..."
-                className="pl-10"
-              />
-            </div>
-            <Button type="submit">
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </Button>
-          </form>
+          const matchesFilter = activeFilter === "all" || game.tab === activeFilter
 
-          {/* Category Filters */}
-          <div className="flex items-center gap-2 mb-6">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filter by:</span>
-            <div className="flex gap-2 flex-wrap">
-              {categories.map((category) => (
-                <Button
-                  key={category.value}
-                  variant={selectedCategory === category.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleCategoryFilter(category.value)}
-                >
-                  {category.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
+          return matchesSearch && matchesFilter
+        })
+        .sort((a, b) => {
+          const aExact = a.title.toLowerCase().includes(query.toLowerCase())
+          const bExact = b.title.toLowerCase().includes(query.toLowerCase())
+          if (aExact && !bExact) return -1
+          if (!aExact && bExact) return 1
+          const aRating = typeof a.rating === "number" && !isNaN(a.rating) ? a.rating : 4.0
+          const bRating = typeof b.rating === "number" && !isNaN(b.rating) ? b.rating : 4.0
+          return bRating - aRating
+        })
+    : combinedGames.filter((game) => activeFilter === "all" || game.tab === activeFilter)
 
-        {/* Results */}
-        {filteredGames.length > 0 ? (
-          <>
-            {/* Results Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {getCurrentPageItems().map((item, index) => (
-                <Link key={index} href={`/game/${item.id}`}>
-                  <Card className="gaming-card overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer">
-                    <div className="relative overflow-hidden">
-                      <img
-                        src={item.image || "/placeholder.svg"}
-                        alt={item.title}
-                        className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-2 right-2">
-                        <Badge variant="secondary" className="bg-black/50 text-white">
-                          {item.size}
-                        </Badge>
-                      </div>
-                      <div className="absolute top-2 left-2">
-                        <Badge variant="outline" className="bg-white/90 text-black text-xs">
-                          {getCategoryLabel(item.category)}
-                        </Badge>
-                      </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-base mb-2 text-balance line-clamp-2">{item.title}</h3>
-
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center gap-1">{renderStars(item.rating)}</div>
-                        <span className="text-xs text-muted-foreground">({item.rating})</span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-                        <div className="flex items-center gap-1">
-                          <Download className="h-3 w-3" />
-                          {item.downloads}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(item.date).toLocaleDateString()}
-                        </div>
-                      </div>
-
-                      <Button className="w-full" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {getTotalPages() > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: getTotalPages() }, (_, i) => i + 1).map((page) => (
-                    <Button
-                      key={page}
-                      variant={currentPage === page ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePageChange(page)}
-                      className="w-10 h-10"
-                    >
-                      {page}
-                    </Button>
-                  ))}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === getTotalPages()}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </>
-        ) : query ? (
-          /* No Results */
-          <div className="text-center py-12">
-            <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No results found</h3>
-            <p className="text-muted-foreground mb-6">
-              Try adjusting your search terms or browse our categories to find what you're looking for.
-            </p>
-            <div className="flex gap-2 justify-center">
-              <Link href="/categories">
-                <Button variant="outline">Browse Categories</Button>
-              </Link>
-              <Link href="/latest">
-                <Button>View Latest</Button>
-              </Link>
-            </div>
-          </div>
-        ) : (
-          /* Empty Search */
-          <div className="text-center py-12">
-            <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Start your search</h3>
-            <p className="text-muted-foreground">
-              Enter a search term above to find games, software, and more from our collection.
-            </p>
-          </div>
-        )}
+  if (!query) {
+    return (
+      <div className="text-center py-12">
+        <Search className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-white mb-2">Enter a search term</h2>
+        <p className="text-gray-400">Use the search bar above to find games and software</p>
       </div>
-    </main>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-2 mb-6">
+        {tabs.map((tab) => (
+          <Button
+            key={tab.id}
+            onClick={() => setActiveFilter(tab.id)}
+            variant={activeFilter === tab.id ? "default" : "outline"}
+            className={`${
+              activeFilter === tab.id
+                ? "bg-red-600 hover:bg-red-700 text-white"
+                : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between">
+        <p className="text-gray-400">
+          Found {filteredGames.length} result{filteredGames.length !== 1 ? "s" : ""} for "{query}"
+          {activeFilter !== "all" && ` in ${tabs.find((t) => t.id === activeFilter)?.label}`}
+        </p>
+      </div>
+
+      {filteredGames.length === 0 ? (
+        <div className="text-center py-12">
+          <Search className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">No results found</h2>
+          <p className="text-gray-400">No games or software found for "{query}". Try different keywords.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredGames.map((game) => (
+            <Link key={game.id} href={`/game/${game.id}`}>
+              <Card className="bg-gray-800 border-gray-700 hover:border-red-500 transition-all duration-300 group overflow-hidden">
+                <div className="relative">
+                  <Image
+                    src={game.image || "/placeholder.svg"}
+                    alt={game.title}
+                    width={300}
+                    height={200}
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <Badge className="absolute top-2 right-2 bg-red-600 text-white">{game.category}</Badge>
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="text-white font-semibold text-lg mb-2 group-hover:text-red-400 transition-colors">
+                    {game.title}
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-3 line-clamp-2">{game.description}</p>
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <div className="flex items-center space-x-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span>
+                        {typeof game.rating === "number" && !isNaN(game.rating) ? game.rating.toFixed(1) : "4.0"}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>{new Date(game.releaseDate).getFullYear()}</span>
+                    </div>
+                    <span className="font-medium">{game.size}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
