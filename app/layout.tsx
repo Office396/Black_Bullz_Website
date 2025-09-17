@@ -4,7 +4,6 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
-import { LoadingScreen } from "@/components/loading-screen"
 import { PageLoader } from "@/components/page-loader"
 import "./globals.css"
 
@@ -22,7 +21,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-gray-900`}>
-        <LoadingScreen />
         <PageLoader />
         <Suspense fallback={null}>{children}</Suspense>
         <Analytics />
