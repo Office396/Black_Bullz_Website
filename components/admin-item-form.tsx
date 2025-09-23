@@ -24,6 +24,7 @@ interface FormData {
   trending: boolean
   latest: boolean // Added latest checkbox
   keyFeatures: string[]
+  screenshots: string[] // Added screenshots array
   systemRequirements: {
     recommended: {
       // Removed minimum, kept only recommended
@@ -59,6 +60,7 @@ const initialFormData: FormData = {
   trending: false,
   latest: false, // Added latest field
   keyFeatures: [""],
+  screenshots: [], // Added empty screenshots array
   systemRequirements: {
     recommended: { os: "", processor: "", memory: "", graphics: "", storage: "" }, // Only recommended
   },
@@ -69,7 +71,16 @@ const initialFormData: FormData = {
 }
 
 export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: () => void }) {
-  const [formData, setFormData] = useState<FormData>(editItem || initialFormData)
+  const [formData, setFormData] = useState<FormData>(() => {
+    if (editItem) {
+      // Ensure screenshots array exists for existing items
+      return {
+        ...editItem,
+        screenshots: editItem.screenshots || [], // Initialize screenshots if it doesn't exist
+      }
+    }
+    return initialFormData
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -321,6 +332,52 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
         </Card>
       )}
 
+      {/* Screenshots */}
+      <Card className="bg-gray-700 border-gray-600">
+        <CardHeader>
+          <CardTitle className="text-white">Screenshots (Max 5)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {formData.screenshots.map((screenshot, index) => (
+            <div key={index} className="flex gap-2">
+              <Input
+                value={screenshot}
+                onChange={(e) => {
+                  const updatedScreenshots = [...formData.screenshots]
+                  updatedScreenshots[index] = e.target.value
+                  setFormData({ ...formData, screenshots: updatedScreenshots })
+                }}
+                className="bg-gray-600 border-gray-500 text-white"
+                placeholder="Enter screenshot URL"
+              />
+              <Button
+                type="button"
+                onClick={() => {
+                  const updatedScreenshots = formData.screenshots.filter((_, i) => i !== index)
+                  setFormData({ ...formData, screenshots: updatedScreenshots })
+                }}
+                variant="outline"
+                size="sm"
+                className="bg-gray-600 border-gray-500 text-red-400"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          {formData.screenshots.length < 5 && (
+            <Button
+              type="button"
+              onClick={() => setFormData({ ...formData, screenshots: [...formData.screenshots, ""] })}
+              variant="outline"
+              className="bg-gray-600 border-gray-500 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Screenshot
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
       {/* System Requirements (PC Games and Software only) */}
       {showSystemRequirements && (
         <Card className="bg-gray-700 border-gray-600">
@@ -492,41 +549,64 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
       )}
 
       {/* Download Links */}
-      <Card className="bg-gray-700 border-gray-600">
+      <Card className="bg-gray-700 border-gray-700">
         <CardHeader>
           <CardTitle className="text-white">Download Links</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="bg-gray-600 p-4 rounded-lg mb-4">
+            <p className="text-white text-sm mb-2">Tips for GP Links:</p>
+            <ul className="text-gray-300 text-xs space-y-1 list-disc pl-4">
+              <li>Use GP Links to generate a survey/ad gate for your download links</li>
+              <li>Create your shortened URL on GP Links first</li>
+              <li>Paste the GP Links URL in the URL field below</li>
+              <li>Recommended: Add multiple mirror links for better availability</li>
+            </ul>
+          </div>
           {formData.downloadLinks.map((link, index) => (
-            <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-2">
-              <Input
-                placeholder="Link name"
-                value={link.name}
-                onChange={(e) => updateDownloadLink(index, "name", e.target.value)}
-                className="bg-gray-600 border-gray-500 text-white"
-              />
-              <Input
-                placeholder="URL"
-                value={link.url}
-                onChange={(e) => updateDownloadLink(index, "url", e.target.value)}
-                className="bg-gray-600 border-gray-500 text-white md:col-span-2"
-              />
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Size"
-                  value={link.size}
-                  onChange={(e) => updateDownloadLink(index, "size", e.target.value)}
-                  className="bg-gray-600 border-gray-500 text-white"
-                />
-                <Button
-                  type="button"
-                  onClick={() => removeDownloadLink(index)}
-                  variant="outline"
-                  size="sm"
-                  className="bg-gray-600 border-gray-500 text-red-400 hover:bg-red-600 hover:text-white"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+            <div key={index} className="space-y-4 p-4 bg-gray-600 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-white mb-2 block">Link Name *</Label>
+                  <Input
+                    placeholder="e.g., Mirror 1, Direct Download"
+                    value={link.name}
+                    onChange={(e) => updateDownloadLink(index, "name", e.target.value)}
+                    className="bg-gray-700 border-gray-600 text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label className="text-white mb-2 block">File Size *</Label>
+                  <Input
+                    placeholder="e.g., 2.5 GB"
+                    value={link.size}
+                    onChange={(e) => updateDownloadLink(index, "size", e.target.value)}
+                    className="bg-gray-700 border-gray-600 text-white"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-white mb-2 block">GP Links URL *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Paste your GP Links URL here"
+                    value={link.url}
+                    onChange={(e) => updateDownloadLink(index, "url", e.target.value)}
+                    className="bg-gray-700 border-gray-600 text-white flex-1"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => removeDownloadLink(index)}
+                    variant="outline"
+                    size="sm"
+                    className="bg-gray-700 border-gray-600 text-red-400 hover:bg-red-600 hover:text-white"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -534,15 +614,13 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
             type="button"
             onClick={addDownloadLink}
             variant="outline"
-            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500"
+            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Download Link
+            Add Mirror Link
           </Button>
         </CardContent>
-      </Card>
-
-      <div className="flex justify-end">
+      </Card>      <div className="flex justify-end">
         <Button type="submit" className="bg-red-600 hover:bg-red-700 transition-colors">
           <Save className="h-4 w-4 mr-2" />
           {editItem ? "Update Item" : "Save Item"}

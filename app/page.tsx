@@ -1,7 +1,7 @@
 import { Header } from "@/components/header"
 import { Sidebar } from "@/components/sidebar"
 import { GameGrid } from "@/components/game-grid"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { PageLoader } from "@/components/page-loader"
 import { Suspense } from "react"
 
 export default function HomePage() {
@@ -16,9 +16,7 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex gap-6">
           <main className="flex-1">
-            <Suspense fallback={<LoadingSpinner />}>
-              <GameGrid />
-            </Suspense>
+            <GameGrid />
           </main>
           <aside className="w-80 hidden lg:block">
             <Sidebar />

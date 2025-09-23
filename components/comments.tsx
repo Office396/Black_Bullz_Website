@@ -27,40 +27,6 @@ interface CommentsProps {
 
 export function Comments({ gameId }: CommentsProps) {
   const [comments, setComments] = useState<Comment[]>([
-    {
-      id: 1,
-      author: "GameMaster2024",
-      content: "Amazing game! The graphics are incredible and the gameplay is so smooth. Definitely worth downloading!",
-      timestamp: "2 hours ago",
-      likes: 12,
-      dislikes: 1,
-      replies: [
-        {
-          id: 2,
-          author: "ProGamer",
-          content: "I agree! Been playing for weeks now and still discovering new things.",
-          timestamp: "1 hour ago",
-          likes: 5,
-          dislikes: 0,
-        },
-      ],
-    },
-    {
-      id: 3,
-      author: "TechReviewer",
-      content: "Installation was easy and the game runs perfectly on my system. Thanks for the upload!",
-      timestamp: "5 hours ago",
-      likes: 8,
-      dislikes: 0,
-    },
-    {
-      id: 4,
-      author: "CasualPlayer",
-      content: "Good game but takes up a lot of space. Make sure you have enough storage before downloading.",
-      timestamp: "1 day ago",
-      likes: 15,
-      dislikes: 2,
-    },
   ])
 
   const [newComment, setNewComment] = useState("")

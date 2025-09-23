@@ -1,13 +1,28 @@
+'use client'
+
 import { Header } from "@/components/header"
 import { Sidebar } from "@/components/sidebar"
 import { GameDetails } from "@/components/game-details"
 import { Comments } from "@/components/comments"
-import { LoadingSpinner } from "@/components/loading-spinner"
-import { Suspense } from "react"
+import { PageLoader } from "@/components/page-loader"
+import { useEffect, useState } from "react"
 import { notFound } from "next/navigation"
 
-// Mock data - in real app this would come from database
-const games = [
+// Helper function to get game data
+function getGameData(gameId: number) {
+  if (typeof window === 'undefined') return null
+  
+  // Try to get from admin items first
+  const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
+  const adminGame = adminItems.find((item: any) => item.id === gameId)
+  if (adminGame) return adminGame
+
+  // If not found in admin items, check static games
+  return staticGames.find(game => game.id === gameId)
+}
+
+// Static games data - in real app this would come from database
+const staticGames = [
   {
     id: 1,
     title: "Grand Theft Auto V",
@@ -138,8 +153,19 @@ interface GamePageProps {
 }
 
 export default function GamePage({ params }: GamePageProps) {
+  const [game, setGame] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const gameId = Number.parseInt(params.id)
-  const game = games.find((g) => g.id === gameId)
+
+  useEffect(() => {
+    const foundGame = getGameData(gameId)
+    setGame(foundGame)
+    setIsLoading(false)
+  }, [gameId])
+
+  if (!game) {
+    return null // Let the layout PageLoader handle loading state
+  }
 
   if (!game) {
     notFound()
@@ -151,12 +177,10 @@ export default function GamePage({ params }: GamePageProps) {
       <div className="container mx-auto px-4 py-6">
         <div className="flex gap-6">
           <main className="flex-1">
-            <Suspense fallback={<LoadingSpinner />}>
-              <GameDetails game={game} />
-              <div className="mt-8">
-                <Comments gameId={gameId} />
-              </div>
-            </Suspense>
+            <GameDetails game={game} />
+            <div className="mt-8">
+              <Comments gameId={gameId} />
+            </div>
           </main>
           <aside className="w-80 hidden lg:block">
             <Sidebar />

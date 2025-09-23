@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({
+  
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -22,7 +23,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-gray-900`}>
         <PageLoader />
-        <Suspense fallback={null}>{children}</Suspense>
+        {children}
         <Analytics />
       </body>
     </html>

@@ -7,175 +7,22 @@ import Link from "next/link"
 import Image from "next/image"
 import { Star } from "lucide-react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 
-const games = [
-  {
-    id: 1,
-    title: "Grand Theft Auto V",
-    category: "PC Games",
-    image: "/gta-v-game-cover.jpg",
-    rating: 4.8,
-    size: "65 GB",
-    releaseDate: "2015-04-14",
-    description: "Open world action-adventure game set in Los Santos.",
-    tab: "pc-games",
-  },
-  {
-    id: 2,
-    title: "Call of Duty: Modern Warfare",
-    category: "PC Games",
-    image: "/call-of-duty-game-cover.jpg",
-    rating: 4.6,
-    size: "175 GB",
-    releaseDate: "2019-10-25",
-    description: "First-person shooter with intense multiplayer action.",
-    tab: "pc-games",
-  },
-  {
-    id: 3,
-    title: "Adobe Photoshop 2024",
-    category: "Software",
-    image: "/adobe-photoshop-icon.jpg",
-    rating: 4.9,
-    size: "3.2 GB",
-    releaseDate: "2023-10-10",
-    description: "Professional image editing and graphic design software.",
-    tab: "software",
-  },
-  {
-    id: 4,
-    title: "PUBG Mobile",
-    category: "Android Games",
-    image: "/pubg-mobile-game-cover.jpg",
-    rating: 4.3,
-    size: "2.1 GB",
-    releaseDate: "2018-03-19",
-    description: "Battle royale game for mobile devices.",
-    tab: "android-games",
-  },
-  {
-    id: 5,
-    title: "Minecraft Java Edition",
-    category: "PC Games",
-    image: "/minecraft-game-cover.png",
-    rating: 4.7,
-    size: "1 GB",
-    releaseDate: "2011-11-18",
-    description: "Sandbox game with endless possibilities.",
-    tab: "pc-games",
-  },
-  {
-    id: 6,
-    title: "Microsoft Office 2021",
-    category: "Software",
-    image: "/microsoft-office-suite.jpg",
-    rating: 4.5,
-    size: "4.5 GB",
-    releaseDate: "2021-10-05",
-    description: "Complete office productivity suite.",
-    tab: "software",
-  },
-  {
-    id: 7,
-    title: "Among Us",
-    category: "Android Games",
-    image: "/among-us-game-characters.jpg",
-    rating: 4.2,
-    size: "250 MB",
-    releaseDate: "2018-06-15",
-    description: "Social deduction game with friends.",
-    tab: "android-games",
-  },
-  {
-    id: 8,
-    title: "Cyberpunk 2077",
-    category: "PC Games",
-    image: "/cyberpunk-2077-futuristic-city.jpg",
-    rating: 4.1,
-    size: "70 GB",
-    releaseDate: "2020-12-10",
-    description: "Futuristic open-world RPG.",
-    tab: "pc-games",
-  },
-  {
-    id: 9,
-    title: "WhatsApp",
-    category: "Android Games",
-    image: "/whatsapp-app-icon.png",
-    rating: 4.4,
-    size: "120 MB",
-    releaseDate: "2009-05-03",
-    description: "Messaging app for communication.",
-    tab: "android-games",
-  },
-  {
-    id: 10,
-    title: "Valorant",
-    category: "PC Games",
-    image: "/valorant-tactical-shooter.jpg",
-    rating: 4.6,
-    size: "23 GB",
-    releaseDate: "2020-06-02",
-    description: "Tactical first-person shooter.",
-    tab: "pc-games",
-  },
-  {
-    id: 11,
-    title: "Visual Studio Code",
-    category: "Software",
-    image: "/visual-studio-code-editor.jpg",
-    rating: 4.8,
-    size: "200 MB",
-    releaseDate: "2015-04-29",
-    description: "Powerful code editor for developers.",
-    tab: "software",
-  },
-  {
-    id: 12,
-    title: "Clash of Clans",
-    category: "Android Games",
-    image: "/clash-of-clans-gameplay.jpg",
-    rating: 4.5,
-    size: "180 MB",
-    releaseDate: "2012-08-02",
-    description: "Strategy game with clan battles.",
-    tab: "android-games",
-  },
-  {
-    id: 13,
-    title: "FIFA 24",
-    category: "PC Games",
-    image: "/fifa-24-gameplay.jpg",
-    rating: 4.3,
-    size: "50 GB",
-    releaseDate: "2023-09-29",
-    description: "Latest football simulation game.",
-    tab: "pc-games",
-  },
-  {
-    id: 14,
-    title: "Chrome Browser",
-    category: "Software",
-    image: "/google-chrome-browser.jpg",
-    rating: 4.4,
-    size: "150 MB",
-    releaseDate: "2008-09-02",
-    description: "Fast and secure web browser.",
-    tab: "software",
-  },
-  {
-    id: 15,
-    title: "Genshin Impact",
-    category: "Android Games",
-    image: "/genshin-impact-gameplay.jpg",
-    rating: 4.7,
-    size: "15 GB",
-    releaseDate: "2020-09-28",
-    description: "Open-world action RPG with anime style.",
-    tab: "android-games",
-  },
-]
+interface GameItem {
+  id: number
+  title: string
+  category: string
+  image: string
+  rating: number
+  size: string
+  description: string
+  releaseDate?: string
+  uploadDate?: string
+  latest?: boolean
+  tab?: string
+}
+
 
 const tabs = [
   { id: "all", label: "All" },
@@ -193,36 +40,48 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
   const router = useRouter()
   const activeTab = searchParams.get("tab") || "all"
   const [currentPage, setCurrentPage] = useState(1)
-  const [adminItems, setAdminItems] = useState<any[]>([])
+  const [adminItems, setAdminItems] = useState<GameItem[]>([])
+  const [isLoaded, setIsLoaded] = useState(false)
 
   const itemsPerPage = activeTab === "android-games" ? 15 : 12
 
   useEffect(() => {
+    setIsLoaded(false) // Start loading
     if (typeof window !== "undefined") {
-      const items = JSON.parse(localStorage.getItem("admin_items") || "[]")
-      setAdminItems(items)
+      try {
+        const items = JSON.parse(localStorage.getItem("admin_items") || "[]") as GameItem[]
+        setAdminItems(items)
+      } catch (error) {
+        console.error("Error loading items:", error)
+      } finally {
+        setIsLoaded(true)
+      }
     }
   }, [])
 
-  const allGames = [
-    ...games,
-    ...adminItems.map((item: any) => ({
+  const allGames = useMemo(() => 
+    adminItems.map((item) => ({
       ...item,
       tab: item.category === "PC Games" ? "pc-games" : item.category === "Android Games" ? "android-games" : "software",
     })),
-  ]
+    [adminItems]
+  )
 
-  let filteredGames = activeTab === "all" ? allGames : allGames.filter((game) => game.tab === activeTab)
+  const filteredGames = useMemo(() => {
+    let games = activeTab === "all" ? allGames : allGames.filter((game) => game.tab === activeTab)
 
-  if (filterLatest) {
-    filteredGames = filteredGames.filter((game) => {
-      if (game.latest) return true
-      const gameDate = new Date(game.releaseDate || game.uploadDate)
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      return gameDate >= thirtyDaysAgo
-    })
-  }
+    if (filterLatest) {
+      games = games.filter((game) => {
+        if (game.latest) return true
+        const gameDate = new Date(game.releaseDate || game.uploadDate)
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+        return gameDate >= thirtyDaysAgo
+      })
+    }
+
+    return games
+  }, [allGames, activeTab, filterLatest])
 
   const totalPages = Math.ceil(filteredGames.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -237,24 +96,43 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
     }
   }
 
+  // Don't render anything until the initial load is complete
+  if (!isLoaded) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse bg-gray-800 h-8 w-32 rounded"></div>
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-gray-800 rounded-lg h-64 animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {!filterLatest && (
         <div className="flex flex-wrap gap-2 mb-6">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              variant={activeTab === tab.id ? "default" : "outline"}
-              className={`${
-                activeTab === tab.id
-                  ? "bg-red-600 hover:bg-red-700 text-white"
-                  : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              {tab.label} ({tab.id === "all" ? allGames.length : allGames.filter((g) => g.tab === tab.id).length})
-            </Button>
-          ))}
+          {tabs.map((tab) => {
+            const count = tab.id === "all" 
+              ? allGames.length 
+              : allGames.filter((g) => g.tab === tab.id).length
+            return (
+              <Button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                variant={activeTab === tab.id ? "default" : "outline"}
+                className={`${
+                  activeTab === tab.id
+                    ? "bg-red-600 hover:bg-red-700 text-white"
+                    : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                {tab.label} ({count})
+              </Button>
+            )
+          })}
         </div>
       )}
 
@@ -289,9 +167,14 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
                   width={200}
                   height={150}
                   className={`w-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-                    activeTab === "android-games" ? "h-24" : "h-32"
+                    activeTab === "android-games" 
+                      ? "h-48 md:h-56" // Increased height for Android games
+                      : "h-48 md:h-64" // Consistent height across categories
                   }`}
-                  style={{ objectPosition: "center" }}
+                  style={{ 
+                    objectPosition: "center", 
+                    objectFit: "cover" // Ensure full coverage
+                  }}
                 />
                 <Badge className="absolute top-1 right-1 bg-red-600 text-white text-xs">{game.category}</Badge>
               </div>

@@ -6,47 +6,25 @@ import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 
-const trendingGames = [
-  {
-    id: 1,
-    title: "GTA V",
-    category: "PC Games",
-    image: "/gta-v-game-cover.jpg",
-    downloads: "2.5M",
-  },
-  {
-    id: 2,
-    title: "Call of Duty",
-    category: "PC Games",
-    image: "/call-of-duty-game-cover.jpg",
-    downloads: "1.8M",
-  },
-  {
-    id: 3,
-    title: "Minecraft",
-    category: "PC Games",
-    image: "/minecraft-game-cover.png",
-    downloads: "3.2M",
-  },
-  {
-    id: 4,
-    title: "Adobe Photoshop",
-    category: "Software",
-    image: "/adobe-photoshop-icon.jpg",
-    downloads: "950K",
-  },
-  {
-    id: 5,
-    title: "PUBG Mobile",
-    category: "Android Games",
-    image: "/pubg-mobile-game-cover.jpg",
-    downloads: "4.1M",
-  },
-]
+interface TrendingGame {
+  id: number
+  title: string
+  category: string
+  image: string
+  downloads: string
+  trending: boolean
+}
+
+interface QuickLink {
+  href: string
+  label: string
+  count: number
+}
+
 
 export function Sidebar() {
-  const [allGames, setAllGames] = useState<any[]>([])
-  const [quickLinksData, setQuickLinksData] = useState([
+  const [allGames, setAllGames] = useState<Array<{ category: string, tab: string }>>([])
+  const [quickLinksData, setQuickLinksData] = useState<QuickLink[]>([
     { href: "/?tab=pc-games", label: "PC Games", count: 0 },
     { href: "/?tab=android-games", label: "Android Games", count: 0 },
     { href: "/?tab=software", label: "Software", count: 0 },
@@ -54,41 +32,33 @@ export function Sidebar() {
   ])
 
   useEffect(() => {
+    // Get admin items from localStorage
     const adminItems = JSON.parse(localStorage.getItem("admin_items") || "[]")
-    const defaultGames = [
-      { category: "PC Games", tab: "pc-games" },
-      { category: "PC Games", tab: "pc-games" },
-      { category: "Software", tab: "software" },
-      { category: "Android Games", tab: "android-games" },
-      { category: "PC Games", tab: "pc-games" },
-      { category: "Software", tab: "software" },
-      { category: "Android Games", tab: "android-games" },
-      { category: "PC Games", tab: "pc-games" },
-      { category: "Android Games", tab: "android-games" },
-      { category: "PC Games", tab: "pc-games" },
-      { category: "Software", tab: "software" },
-      { category: "Android Games", tab: "android-games" },
-      { category: "PC Games", tab: "pc-games" },
-      { category: "Software", tab: "software" },
-      { category: "Android Games", tab: "android-games" },
-    ]
 
-    const combinedGames = [
-      ...defaultGames,
-      ...adminItems.map((item: any) => ({
-        category: item.category,
-        tab:
-          item.category === "PC Games" ? "pc-games" : item.category === "Android Games" ? "android-games" : "software",
-      })),
-    ]
+    // Get only valid items from admin that have all required fields
+    const validAdminItems = adminItems.filter((item: any) => 
+      item && 
+      item.title && 
+      item.category && 
+      item.description
+    )
 
-    setAllGames(combinedGames)
+    // Map items to their categories and get counts
+    const counts = validAdminItems.reduce((acc: { [key: string]: number }, item: any) => {
+      const category = item.category
+      acc[category] = (acc[category] || 0) + 1
+      return acc
+    }, {})
 
-    const pcGamesCount = combinedGames.filter((g) => g.tab === "pc-games").length
-    const androidGamesCount = combinedGames.filter((g) => g.tab === "android-games").length
-    const softwareCount = combinedGames.filter((g) => g.tab === "software").length
-    const totalCount = combinedGames.length
+    // Get specific counts
+    const pcGamesCount = counts["PC Games"] || 0
+    const androidGamesCount = counts["Android Games"] || 0
+    const softwareCount = counts["Software"] || 0
 
+    // Calculate total valid items
+    const totalCount = validAdminItems.length
+
+    // Update quick links with accurate counts
     setQuickLinksData([
       { href: "/?tab=pc-games", label: "PC Games", count: pcGamesCount },
       { href: "/?tab=android-games", label: "Android Games", count: androidGamesCount },
@@ -97,23 +67,27 @@ export function Sidebar() {
     ])
   }, [])
 
-  const [displayTrending, setDisplayTrending] = useState(trendingGames)
+  const [displayTrending, setDisplayTrending] = useState<TrendingGame[]>([])
 
+  // Separate useEffect for trending items
   useEffect(() => {
     const adminItems = JSON.parse(localStorage.getItem("admin_items") || "[]")
-    const trendingAdminItems = adminItems.filter((item: any) => item.trending)
+    
+    // Get only items marked as trending from admin items
+    const trendingAdminItems = adminItems.filter((item: any) => item.trending === true)
 
     const combinedTrending = [
-      ...trendingGames,
       ...trendingAdminItems.map((item: any) => ({
         id: item.id,
         title: item.title,
         category: item.category,
         image: item.image || "/placeholder.svg",
         downloads: "New",
-      })),
+        trending: true
+      }))
     ]
 
+    // Update trending display items
     setDisplayTrending(combinedTrending.slice(0, 5))
   }, [])
 
