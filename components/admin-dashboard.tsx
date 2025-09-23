@@ -8,8 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AdminItemForm } from "@/components/admin-item-form"
 import { AdminItemList } from "@/components/admin-item-list"
 import { AdminSettings } from "@/components/admin-settings"
-import { AdminDownloadPages } from "@/components/admin-download-pages"
-import { LogOut, Plus, List, Settings, Search, Download } from "lucide-react"
+import { LogOut, Plus, List, Settings, Search } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -59,10 +58,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <Plus className="h-4 w-4 mr-2" />
               Add New Item
             </TabsTrigger>
-            <TabsTrigger value="downloads" className="data-[state=active]:bg-red-600">
-              <Download className="h-4 w-4 mr-2" />
-              Download Pages
-            </TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-red-600">
               <Settings className="h-4 w-4 mr-2" />
               Settings
@@ -100,10 +95,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <AdminItemForm />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="downloads">
-            <AdminDownloadPages />
           </TabsContent>
 
           <TabsContent value="settings">

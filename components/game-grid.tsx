@@ -43,7 +43,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
   const [adminItems, setAdminItems] = useState<GameItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
 
-  const itemsPerPage = activeTab === "android-games" ? 15 : 12
+  const itemsPerPage = activeTab === "android-games" ? 10 : 8 // Reduced number of items per page
 
   useEffect(() => {
     setIsLoaded(false) // Start loading
@@ -151,58 +151,39 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
       </div>
 
       <div
-        className={`grid gap-4 ${
+        className={`grid gap-2 sm:gap-3 ${
           activeTab === "android-games"
-            ? "grid-cols-3 md:grid-cols-5 lg:grid-cols-5"
-            : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-        }`}
+            ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5"
+            : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4"
+        } max-w-[1400px] mx-auto`}
       >
         {paginatedGames.map((game) => (
           <Link key={game.id} href={`/game/${game.id}`}>
             <Card className="bg-gray-800 border-gray-700 hover:border-red-500 transition-all duration-300 group overflow-hidden">
-              <div className="relative">
+              <div className="aspect-[4/3] relative overflow-hidden">
                 <Image
                   src={game.image || "/placeholder.svg"}
                   alt={game.title}
-                  width={200}
-                  height={150}
-                  className={`w-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-                    activeTab === "android-games" 
-                      ? "h-48 md:h-56" // Increased height for Android games
-                      : "h-48 md:h-64" // Consistent height across categories
-                  }`}
-                  style={{ 
-                    objectPosition: "center", 
-                    objectFit: "cover" // Ensure full coverage
-                  }}
+                  fill={true}
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
                 />
-                <Badge className="absolute top-1 right-1 bg-red-600 text-white text-xs">{game.category}</Badge>
+                <Badge className="absolute top-0.5 right-0.5 bg-red-600 text-white text-[9px] px-1 py-0">{game.category}</Badge>
               </div>
-              <CardContent className={`${activeTab === "android-games" ? "p-2" : "p-3"}`}>
-                <h3
-                  className={`text-white font-semibold mb-1 group-hover:text-red-400 transition-colors line-clamp-2 ${
-                    activeTab === "android-games" ? "text-xs" : "text-sm"
-                  }`}
-                >
-                  {game.title}
-                </h3>
-                <p
-                  className={`text-gray-400 mb-2 line-clamp-2 ${activeTab === "android-games" ? "text-xs" : "text-sm"}`}
-                >
-                  {game.description}
-                </p>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center space-x-1">
+              <CardContent className="p-1.5">
+                <div className="flex flex-col gap-1">
+                  <h3
+                    className={`text-white font-bold group-hover:text-red-400 transition-colors line-clamp-1 ${
+                      activeTab === "android-games" ? "text-xs" : "text-sm"
+                    }`}
+                  >
+                    {game.title}
+                  </h3>
+                  <div className="flex items-center gap-0.5">
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    <span>{game.rating || 4.0}</span>
+                    <span className="text-[11px] text-gray-400">{game.rating || 4.0}</span>
                   </div>
-                  <span className="font-medium">{game.size}</span>
                 </div>
-                {game.uploadDate && (
-                  <div className="text-xs text-gray-400 mt-1">
-                    Added: {new Date(game.uploadDate).toLocaleDateString()}
-                  </div>
-                )}
               </CardContent>
             </Card>
           </Link>

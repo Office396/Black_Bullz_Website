@@ -44,7 +44,11 @@ interface FormData {
       processor: string
     }
   }
-  downloadLinks: Array<{ name: string; url: string; size: string }>
+  downloadPage: {
+    pinCode: string
+    actualDownloadLinks: Array<{ name: string; url: string; size: string }>
+    rarPassword?: string
+  }
 }
 
 const initialFormData: FormData = {
@@ -67,16 +71,25 @@ const initialFormData: FormData = {
   androidRequirements: {
     recommended: { os: "", ram: "", storage: "", processor: "" }, // Only recommended
   },
-  downloadLinks: [{ name: "", url: "", size: "" }],
+  downloadPage: {
+    pinCode: Math.floor(1000 + Math.random() * 9000).toString(), // Generate random 4-digit PIN
+    actualDownloadLinks: [{ name: "", url: "", size: "" }],
+    rarPassword: "",
+  },
 }
 
 export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: () => void }) {
   const [formData, setFormData] = useState<FormData>(() => {
     if (editItem) {
-      // Ensure screenshots array exists for existing items
+      // Ensure all required fields exist for existing items
       return {
         ...editItem,
-        screenshots: editItem.screenshots || [], // Initialize screenshots if it doesn't exist
+        screenshots: editItem.screenshots || [],
+        downloadPage: editItem.downloadPage || {
+          pinCode: Math.floor(1000 + Math.random() * 9000).toString(),
+          actualDownloadLinks: editItem.downloadLinks || [{ name: "", url: "", size: "" }],
+          rarPassword: "",
+        },
       }
     }
     return initialFormData
@@ -125,21 +138,43 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
   const addDownloadLink = () => {
     setFormData({
       ...formData,
-      downloadLinks: [...formData.downloadLinks, { name: "", url: "", size: "" }],
+      downloadPage: {
+        ...formData.downloadPage,
+        actualDownloadLinks: [...formData.downloadPage.actualDownloadLinks, { name: "", url: "", size: "" }],
+      },
     })
   }
 
   const removeDownloadLink = (index: number) => {
     setFormData({
       ...formData,
-      downloadLinks: formData.downloadLinks.filter((_, i) => i !== index),
+      downloadPage: {
+        ...formData.downloadPage,
+        actualDownloadLinks: formData.downloadPage.actualDownloadLinks.filter((_, i) => i !== index),
+      },
     })
   }
 
   const updateDownloadLink = (index: number, field: string, value: string) => {
-    const updated = [...formData.downloadLinks]
+    const updated = [...formData.downloadPage.actualDownloadLinks]
     updated[index] = { ...updated[index], [field]: value }
-    setFormData({ ...formData, downloadLinks: updated })
+    setFormData({
+      ...formData,
+      downloadPage: {
+        ...formData.downloadPage,
+        actualDownloadLinks: updated,
+      },
+    })
+  }
+
+  const generateNewPin = () => {
+    setFormData({
+      ...formData,
+      downloadPage: {
+        ...formData.downloadPage,
+        pinCode: Math.floor(1000 + Math.random() * 9000).toString(),
+      },
+    })
   }
 
   const showSystemRequirements = formData.category === "PC Games" || formData.category === "Software"
@@ -548,77 +583,131 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
         </Card>
       )}
 
-      {/* Download Links */}
-      <Card className="bg-gray-700 border-gray-700">
+      {/* Download Page Configuration */}
+      <Card className="bg-gray-700 border-gray-600">
         <CardHeader>
-          <CardTitle className="text-white">Download Links</CardTitle>
+          <CardTitle className="text-white">Download Page Configuration</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-gray-600 p-4 rounded-lg mb-4">
-            <p className="text-white text-sm mb-2">Tips for GP Links:</p>
-            <ul className="text-gray-300 text-xs space-y-1 list-disc pl-4">
-              <li>Use GP Links to generate a survey/ad gate for your download links</li>
-              <li>Create your shortened URL on GP Links first</li>
-              <li>Paste the GP Links URL in the URL field below</li>
-              <li>Recommended: Add multiple mirror links for better availability</li>
+          <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg mb-4">
+            <p className="text-blue-300 text-sm mb-2">📋 How it works:</p>
+            <ul className="text-blue-200 text-xs space-y-1 list-disc pl-4">
+              <li>Users click download button → GP Links/V2Links survey opens automatically</li>
+              <li>After completing survey → PIN entry page appears</li>
+              <li>Users enter the PIN below → Access to download page with direct links</li>
+              <li>Download page expires after 12 hours for security</li>
             </ul>
           </div>
-          {formData.downloadLinks.map((link, index) => (
-            <div key={index} className="space-y-4 p-4 bg-gray-600 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-white mb-2 block">Link Name *</Label>
-                  <Input
-                    placeholder="e.g., Mirror 1, Direct Download"
-                    value={link.name}
-                    onChange={(e) => updateDownloadLink(index, "name", e.target.value)}
-                    className="bg-gray-700 border-gray-600 text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label className="text-white mb-2 block">File Size *</Label>
-                  <Input
-                    placeholder="e.g., 2.5 GB"
-                    value={link.size}
-                    onChange={(e) => updateDownloadLink(index, "size", e.target.value)}
-                    className="bg-gray-700 border-gray-600 text-white"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-white mb-2 block">GP Links URL *</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Paste your GP Links URL here"
-                    value={link.url}
-                    onChange={(e) => updateDownloadLink(index, "url", e.target.value)}
-                    className="bg-gray-700 border-gray-600 text-white flex-1"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => removeDownloadLink(index)}
-                    variant="outline"
-                    size="sm"
-                    className="bg-gray-700 border-gray-600 text-red-400 hover:bg-red-600 hover:text-white"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+
+          {/* PIN Configuration */}
+          <div className="bg-gray-600 p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-white">Download PIN Code</Label>
+              <Button
+                type="button"
+                onClick={generateNewPin}
+                variant="outline"
+                size="sm"
+                className="bg-gray-700 border-gray-600 text-white hover:bg-gray-500"
+              >
+                Generate New PIN
+              </Button>
             </div>
-          ))}
-          <Button
-            type="button"
-            onClick={addDownloadLink}
-            variant="outline"
-            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 w-full"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Mirror Link
-          </Button>
+            <Input
+              value={formData.downloadPage.pinCode}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  downloadPage: { ...formData.downloadPage, pinCode: e.target.value },
+                })
+              }
+              className="bg-gray-700 border-gray-600 text-white text-center text-lg font-mono tracking-widest"
+              maxLength={4}
+              placeholder="1234"
+            />
+            <p className="text-gray-400 text-xs mt-1">Users will need this PIN to access the download page</p>
+          </div>
+
+          {/* RAR Password (Optional) */}
+          <div>
+            <Label className="text-white mb-2 block">RAR/Archive Password (Optional)</Label>
+            <Input
+              value={formData.downloadPage.rarPassword || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  downloadPage: { ...formData.downloadPage, rarPassword: e.target.value },
+                })
+              }
+              className="bg-gray-600 border-gray-500 text-white"
+              placeholder="Enter password for compressed files"
+            />
+            <p className="text-gray-400 text-xs mt-1">Will be shown to users on the download page</p>
+          </div>
+
+          {/* Actual Download Links */}
+          <div>
+            <Label className="text-white mb-2 block">Direct Download Links</Label>
+            <p className="text-gray-400 text-xs mb-3">These are the actual download links users will see after entering the PIN</p>
+            
+            {formData.downloadPage.actualDownloadLinks.map((link, index) => (
+              <div key={index} className="space-y-3 p-4 bg-gray-600 rounded-lg mb-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-white mb-1 block text-sm">Link Name *</Label>
+                    <Input
+                      placeholder="e.g., Mirror 1, Google Drive, Mega"
+                      value={link.name}
+                      onChange={(e) => updateDownloadLink(index, "name", e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-white mb-1 block text-sm">File Size *</Label>
+                    <Input
+                      placeholder="e.g., 2.5 GB"
+                      value={link.size}
+                      onChange={(e) => updateDownloadLink(index, "size", e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-white mb-1 block text-sm">Direct Download URL *</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://drive.google.com/... or https://mega.nz/..."
+                      value={link.url}
+                      onChange={(e) => updateDownloadLink(index, "url", e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white flex-1"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => removeDownloadLink(index)}
+                      variant="outline"
+                      size="sm"
+                      className="bg-gray-700 border-gray-600 text-red-400 hover:bg-red-600 hover:text-white"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            <Button
+              type="button"
+              onClick={addDownloadLink}
+              variant="outline"
+              className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 w-full"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Download Link
+            </Button>
+          </div>
         </CardContent>
       </Card>      <div className="flex justify-end">
         <Button type="submit" className="bg-red-600 hover:bg-red-700 transition-colors">

@@ -10,25 +10,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Download, Lock, Shield, Clock, ExternalLink } from "lucide-react"
-
-interface DownloadPage {
-  id: string
-  itemId: string
-  itemTitle: string
-  pinCode: string
-  domainUrl: string
-  downloadLinks: Array<{ name: string; url: string; size: string }>
-  rarPassword: string
-  createdAt: string
-}
+import { getDownloadPage, type DownloadPageData } from "@/lib/link-shortener"
 
 export default function DownloadPage() {
   const params = useParams()
   const router = useRouter()
-  const [downloadPage, setDownloadPage] = useState<DownloadPage | null>(null)
+  const [downloadPage, setDownloadPage] = useState<DownloadPageData | null>(null)
+  const [gameData, setGameData] = useState<any>(null)
   const [pinInput, setPinInput] = useState("")
   const [isUnlocked, setIsUnlocked] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(300) // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(0)
   const [hasVisitedMain, setHasVisitedMain] = useState(false)
   const [error, setError] = useState("")
 
@@ -42,11 +33,21 @@ export default function DownloadPage() {
     }
 
     // Load download page data
-    const pages = JSON.parse(localStorage.getItem("download_pages") || "[]")
-    const page = pages.find((p: DownloadPage) => p.id === params.id)
-
+    const gameId = Number.parseInt(params.id as string)
+    const page = getDownloadPage(gameId)
+    
     if (page) {
       setDownloadPage(page)
+      
+      // Calculate remaining time
+      const expiresAt = new Date(page.expiresAt).getTime()
+      const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))
+      setTimeLeft(remaining)
+      
+      // Get game data for title
+      const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
+      const game = adminItems.find((item: any) => item.id === gameId)
+      setGameData(game)
     }
   }, [params.id])
 
@@ -142,7 +143,7 @@ export default function DownloadPage() {
           <CardHeader>
             <CardTitle className="text-white flex items-center">
               <Lock className="h-5 w-5 mr-2 text-red-500" />
-              {downloadPage.itemTitle}
+              {gameData?.title || 'Download'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -177,7 +178,7 @@ export default function DownloadPage() {
         <Card className="bg-gray-800 border-gray-700 mb-6">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white text-2xl">{downloadPage.itemTitle}</CardTitle>
+              <CardTitle className="text-white text-2xl">{gameData?.title || 'Download'}</CardTitle>
               <Badge className="bg-green-600 text-white">
                 <Clock className="h-3 w-3 mr-1" />
                 {formatTime(timeLeft)}
@@ -192,14 +193,14 @@ export default function DownloadPage() {
             <CardTitle className="text-white">Download Links</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {downloadPage.downloadLinks.map((link, index) => (
+            {downloadPage.actualDownloadLinks.map((link, index) => (
               <div key={index} className="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
                 <div>
                   <h3 className="text-white font-medium">{link.name}</h3>
                   <p className="text-gray-400 text-sm">Size: {link.size}</p>
                 </div>
                 <Button
-                  onClick={() => handleDownload(link.url)}
+                  onClick={() => window.open(link.url, '_blank')}
                   className="bg-red-600 hover:bg-red-700 transition-colors"
                 >
                   <Download className="h-4 w-4 mr-2" />
