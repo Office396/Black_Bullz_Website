@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,8 +15,10 @@ import { getDownloadPage, type DownloadPageData } from "@/lib/link-shortener"
 export default function DownloadPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [downloadPage, setDownloadPage] = useState<DownloadPageData | null>(null)
   const [gameData, setGameData] = useState<any>(null)
+  const [cloudData, setCloudData] = useState<any>(null)
   const [pinInput, setPinInput] = useState("")
   const [isUnlocked, setIsUnlocked] = useState(false)
   const [timeLeft, setTimeLeft] = useState(0)
@@ -34,7 +36,8 @@ export default function DownloadPage() {
 
     // Load download page data
     const gameId = Number.parseInt(params.id as string)
-    const page = getDownloadPage(gameId)
+    const cloudIndex = searchParams.get('cloud') ? Number.parseInt(searchParams.get('cloud') as string) : 0
+    const page = getDownloadPage(gameId, cloudIndex)
     
     if (page) {
       setDownloadPage(page)
@@ -44,12 +47,17 @@ export default function DownloadPage() {
       const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))
       setTimeLeft(remaining)
       
-      // Get game data for title
+      // Get game data for title and cloud data
       const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
       const game = adminItems.find((item: any) => item.id === gameId)
       setGameData(game)
+      
+      // Get specific cloud data
+      if (game?.cloudDownloads?.[cloudIndex]) {
+        setCloudData(game.cloudDownloads[cloudIndex])
+      }
     }
-  }, [params.id])
+  }, [params.id, searchParams])
 
   useEffect(() => {
     if (isUnlocked && timeLeft > 0) {
@@ -178,7 +186,12 @@ export default function DownloadPage() {
         <Card className="bg-gray-800 border-gray-700 mb-6">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white text-2xl">{gameData?.title || 'Download'}</CardTitle>
+              <div>
+                <CardTitle className="text-white text-2xl">{gameData?.title || 'Download'}</CardTitle>
+                {cloudData?.cloudName && (
+                  <p className="text-gray-400 text-sm mt-1">Cloud Provider: {cloudData.cloudName}</p>
+                )}
+              </div>
               <Badge className="bg-green-600 text-white">
                 <Clock className="h-3 w-3 mr-1" />
                 {formatTime(timeLeft)}
@@ -190,7 +203,9 @@ export default function DownloadPage() {
         {/* Download Links */}
         <Card className="bg-gray-800 border-gray-700 mb-6">
           <CardHeader>
-            <CardTitle className="text-white">Download Links</CardTitle>
+            <CardTitle className="text-white">
+              {cloudData?.cloudName ? `${cloudData.cloudName} Download Links` : 'Download Links'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {downloadPage.actualDownloadLinks.map((link, index) => (
@@ -212,18 +227,30 @@ export default function DownloadPage() {
         </Card>
 
         {/* Download Info */}
-        {downloadPage.rarPassword && (
+        {(downloadPage.rarPassword || cloudData?.cloudName) && (
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white">Download Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="bg-gray-700 p-4 rounded-lg">
-                <Label className="text-gray-300">RAR Password:</Label>
-                <code className="block bg-gray-600 px-3 py-2 rounded text-white font-mono mt-1">
-                  {downloadPage.rarPassword}
-                </code>
-              </div>
+              {downloadPage.rarPassword && (
+                <div className="bg-gray-700 p-4 rounded-lg">
+                  <Label className="text-gray-300">RAR Password:</Label>
+                  <code className="block bg-gray-600 px-3 py-2 rounded text-white font-mono mt-1">
+                    {downloadPage.rarPassword}
+                  </code>
+                </div>
+              )}
+              {cloudData?.cloudName && (
+                <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
+                  <p className="text-blue-300 text-sm">
+                    <strong>Cloud Provider:</strong> {cloudData.cloudName}
+                  </p>
+                  <p className="text-blue-200 text-xs mt-1">
+                    These links are hosted on {cloudData.cloudName}. Please follow their terms of service.
+                  </p>
+                </div>
+              )}
               <div className="bg-yellow-900/20 border border-yellow-600 p-4 rounded-lg">
                 <p className="text-yellow-300 text-sm">
                   <strong>Note:</strong> This page will expire in {formatTime(timeLeft)}. You'll need to visit the main

@@ -44,11 +44,12 @@ interface FormData {
       processor: string
     }
   }
-  downloadPage: {
-    pinCode: string
+  sharedPinCode: string
+  sharedRarPassword?: string
+  cloudDownloads: Array<{
+    cloudName: string
     actualDownloadLinks: Array<{ name: string; url: string; size: string }>
-    rarPassword?: string
-  }
+  }>
 }
 
 const initialFormData: FormData = {
@@ -71,11 +72,12 @@ const initialFormData: FormData = {
   androidRequirements: {
     recommended: { os: "", ram: "", storage: "", processor: "" }, // Only recommended
   },
-  downloadPage: {
-    pinCode: Math.floor(1000 + Math.random() * 9000).toString(), // Generate random 4-digit PIN
+  sharedPinCode: Math.floor(1000 + Math.random() * 9000).toString(), // Generate random 4-digit PIN
+  sharedRarPassword: "",
+  cloudDownloads: [{
+    cloudName: "",
     actualDownloadLinks: [{ name: "", url: "", size: "" }],
-    rarPassword: "",
-  },
+  }],
 }
 
 export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: () => void }) {
@@ -85,11 +87,12 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
       return {
         ...editItem,
         screenshots: editItem.screenshots || [],
-        downloadPage: editItem.downloadPage || {
-          pinCode: Math.floor(1000 + Math.random() * 9000).toString(),
+        sharedPinCode: editItem.sharedPinCode || Math.floor(1000 + Math.random() * 9000).toString(),
+        sharedRarPassword: editItem.sharedRarPassword || "",
+        cloudDownloads: editItem.cloudDownloads || [{
+          cloudName: "",
           actualDownloadLinks: editItem.downloadLinks || [{ name: "", url: "", size: "" }],
-          rarPassword: "",
-        },
+        }],
       }
     }
     return initialFormData
@@ -135,45 +138,55 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
     setFormData({ ...formData, keyFeatures: updated })
   }
 
-  const addDownloadLink = () => {
+  // Cloud Downloads Functions
+  const addCloudDownload = () => {
     setFormData({
       ...formData,
-      downloadPage: {
-        ...formData.downloadPage,
-        actualDownloadLinks: [...formData.downloadPage.actualDownloadLinks, { name: "", url: "", size: "" }],
-      },
+      cloudDownloads: [...formData.cloudDownloads, {
+        cloudName: "",
+        actualDownloadLinks: [{ name: "", url: "", size: "" }],
+      }],
     })
   }
 
-  const removeDownloadLink = (index: number) => {
+  const removeCloudDownload = (cloudIndex: number) => {
     setFormData({
       ...formData,
-      downloadPage: {
-        ...formData.downloadPage,
-        actualDownloadLinks: formData.downloadPage.actualDownloadLinks.filter((_, i) => i !== index),
-      },
+      cloudDownloads: formData.cloudDownloads.filter((_, i) => i !== cloudIndex),
     })
   }
 
-  const updateDownloadLink = (index: number, field: string, value: string) => {
-    const updated = [...formData.downloadPage.actualDownloadLinks]
-    updated[index] = { ...updated[index], [field]: value }
-    setFormData({
-      ...formData,
-      downloadPage: {
-        ...formData.downloadPage,
-        actualDownloadLinks: updated,
-      },
-    })
+  const updateCloudDownload = (cloudIndex: number, field: string, value: string) => {
+    const updated = [...formData.cloudDownloads]
+    updated[cloudIndex] = { ...updated[cloudIndex], [field]: value }
+    setFormData({ ...formData, cloudDownloads: updated })
   }
 
-  const generateNewPin = () => {
+  const addDownloadLink = (cloudIndex: number) => {
+    const updated = [...formData.cloudDownloads]
+    updated[cloudIndex].actualDownloadLinks.push({ name: "", url: "", size: "" })
+    setFormData({ ...formData, cloudDownloads: updated })
+  }
+
+  const removeDownloadLink = (cloudIndex: number, linkIndex: number) => {
+    const updated = [...formData.cloudDownloads]
+    updated[cloudIndex].actualDownloadLinks = updated[cloudIndex].actualDownloadLinks.filter((_, i) => i !== linkIndex)
+    setFormData({ ...formData, cloudDownloads: updated })
+  }
+
+  const updateDownloadLink = (cloudIndex: number, linkIndex: number, field: string, value: string) => {
+    const updated = [...formData.cloudDownloads]
+    updated[cloudIndex].actualDownloadLinks[linkIndex] = { 
+      ...updated[cloudIndex].actualDownloadLinks[linkIndex], 
+      [field]: value 
+    }
+    setFormData({ ...formData, cloudDownloads: updated })
+  }
+
+  const generateNewSharedPin = () => {
     setFormData({
       ...formData,
-      downloadPage: {
-        ...formData.downloadPage,
-        pinCode: Math.floor(1000 + Math.random() * 9000).toString(),
-      },
+      sharedPinCode: Math.floor(1000 + Math.random() * 9000).toString(),
     })
   }
 
@@ -583,131 +596,197 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
         </Card>
       )}
 
-      {/* Download Page Configuration */}
+      {/* Cloud Downloads Configuration */}
       <Card className="bg-gray-700 border-gray-600">
         <CardHeader>
-          <CardTitle className="text-white">Download Page Configuration</CardTitle>
+          <CardTitle className="text-white">Cloud Downloads Configuration</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg mb-4">
             <p className="text-blue-300 text-sm mb-2">📋 How it works:</p>
             <ul className="text-blue-200 text-xs space-y-1 list-disc pl-4">
-              <li>Users click download button → GP Links/V2Links survey opens automatically</li>
+              <li>Users click cloud download button → GP Links/V2Links survey opens automatically</li>
               <li>After completing survey → PIN entry page appears</li>
-              <li>Users enter the PIN below → Access to download page with direct links</li>
-              <li>Download page expires after 12 hours for security</li>
+              <li>Users enter the shared PIN → Access to download page with direct links</li>
+              <li>All cloud providers use the same PIN and RAR password</li>
+              <li>Download pages expire after 12 hours for security</li>
             </ul>
           </div>
 
-          {/* PIN Configuration */}
-          <div className="bg-gray-600 p-4 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-white">Download PIN Code</Label>
-              <Button
-                type="button"
-                onClick={generateNewPin}
-                variant="outline"
-                size="sm"
-                className="bg-gray-700 border-gray-600 text-white hover:bg-gray-500"
-              >
-                Generate New PIN
-              </Button>
-            </div>
-            <Input
-              value={formData.downloadPage.pinCode}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  downloadPage: { ...formData.downloadPage, pinCode: e.target.value },
-                })
-              }
-              className="bg-gray-700 border-gray-600 text-white text-center text-lg font-mono tracking-widest"
-              maxLength={4}
-              placeholder="1234"
-            />
-            <p className="text-gray-400 text-xs mt-1">Users will need this PIN to access the download page</p>
-          </div>
-
-          {/* RAR Password (Optional) */}
-          <div>
-            <Label className="text-white mb-2 block">RAR/Archive Password (Optional)</Label>
-            <Input
-              value={formData.downloadPage.rarPassword || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  downloadPage: { ...formData.downloadPage, rarPassword: e.target.value },
-                })
-              }
-              className="bg-gray-600 border-gray-500 text-white"
-              placeholder="Enter password for compressed files"
-            />
-            <p className="text-gray-400 text-xs mt-1">Will be shown to users on the download page</p>
-          </div>
-
-          {/* Actual Download Links */}
-          <div>
-            <Label className="text-white mb-2 block">Direct Download Links</Label>
-            <p className="text-gray-400 text-xs mb-3">These are the actual download links users will see after entering the PIN</p>
-            
-            {formData.downloadPage.actualDownloadLinks.map((link, index) => (
-              <div key={index} className="space-y-3 p-4 bg-gray-600 rounded-lg mb-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-white mb-1 block text-sm">Link Name *</Label>
-                    <Input
-                      placeholder="e.g., Mirror 1, Google Drive, Mega"
-                      value={link.name}
-                      onChange={(e) => updateDownloadLink(index, "name", e.target.value)}
-                      className="bg-gray-700 border-gray-600 text-white"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-white mb-1 block text-sm">File Size *</Label>
-                    <Input
-                      placeholder="e.g., 2.5 GB"
-                      value={link.size}
-                      onChange={(e) => updateDownloadLink(index, "size", e.target.value)}
-                      className="bg-gray-700 border-gray-600 text-white"
-                      required
-                    />
-                  </div>
+          {/* Shared PIN and RAR Password */}
+          <Card className="bg-gray-600 border-gray-500">
+            <CardHeader>
+              <CardTitle className="text-white text-lg">Shared Settings for All Cloud Providers</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Shared PIN Configuration */}
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-white">Shared PIN Code (for all clouds)</Label>
+                  <Button
+                    type="button"
+                    onClick={generateNewSharedPin}
+                    variant="outline"
+                    size="sm"
+                    className="bg-gray-800 border-gray-700 text-white hover:bg-gray-600"
+                  >
+                    Generate New PIN
+                  </Button>
                 </div>
-                <div>
-                  <Label className="text-white mb-1 block text-sm">Direct Download URL *</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="https://drive.google.com/... or https://mega.nz/..."
-                      value={link.url}
-                      onChange={(e) => updateDownloadLink(index, "url", e.target.value)}
-                      className="bg-gray-700 border-gray-600 text-white flex-1"
-                      required
-                    />
+                <Input
+                  value={formData.sharedPinCode}
+                  onChange={(e) => setFormData({ ...formData, sharedPinCode: e.target.value })}
+                  className="bg-gray-800 border-gray-700 text-white text-center text-lg font-mono tracking-widest"
+                  maxLength={4}
+                  placeholder="1234"
+                />
+                <p className="text-gray-400 text-xs mt-1">Users will need this PIN to access any cloud download page</p>
+              </div>
+
+              {/* Shared RAR Password (Optional) */}
+              <div>
+                <Label className="text-white mb-2 block">Shared RAR/Archive Password (Optional)</Label>
+                <Input
+                  value={formData.sharedRarPassword || ""}
+                  onChange={(e) => setFormData({ ...formData, sharedRarPassword: e.target.value })}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Enter password for compressed files"
+                />
+                <p className="text-gray-400 text-xs mt-1">Will be shown to users on all download pages</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cloud Providers */}
+          {formData.cloudDownloads.map((cloudDownload, cloudIndex) => (
+            <Card key={cloudIndex} className="bg-gray-600 border-gray-500">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white text-lg">
+                    Cloud Provider {cloudIndex + 1}
+                  </CardTitle>
+                  {formData.cloudDownloads.length > 1 && (
                     <Button
                       type="button"
-                      onClick={() => removeDownloadLink(index)}
+                      onClick={() => removeCloudDownload(cloudIndex)}
                       variant="outline"
                       size="sm"
                       className="bg-gray-700 border-gray-600 text-red-400 hover:bg-red-600 hover:text-white"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </div>
+                  )}
                 </div>
-              </div>
-            ))}
-            
-            <Button
-              type="button"
-              onClick={addDownloadLink}
-              variant="outline"
-              className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Download Link
-            </Button>
-          </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Cloud Name */}
+                <div>
+                  <Label className="text-white mb-2 block">Cloud Provider Name *</Label>
+                  <Select
+                    value={cloudDownload.cloudName}
+                    onValueChange={(value) => updateCloudDownload(cloudIndex, "cloudName", value)}
+                  >
+                    <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                      <SelectValue placeholder="Select cloud provider" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-700 border-gray-600">
+                      <SelectItem value="Google Drive">Google Drive</SelectItem>
+                      <SelectItem value="MediaFire">MediaFire</SelectItem>
+                      <SelectItem value="Mega">Mega</SelectItem>
+                      <SelectItem value="OneDrive">OneDrive</SelectItem>
+                      <SelectItem value="Dropbox">Dropbox</SelectItem>
+                      <SelectItem value="pCloud">pCloud</SelectItem>
+                      <SelectItem value="4shared">4shared</SelectItem>
+                      <SelectItem value="Zippyshare">Zippyshare</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {cloudDownload.cloudName === "Other" && (
+                    <Input
+                      className="bg-gray-700 border-gray-600 text-white mt-2"
+                      placeholder="Enter custom cloud provider name"
+                      value={cloudDownload.cloudName === "Other" ? "" : cloudDownload.cloudName}
+                      onChange={(e) => updateCloudDownload(cloudIndex, "cloudName", e.target.value)}
+                    />
+                  )}
+                </div>
+
+                {/* Download Links for this cloud */}
+                <div>
+                  <Label className="text-white mb-2 block">Download Links for {cloudDownload.cloudName || 'this cloud'}</Label>
+                  <p className="text-gray-400 text-xs mb-3">These are the actual download links users will see after entering the shared PIN</p>
+                  
+                  {cloudDownload.actualDownloadLinks.map((link, linkIndex) => (
+                    <div key={linkIndex} className="space-y-3 p-4 bg-gray-700 rounded-lg mb-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-white mb-1 block text-sm">Link Name *</Label>
+                          <Input
+                            placeholder="e.g., Part 1, Main File, Setup"
+                            value={link.name}
+                            onChange={(e) => updateDownloadLink(cloudIndex, linkIndex, "name", e.target.value)}
+                            className="bg-gray-800 border-gray-700 text-white"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-white mb-1 block text-sm">File Size *</Label>
+                          <Input
+                            placeholder="e.g., 2.5 GB"
+                            value={link.size}
+                            onChange={(e) => updateDownloadLink(cloudIndex, linkIndex, "size", e.target.value)}
+                            className="bg-gray-800 border-gray-700 text-white"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-white mb-1 block text-sm">Direct Download URL *</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="https://drive.google.com/... or https://mega.nz/..."
+                            value={link.url}
+                            onChange={(e) => updateDownloadLink(cloudIndex, linkIndex, "url", e.target.value)}
+                            className="bg-gray-800 border-gray-700 text-white flex-1"
+                            required
+                          />
+                          <Button
+                            type="button"
+                            onClick={() => removeDownloadLink(cloudIndex, linkIndex)}
+                            variant="outline"
+                            size="sm"
+                            className="bg-gray-800 border-gray-700 text-red-400 hover:bg-red-600 hover:text-white"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <Button
+                    type="button"
+                    onClick={() => addDownloadLink(cloudIndex)}
+                    variant="outline"
+                    className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Download Link
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          <Button
+            type="button"
+            onClick={addCloudDownload}
+            variant="outline"
+            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 w-full"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Cloud Provider
+          </Button>
         </CardContent>
       </Card>      <div className="flex justify-end">
         <Button type="submit" className="bg-red-600 hover:bg-red-700 transition-colors">

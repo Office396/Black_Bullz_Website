@@ -4,9 +4,10 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogTrigger, DialogClose } from "@/components/ui/dialog"
 import Image from "next/image"
 import Link from "next/link"
-import { Star, Download, Monitor, Smartphone, HardDrive, Cpu, MemoryStick, ArrowLeft } from "lucide-react"
+import { Star, Download, Monitor, Smartphone, HardDrive, Cpu, MemoryStick, ArrowLeft, X } from "lucide-react"
 import { createSurveyLink, createDownloadPage } from "@/lib/link-shortener"
 
 interface GameDetailsProps {
@@ -51,47 +52,42 @@ interface GameDetailsProps {
 
 export function GameDetails({ game }: GameDetailsProps) {
   const [gameData, setGameData] = useState<any>(null)
-  const [pinCode, setPinCode] = useState<string>("")
 
   useEffect(() => {
     // Get game data from localStorage
     const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
     const foundGame = adminItems.find((item: any) => item.id === game.id)
     setGameData(foundGame)
-    
-    if (foundGame?.downloadPage?.pinCode) {
-      setPinCode(foundGame.downloadPage.pinCode)
-    }
   }, [game.id])
 
-  const handleDownload = async (gameId: number) => {
+  const handleCloudDownload = async (gameId: number, cloudIndex: number, cloudName: string) => {
     try {
-      // First, ensure we have game data with download page configuration
+      // First, ensure we have game data with cloud downloads configuration
       const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
       const gameData = adminItems.find((item: any) => item.id === gameId)
       
-      if (!gameData?.downloadPage?.actualDownloadLinks?.length) {
-        alert('Download not configured for this item. Please contact admin.')
+      if (!gameData?.cloudDownloads?.[cloudIndex]?.actualDownloadLinks?.length) {
+        alert(`${cloudName} download not configured for this item. Please contact admin.`)
         return
       }
 
-      // Create download page data first
-      console.log('Creating download page data...')
-      createDownloadPage(gameId)
+      // Create download page data first for this specific cloud
+      console.log(`Creating download page data for ${cloudName}...`)
+      createDownloadPage(gameId, cloudIndex)
       
       // Show loading state - target the specific download button
-      const downloadButton = document.querySelector('[data-download-button]') as HTMLButtonElement
+      const downloadButton = document.querySelector(`[data-cloud-download="${cloudIndex}"]`) as HTMLButtonElement
       if (downloadButton) {
         downloadButton.disabled = true
         downloadButton.textContent = 'Creating Survey Link...'
       }
       
-      console.log('Attempting to create survey link for game:', gameId)
-      console.log('Download page URL will be:', `${window.location.origin}/download/${gameId}`)
+      console.log(`Attempting to create survey link for ${cloudName}:`, gameId)
+      console.log('Download page URL will be:', `${window.location.origin}/download/${gameId}?cloud=${cloudIndex}`)
       
       try {
         // Try to create survey link with comprehensive fallback
-        const result = await createSurveyLink(gameId)
+        const result = await createSurveyLink(gameId, cloudIndex)
         
         if (result.success && result.shortenedUrl) {
           console.log('✅ Survey link created successfully:', result.shortenedUrl)
@@ -100,14 +96,14 @@ export function GameDetails({ game }: GameDetailsProps) {
           // Reset button
           if (downloadButton) {
             downloadButton.disabled = false
-            downloadButton.innerHTML = '<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Start Download'
+            downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${cloudName}`
           }
           
           // Open the survey link in a new tab
           window.open(result.shortenedUrl, '_blank')
           
           // Show success message
-          alert(`Survey link created successfully using ${result.provider?.toUpperCase()}! Complete the survey to get access to download page.`)
+          alert(`Survey link created successfully using ${result.provider?.toUpperCase()}! Complete the survey to get access to ${cloudName} download page.`)
           
         } else {
           throw new Error(result.error || 'Failed to create survey link')
@@ -119,26 +115,26 @@ export function GameDetails({ game }: GameDetailsProps) {
         // Reset button
         if (downloadButton) {
           downloadButton.disabled = false
-          downloadButton.innerHTML = '<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Start Download'
+          downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${cloudName}`
         }
         
         // Final fallback: direct redirect to download page
         console.log('🔄 Using fallback: Direct redirect to download page')
         alert('Survey services are temporarily unavailable. Redirecting directly to PIN entry page.')
-        window.open(`/download/${gameId}`, '_blank')
+        window.open(`/download/${gameId}?cloud=${cloudIndex}`, '_blank')
       }
       
     } catch (error) {
       console.error('💥 Download process completely failed:', error)
       
       // Reset button
-      const downloadButton = document.querySelector('[data-download-button]') as HTMLButtonElement
+      const downloadButton = document.querySelector(`[data-cloud-download="${cloudIndex}"]`) as HTMLButtonElement
       if (downloadButton) {
         downloadButton.disabled = false
-        downloadButton.innerHTML = '<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Start Download'
+        downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${cloudName}`
       }
       
-      alert('Download temporarily unavailable. Please try again later.')
+      alert(`${cloudName} download temporarily unavailable. Please try again later.`)
     }
   }
 
@@ -156,121 +152,66 @@ export function GameDetails({ game }: GameDetailsProps) {
         </Link>
       </div>
 
-      {/* Main Game Info */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-shrink-0">
-                  <Image
-                    src={game.image || "/placeholder.svg"}
-                    alt={game.title}
-                    width={200}
-                    height={300}
-                    className="rounded-lg object-cover w-full md:w-48 h-64 md:h-72"
-                  />
+      {/* Main Game Info - Now spans full width */}
+      <Card className="bg-gray-800 border-gray-700">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-shrink-0">
+              <Image
+                src={game.image || "/placeholder.svg"}
+                alt={game.title}
+                width={200}
+                height={300}
+                className="rounded-lg object-cover w-full md:w-48 h-64 md:h-72"
+              />
+            </div>
+            <div className="flex-1 space-y-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="bg-red-600 text-white">{game.category}</Badge>
                 </div>
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className="bg-red-600 text-white">{game.category}</Badge>
-                    </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">{game.title}</h1>
-                    <p className="text-gray-400 text-lg">{game.description}</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    {game.developer && (
-                      <div>
-                        <span className="text-gray-400">Developer:</span>
-                        <p className="text-white font-medium">{game.developer}</p>
-                      </div>
-                    )}
-                    {game.releaseDate && (
-                      <div>
-                        <span className="text-gray-400">Release Date:</span>
-                        <p className="text-white font-medium">{new Date(game.releaseDate).toLocaleDateString()}</p>
-                      </div>
-                    )}
-                    <div>
-                      <span className="text-gray-400">Date Uploaded:</span>
-                      <p className="text-white font-medium">{new Date().toLocaleDateString()}</p>
-                    </div>
-                    {game.rating && (
-                      <div>
-                        <span className="text-gray-400">Rating:</span>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                          <span className="text-white font-medium">{game.rating}</span>
-                          <span className="text-gray-400">/5</span>
-                        </div>
-                      </div>
-                    )}
-                    {game.size && (
-                      <div>
-                        <span className="text-gray-400">File Size:</span>
-                        <p className="text-white font-medium">{game.size}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <h1 className="text-3xl font-bold text-white mb-2">{game.title}</h1>
+                <p className="text-gray-400 text-lg">{game.description}</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Download Section */}
-        <div>
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Download className="h-5 w-5" />
-                Download Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-white font-medium">Download Available</span>
-                  <span className="text-gray-400 text-sm">{game.size}</span>
-                </div>
-                
-                {/* Show PIN prominently */}
-                {pinCode && (
-                  <div className="bg-red-900/20 border border-red-600 p-3 rounded-lg">
-                    <p className="text-red-300 text-xs mb-2 font-semibold">🔑 PIN Code:</p>
-                    <div className="bg-red-800/40 p-2 rounded text-center border border-red-500">
-                      <span className="text-white text-xl font-bold font-mono tracking-widest">{pinCode}</span>
-                    </div>
-                    <p className="text-red-200 text-xs mt-1 text-center">
-                      Use this PIN after Ad-survey
-                    </p>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                {game.developer && (
+                  <div>
+                    <span className="text-gray-400">Developer:</span>
+                    <p className="text-white font-medium">{game.developer}</p>
                   </div>
                 )}
-                
-                <div className="bg-blue-900/20 border border-blue-600 p-3 rounded-lg">
-                  <p className="text-blue-300 text-xs mb-1">📋 Download Process:</p>
-                  <ul className="text-blue-200 text-xs space-y-1 list-disc pl-4">
-                    <li>Complete Ad-survey to get access</li>
-                    <li>Enter PIN code shown above</li>
-                    <li>Access download page with direct links</li>
-                    <li>Download expires in 12 hours</li>
-                  </ul>
+                {game.releaseDate && (
+                  <div>
+                    <span className="text-gray-400">Release Date:</span>
+                    <p className="text-white font-medium">{new Date(game.releaseDate).toLocaleDateString()}</p>
+                  </div>
+                )}
+                <div>
+                  <span className="text-gray-400">Date Uploaded:</span>
+                  <p className="text-white font-medium">{new Date().toLocaleDateString()}</p>
                 </div>
-                <Button
-                  data-download-button
-                  onClick={() => handleDownload(game.id)}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Start Download
-                </Button>
+                {game.rating && (
+                  <div>
+                    <span className="text-gray-400">Rating:</span>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                      <span className="text-white font-medium">{game.rating}</span>
+                      <span className="text-gray-400">/5</span>
+                    </div>
+                  </div>
+                )}
+                {game.size && (
+                  <div>
+                    <span className="text-gray-400">File Size:</span>
+                    <p className="text-white font-medium">{game.size}</p>
+                  </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Description */}
       {game.longDescription && (
@@ -417,19 +358,123 @@ export function GameDetails({ game }: GameDetailsProps) {
               {game.screenshots
                 .filter(url => typeof url === 'string' && url.trim())
                 .map((url, index) => (
-                  <div key={index} className="relative aspect-video">
-                    <Image
-                      src={url}
-                      alt={`Screenshot ${index + 1}`}
-                      fill
-                      className="rounded-lg object-cover"
-                    />
-                  </div>
+                  <Dialog key={index}>
+                    <DialogTrigger asChild>
+                      <div className="relative aspect-video cursor-pointer group overflow-hidden rounded-lg">
+                        <Image
+                          src={url}
+                          alt={`Screenshot ${index + 1}`}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="group-hover:opacity-100 transition-opacity duration-300 bg-opacity-20 rounded-full p-1">
+                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l6 6" />
+                            </svg>
+                          </div>
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
+                      <div className="relative">
+                        <Image
+                          src={url}
+                          alt={`Screenshot ${index + 1} - Full Size`}
+                          width={1920}
+                          height={1080}
+                          className="w-auto h-auto max-w-[90vw] max-h-[90vh] object-contain"
+                          priority
+                        />
+                        <DialogClose className="absolute top-3 right-3 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
+                          <X className="h-5 w-5" />
+                        </DialogClose>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 ))}
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Download Section - Now positioned after screenshots */}
+      <Card className="bg-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Download className="h-5 w-5" />
+            Download Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-white font-medium">Download Available</span>
+              <span className="text-gray-400 text-sm">{game.size}</span>
+            </div>
+            
+            {/* Download Process section */}
+            <div className="bg-grey-900/20 border border-blue-600 p-4 rounded-lg">
+              <p className="text-blue-300 text-sm mb-2 font-bold">📋 Download Process:</p>
+              <ul className="text-blue-100 text-x space-y-1 list-disc pl-4 font-semibold">
+                <li>Choose your preferred cloud provider below</li>
+                <li>Click the cloud download button</li>
+                <li>Complete Ad-survey to get access</li>
+                <li>Enter the PIN code for that cloud provider</li>
+                <li>Access download page with direct links</li>
+                <li>Download expires in 12 hours</li>
+              </ul>
+            </div>
+
+            {/* Show PIN prominently */}
+            {gameData?.sharedPinCode && (
+              <div className="bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
+                <p className="text-blue-300 text-sm mb-2 font-semibold">🔑 PIN Code for All Downloads:</p>
+                 <p className="bg-grey-800/40 p-3 rounded text-left border border-grey-500 max-w-xs x-auto">
+                  <span className="text-white text-lg font-bold font-mono tracking-wider">{gameData.sharedPinCode}</span>
+                </p>
+                <p className="text-grey-200 text-xs mt-2 text-left font-bold">
+                  Use this PIN after completing the survey for any cloud provider
+                </p>
+              </div>
+            )}
+
+            {/* Cloud Download Buttons */}
+            {gameData?.cloudDownloads && gameData.cloudDownloads.length > 0 ? (
+              <div className="space-y-4">
+                <h3 className="text-white font-semibold text-lg">Choose Download Options:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {gameData.cloudDownloads.map((cloudDownload: any, index: number) => (
+                    <div key={index} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-white font-medium">{cloudDownload.cloudName || `Cloud ${index + 1}`}</h4>
+                        <div className="bg-green-900/20 border border-green-600 px-2 py-1 rounded">
+                          <span className="text-green-300 text-xs">Parts: {cloudDownload.actualDownloadLinks?.length || 0}</span>
+                        </div>
+                      </div>
+                      <p className="text-gray-400 text-xs mb-3">
+                        Provider: {cloudDownload.cloudName || `Cloud ${index + 1}`}
+                      </p>
+                      <Button
+                        data-cloud-download={index}
+                        onClick={() => handleCloudDownload(game.id, index, cloudDownload.cloudName || `Cloud ${index + 1}`)}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-400">No download links configured for this item.</p>
+                <p className="text-gray-500 text-sm">Please contact admin.</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

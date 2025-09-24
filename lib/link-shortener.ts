@@ -11,15 +11,16 @@ interface ShortenResponse {
 }
 
 // Generate unique alias for each download
-function generateAlias(gameId: number): string {
+function generateAlias(gameId: number, cloudIndex?: number): string {
   const timestamp = Date.now().toString(36)
   const random = Math.random().toString(36).substring(2, 8)
-  return `game${gameId}_${timestamp}_${random}`
+  const cloudSuffix = cloudIndex !== undefined ? `_c${cloudIndex}` : ''
+  return `game${gameId}${cloudSuffix}_${timestamp}_${random}`
 }
 
 // Shorten URL using GP Links API with both JSON and TEXT methods
-async function shortenWithGPLinks(originalUrl: string, gameId: number): Promise<ShortenResponse> {
-  const alias = generateAlias(gameId)
+async function shortenWithGPLinks(originalUrl: string, gameId: number, cloudIndex?: number): Promise<ShortenResponse> {
+  const alias = generateAlias(gameId, cloudIndex)
   
   // Try TEXT format first
   try {
@@ -117,8 +118,8 @@ async function shortenWithGPLinks(originalUrl: string, gameId: number): Promise<
 }
 
 // Shorten URL using V2Links API with both JSON and TEXT methods
-async function shortenWithV2Links(originalUrl: string, gameId: number): Promise<ShortenResponse> {
-  const alias = generateAlias(gameId)
+async function shortenWithV2Links(originalUrl: string, gameId: number, cloudIndex?: number): Promise<ShortenResponse> {
+  const alias = generateAlias(gameId, cloudIndex)
   
   // Try TEXT format first
   try {
@@ -216,7 +217,7 @@ async function shortenWithV2Links(originalUrl: string, gameId: number): Promise<
 }
 
 // Main function to shorten URL with fallback
-export async function createSurveyLink(gameId: number): Promise<ShortenResponse> {
+export async function createSurveyLink(gameId: number, cloudIndex?: number): Promise<ShortenResponse> {
   // Create the download page URL that users will access after survey
   // For localhost testing, use ngrok URL or replace with your public domain
   let baseUrl = window.location.origin
@@ -228,20 +229,22 @@ export async function createSurveyLink(gameId: number): Promise<ShortenResponse>
     console.warn('⚠️ Using localhost URL - APIs may reject this. Use ngrok for testing.')
   }
   
-  const downloadPageUrl = `${baseUrl}/download/${gameId}`
+  const downloadPageUrl = cloudIndex !== undefined 
+    ? `${baseUrl}/download/${gameId}?cloud=${cloudIndex}`
+    : `${baseUrl}/download/${gameId}`
   
   // Randomly choose which service to try first
   const useGPLinksFirst = Math.random() < 0.5
   
   if (useGPLinksFirst) {
     // Try GP Links first, fallback to V2Links
-    const gpResult = await shortenWithGPLinks(downloadPageUrl, gameId)
+    const gpResult = await shortenWithGPLinks(downloadPageUrl, gameId, cloudIndex)
     if (gpResult.success) {
       return gpResult
     }
     
     // GP Links failed, try V2Links
-    const v2Result = await shortenWithV2Links(downloadPageUrl, gameId)
+    const v2Result = await shortenWithV2Links(downloadPageUrl, gameId, cloudIndex)
     if (v2Result.success) {
       return v2Result
     }
@@ -253,13 +256,13 @@ export async function createSurveyLink(gameId: number): Promise<ShortenResponse>
     }
   } else {
     // Try V2Links first, fallback to GP Links
-    const v2Result = await shortenWithV2Links(downloadPageUrl, gameId)
+    const v2Result = await shortenWithV2Links(downloadPageUrl, gameId, cloudIndex)
     if (v2Result.success) {
       return v2Result
     }
     
     // V2Links failed, try GP Links
-    const gpResult = await shortenWithGPLinks(downloadPageUrl, gameId)
+    const gpResult = await shortenWithGPLinks(downloadPageUrl, gameId, cloudIndex)
     if (gpResult.success) {
       return gpResult
     }
@@ -283,12 +286,27 @@ export interface DownloadPageData {
   expiresAt: string
 }
 
-export function createDownloadPage(gameId: number): DownloadPageData {
+export function createDownloadPage(gameId: number, cloudIndex?: number): DownloadPageData {
   // Get game data from localStorage
   const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
   const gameData = adminItems.find((item: any) => item.id === gameId)
   
-  if (!gameData || !gameData.downloadPage) {
+  // Support both old downloadPage structure and new cloudDownloads structure
+  let downloadConfig
+  let pinCode
+  let rarPassword
+  
+  if (cloudIndex !== undefined && gameData?.cloudDownloads?.[cloudIndex]) {
+    // New structure with shared PIN and RAR password
+    downloadConfig = gameData.cloudDownloads[cloudIndex]
+    pinCode = gameData.sharedPinCode || '0000'
+    rarPassword = gameData.sharedRarPassword
+  } else if (gameData?.downloadPage) {
+    // Old structure for backward compatibility
+    downloadConfig = gameData.downloadPage
+    pinCode = downloadConfig.pinCode
+    rarPassword = downloadConfig.rarPassword
+  } else {
     throw new Error('Game data or download page configuration not found')
   }
   
@@ -296,11 +314,11 @@ export function createDownloadPage(gameId: number): DownloadPageData {
   const expiresAt = new Date(now.getTime() + 12 * 60 * 60 * 1000) // 12 hours from now
   
   const downloadPageData: DownloadPageData = {
-    id: gameId.toString(),
+    id: cloudIndex !== undefined ? `${gameId}_c${cloudIndex}` : gameId.toString(),
     gameId,
-    pinCode: gameData.downloadPage.pinCode,
-    actualDownloadLinks: gameData.downloadPage.actualDownloadLinks,
-    rarPassword: gameData.downloadPage.rarPassword,
+    pinCode: pinCode,
+    actualDownloadLinks: downloadConfig.actualDownloadLinks,
+    rarPassword: rarPassword,
     createdAt: now.toISOString(),
     expiresAt: expiresAt.toISOString()
   }
@@ -312,7 +330,7 @@ export function createDownloadPage(gameId: number): DownloadPageData {
   )
   
   // Add or update current page
-  const pageIndex = updatedPages.findIndex((page: DownloadPageData) => page.gameId === gameId)
+  const pageIndex = updatedPages.findIndex((page: DownloadPageData) => page.id === downloadPageData.id)
   if (pageIndex >= 0) {
     updatedPages[pageIndex] = downloadPageData
   } else {
@@ -325,7 +343,7 @@ export function createDownloadPage(gameId: number): DownloadPageData {
 }
 
 // Get active download page data
-export function getDownloadPage(gameId: number): DownloadPageData | null {
+export function getDownloadPage(gameId: number, cloudIndex?: number): DownloadPageData | null {
   const activePages = JSON.parse(localStorage.getItem('active_download_pages') || '[]')
   const now = new Date()
   
@@ -336,7 +354,8 @@ export function getDownloadPage(gameId: number): DownloadPageData | null {
   localStorage.setItem('active_download_pages', JSON.stringify(validPages))
   
   // Find the requested page
-  const page = validPages.find((page: DownloadPageData) => page.gameId === gameId)
+  const pageId = cloudIndex !== undefined ? `${gameId}_c${cloudIndex}` : gameId.toString()
+  const page = validPages.find((page: DownloadPageData) => page.id === pageId)
   return page || null
 }
 
