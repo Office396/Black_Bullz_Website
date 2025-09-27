@@ -1,25 +1,5 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
-
-export function PageLoader() {
-  // Start as true so loader is visible immediately on initial load and route changes
-  const [isLoading, setIsLoading] = useState(true)
-  const pathname = usePathname()
-
-  useEffect(() => {
-    // Trigger loader on every pathname change
-    setIsLoading(true)
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 800)
-
-    return () => clearTimeout(timer)
-  }, [pathname])
-
-  if (!isLoading) return null
-
+export default function Loading() {
+  // Root-level loading UI: shows instantly during server data fetching and route transitions
   return (
     <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
       <div className="text-center">

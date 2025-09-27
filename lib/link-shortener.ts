@@ -217,61 +217,34 @@ async function shortenWithV2Links(originalUrl: string, gameId: number, cloudInde
 }
 
 // Main function to shorten URL with fallback
-export async function createSurveyLink(gameId: number, cloudIndex?: number): Promise<ShortenResponse> {
-  // Create the download page URL that users will access after survey
-  // For localhost testing, use ngrok URL or replace with your public domain
-  let baseUrl = window.location.origin
-  
-  // If localhost, try to use ngrok URL (you need to set this manually)
-  if (baseUrl.includes('localhost')) {
-    // Replace this with your actual ngrok URL when testing
-    // Example: baseUrl = 'https://abc123.ngrok.io'
-    console.warn('⚠️ Using localhost URL - APIs may reject this. Use ngrok for testing.')
-  }
-  
-  const downloadPageUrl = cloudIndex !== undefined 
-    ? `${baseUrl}/download/${gameId}?cloud=${cloudIndex}`
-    : `${baseUrl}/download/${gameId}`
-  
-  // Randomly choose which service to try first
-  const useGPLinksFirst = Math.random() < 0.5
-  
-  if (useGPLinksFirst) {
-    // Try GP Links first, fallback to V2Links
-    const gpResult = await shortenWithGPLinks(downloadPageUrl, gameId, cloudIndex)
-    if (gpResult.success) {
-      return gpResult
+export async function createSurveyLink(gameId: number, cloudIndex?: number, token?: string): Promise<ShortenResponse> {
+  // Build the return URL (ngrok or production origin)
+  const baseUrl = window.location.origin
+  const downloadPageUrl = cloudIndex !== undefined
+    ? `${baseUrl}/download/${gameId}?cloud=${cloudIndex}${token ? `&token=${token}` : ''}`
+    : `${baseUrl}/download/${gameId}${token ? `?token=${token}` : ''}`
+
+  // Call server-side endpoint to avoid CORS and provider restrictions
+  try {
+    const resp = await fetch('/api/shorten', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: downloadPageUrl, gameId, cloudIndex })
+    })
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}))
+      return { success: false, error: err?.error || `Shorten API error ${resp.status}` }
     }
-    
-    // GP Links failed, try V2Links
-    const v2Result = await shortenWithV2Links(downloadPageUrl, gameId, cloudIndex)
-    if (v2Result.success) {
-      return v2Result
+
+    const data = await resp.json()
+    if (data?.success && data?.shortenedUrl) {
+      return { success: true, shortenedUrl: data.shortenedUrl, provider: data.provider }
     }
-    
-    // Both failed
-    return {
-      success: false,
-      error: `Both services failed. GP Links: ${gpResult.error}, V2Links: ${v2Result.error}`
-    }
-  } else {
-    // Try V2Links first, fallback to GP Links
-    const v2Result = await shortenWithV2Links(downloadPageUrl, gameId, cloudIndex)
-    if (v2Result.success) {
-      return v2Result
-    }
-    
-    // V2Links failed, try GP Links
-    const gpResult = await shortenWithGPLinks(downloadPageUrl, gameId, cloudIndex)
-    if (gpResult.success) {
-      return gpResult
-    }
-    
-    // Both failed
-    return {
-      success: false,
-      error: `Both services failed. V2Links: ${v2Result.error}, GP Links: ${gpResult.error}`
-    }
+
+    return { success: false, error: data?.error || 'Shorten API returned no URL' }
+  } catch (e: any) {
+    return { success: false, error: e?.message || 'Failed to reach shorten API' }
   }
 }
 
@@ -284,6 +257,7 @@ export interface DownloadPageData {
   rarPassword?: string
   createdAt: string
   expiresAt: string
+  token: string
 }
 
 export function createDownloadPage(gameId: number, cloudIndex?: number): DownloadPageData {
@@ -312,15 +286,18 @@ export function createDownloadPage(gameId: number, cloudIndex?: number): Downloa
   
   const now = new Date()
   const expiresAt = new Date(now.getTime() + 12 * 60 * 60 * 1000) // 12 hours from now
+  const token = Math.random().toString(36).slice(2, 10) + now.getTime().toString(36)
+  const id = cloudIndex !== undefined ? `${gameId}_c${cloudIndex}_${token}` : `${gameId}_${token}`
   
   const downloadPageData: DownloadPageData = {
-    id: cloudIndex !== undefined ? `${gameId}_c${cloudIndex}` : gameId.toString(),
+    id,
     gameId,
     pinCode: pinCode,
     actualDownloadLinks: downloadConfig.actualDownloadLinks,
     rarPassword: rarPassword,
     createdAt: now.toISOString(),
-    expiresAt: expiresAt.toISOString()
+    expiresAt: expiresAt.toISOString(),
+    token
   }
   
   // Store in localStorage with expiration
@@ -329,13 +306,8 @@ export function createDownloadPage(gameId: number, cloudIndex?: number): Downloa
     new Date(page.expiresAt) > now // Remove expired pages
   )
   
-  // Add or update current page
-  const pageIndex = updatedPages.findIndex((page: DownloadPageData) => page.id === downloadPageData.id)
-  if (pageIndex >= 0) {
-    updatedPages[pageIndex] = downloadPageData
-  } else {
-    updatedPages.push(downloadPageData)
-  }
+  // Always push new unique page
+  updatedPages.push(downloadPageData)
   
   localStorage.setItem('active_download_pages', JSON.stringify(updatedPages))
   
@@ -343,7 +315,7 @@ export function createDownloadPage(gameId: number, cloudIndex?: number): Downloa
 }
 
 // Get active download page data
-export function getDownloadPage(gameId: number, cloudIndex?: number): DownloadPageData | null {
+export function getDownloadPage(gameId: number, cloudIndex?: number, token?: string): DownloadPageData | null {
   const activePages = JSON.parse(localStorage.getItem('active_download_pages') || '[]')
   const now = new Date()
   
@@ -354,9 +326,16 @@ export function getDownloadPage(gameId: number, cloudIndex?: number): DownloadPa
   localStorage.setItem('active_download_pages', JSON.stringify(validPages))
   
   // Find the requested page
-  const pageId = cloudIndex !== undefined ? `${gameId}_c${cloudIndex}` : gameId.toString()
-  const page = validPages.find((page: DownloadPageData) => page.id === pageId)
-  return page || null
+  if (token) {
+    const pageIdWithToken = cloudIndex !== undefined ? `${gameId}_c${cloudIndex}_${token}` : `${gameId}_${token}`
+    const pageById = validPages.find((page: DownloadPageData) => page.id === pageIdWithToken)
+    if (pageById) return pageById
+    // Fallback: match by token and gameId
+    const pageByToken = validPages.find((page: DownloadPageData) => page.token === token && page.gameId === gameId)
+    if (pageByToken) return pageByToken
+  }
+  // Require token-based session strictly; no legacy fallback
+  return null
 }
 
 // Clean up expired download pages

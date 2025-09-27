@@ -62,6 +62,12 @@ export function GameDetails({ game }: GameDetailsProps) {
 
   const handleCloudDownload = async (gameId: number, cloudIndex: number, cloudName: string) => {
     try {
+      // Mark that user started from main site to satisfy access check on return
+      try {
+        localStorage.setItem('last_main_visit', Date.now().toString())
+      } catch (e) {
+        // ignore storage errors
+      }
       // First, ensure we have game data with cloud downloads configuration
       const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
       const gameData = adminItems.find((item: any) => item.id === gameId)
@@ -73,21 +79,21 @@ export function GameDetails({ game }: GameDetailsProps) {
 
       // Create download page data first for this specific cloud
       console.log(`Creating download page data for ${cloudName}...`)
-      createDownloadPage(gameId, cloudIndex)
+      const pageData = createDownloadPage(gameId, cloudIndex)
       
       // Show loading state - target the specific download button
       const downloadButton = document.querySelector(`[data-cloud-download="${cloudIndex}"]`) as HTMLButtonElement
       if (downloadButton) {
         downloadButton.disabled = true
-        downloadButton.textContent = 'Creating Survey Link...'
+        downloadButton.textContent = 'Creating Download Link...'
       }
       
       console.log(`Attempting to create survey link for ${cloudName}:`, gameId)
-      console.log('Download page URL will be:', `${window.location.origin}/download/${gameId}?cloud=${cloudIndex}`)
+      console.log('Download page URL will be:', `${window.location.origin}/download/${gameId}?cloud=${cloudIndex}&token=${pageData.token}`)
       
       try {
         // Try to create survey link with comprehensive fallback
-        const result = await createSurveyLink(gameId, cloudIndex)
+        const result = await createSurveyLink(gameId, cloudIndex, pageData.token)
         
         if (result.success && result.shortenedUrl) {
           console.log('✅ Survey link created successfully:', result.shortenedUrl)
@@ -99,7 +105,12 @@ export function GameDetails({ game }: GameDetailsProps) {
             downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${cloudName}`
           }
           
-          // Open the survey link in a new tab
+          // Record site visit again to extend freshness, then open survey link
+          try {
+            localStorage.setItem('last_main_visit', Date.now().toString())
+          } catch (e) {
+            // ignore
+          }
           window.open(result.shortenedUrl, '_blank')
           
           // Show success message
@@ -110,7 +121,7 @@ export function GameDetails({ game }: GameDetailsProps) {
         }
         
       } catch (apiError) {
-        console.error('❌ All survey link creation methods failed:', apiError)
+        console.error('❌ Survey link creation failed:', apiError)
         
         // Reset button
         if (downloadButton) {
@@ -118,10 +129,8 @@ export function GameDetails({ game }: GameDetailsProps) {
           downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${cloudName}`
         }
         
-        // Final fallback: direct redirect to download page
-        console.log('🔄 Using fallback: Direct redirect to download page')
-        alert('Survey services are temporarily unavailable. Redirecting directly to PIN entry page.')
-        window.open(`/download/${gameId}?cloud=${cloudIndex}`, '_blank')
+        // Enforce survey step: do not bypass to PIN page
+        alert('Survey services are temporarily unavailable. Please try again shortly. A valid survey link is required to access the download page.')
       }
       
     } catch (error) {
@@ -141,13 +150,12 @@ export function GameDetails({ game }: GameDetailsProps) {
   return (
     <div className="space-y-6">
       {/* Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between ">
         <Link
           href="/"
-          className="flex items-center gap-2 hover:text-red-400 transition-colors duration-200"
-          style={{ color: "#ffffff" }}
+          className="flex items-center gap-2 text-white hover:text-red-600 transition-colors duration-200"
         >
-          <ArrowLeft className="h-4 w-4" style={{ color: "#ffffff" }} />
+          <ArrowLeft className="h-4 w-4" />
           Back to Home
         </Link>
       </div>
@@ -170,7 +178,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                 <div className="flex items-center gap-2 mb-2">
                   <Badge className="bg-red-600 text-white">{game.category}</Badge>
                 </div>
-                <h1 className="text-3xl font-bold text-white mb-2">{game.title}</h1>
+                <h1 className="text-3xl font-bold text-red-500 mb-2">{game.title}</h1>
                 <p className="text-gray-400 text-lg">{game.description}</p>
               </div>
 
@@ -217,7 +225,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       {game.longDescription && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white">About {game.title}</CardTitle>
+            <CardTitle className="text-red-500">About {game.title}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-gray-300 leading-relaxed">{game.longDescription}</p>
@@ -229,7 +237,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       {game.systemRequirements?.recommended && Object.values(game.systemRequirements.recommended).some(value => value) && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-red-500 flex items-center gap-2">
               <Monitor className="h-5 w-5" />
               Recommended System Requirements
             </CardTitle>
@@ -290,7 +298,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       {game.androidRequirements?.recommended && Object.values(game.androidRequirements.recommended).some(value => value) && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-red-500 flex items-center gap-2">
               <Smartphone className="h-5 w-5" />
               Recommended Android Requirements
             </CardTitle>
@@ -330,7 +338,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       {game.keyFeatures && Array.isArray(game.keyFeatures) && game.keyFeatures.filter(feature => typeof feature === 'string' && feature.trim()).length > 0 && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white">Key Features</CardTitle>
+            <CardTitle className="text-red-500">Key Features</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -351,7 +359,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       {game.screenshots && Array.isArray(game.screenshots) && game.screenshots.filter(url => typeof url === 'string' && url.trim()).length > 0 && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white">Screenshots</CardTitle>
+            <CardTitle className="text-red-500">Screenshots</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -400,7 +408,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       {/* Download Section - Now positioned after screenshots */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-red-500 flex items-center gap-2">
             <Download className="h-5 w-5" />
             Download Information
           </CardTitle>
@@ -412,31 +420,34 @@ export function GameDetails({ game }: GameDetailsProps) {
               <span className="text-gray-400 text-sm">{game.size}</span>
             </div>
             
-            {/* Download Process section */}
-            <div className="bg-grey-900/20 border border-blue-600 p-4 rounded-lg">
-              <p className="text-blue-300 text-sm mb-2 font-bold">📋 Download Process:</p>
-              <ul className="text-blue-100 text-x space-y-1 list-disc pl-4 font-semibold">
-                <li>Choose your preferred cloud provider below</li>
-                <li>Click the cloud download button</li>
-                <li>Complete Ad-survey to get access</li>
-                <li>Enter the PIN code for that cloud provider</li>
-                <li>Access download page with direct links</li>
-                <li>Download expires in 12 hours</li>
-              </ul>
-            </div>
-
-            {/* Show PIN prominently */}
-            {gameData?.sharedPinCode && (
-              <div className="bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
-                <p className="text-blue-300 text-sm mb-2 font-semibold">🔑 PIN Code for All Downloads:</p>
-                 <p className="bg-grey-800/40 p-3 rounded text-left border border-grey-500 max-w-xs x-auto">
-                  <span className="text-white text-lg font-bold font-mono tracking-wider">{gameData.sharedPinCode}</span>
-                </p>
-                <p className="text-grey-200 text-xs mt-2 text-left font-bold">
-                  Use this PIN after completing the survey for any cloud provider
-                </p>
+            {/* Download Process and PIN section - side by side on desktop */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+              {/* Download Process section */}
+              <div className="inline-block w-fit max-w-full bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
+                <p className="text-white text-sm mb-3 font-bold">📋 Download Process:</p>
+                <ul className="text-blue-100 text-x space-y-1 list-disc pl-4 font-semibold">
+                  <li>Choose your preferred cloud provider below</li>
+                  <li>Click the cloud download button</li>
+                  <li>Complete Ad-survey to get access</li>
+                  <li>Enter the PIN code for that cloud provider</li>
+                  <li>Access download page with direct links</li>
+                  <li>Download expires in 12 hours</li>
+                </ul>
               </div>
-            )}
+
+              {/* Show PIN prominently */}
+              {gameData?.sharedPinCode && (
+                <div className="bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
+                  <p className="text-white text-sm mb-2 font-semibold">🔑 PIN Code for All Downloads:</p>
+                   <p className="bg-grey-800/40 p-3 rounded text-left border border-grey-500 max-w-xs x-auto">
+                    <span className="text-white text-lg font-bold font-mono tracking-wider">{gameData.sharedPinCode}</span>
+                  </p>
+                  <p className="text-grey-200 text-xs mt-2 text-left font-bold">
+                    Use this PIN after completing the Ad-Survey for any cloud provider
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Cloud Download Buttons */}
             {gameData?.cloudDownloads && gameData.cloudDownloads.length > 0 ? (

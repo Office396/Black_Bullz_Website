@@ -683,8 +683,14 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                 <div>
                   <Label className="text-white mb-2 block">Cloud Provider Name *</Label>
                   <Select
-                    value={cloudDownload.cloudName}
-                    onValueChange={(value) => updateCloudDownload(cloudIndex, "cloudName", value)}
+                    value={["Google Drive","MediaFire","Mega","OneDrive","Dropbox","pCloud","4shared","Zippyshare"].includes(cloudDownload.cloudName) ? cloudDownload.cloudName : "Other"}
+                    onValueChange={(value) => {
+                      if (value === "Other") {
+                        updateCloudDownload(cloudIndex, "cloudName", "Other")
+                      } else {
+                        updateCloudDownload(cloudIndex, "cloudName", value)
+                      }
+                    }}
                   >
                     <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                       <SelectValue placeholder="Select cloud provider" />
@@ -701,7 +707,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                       <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
-                  {cloudDownload.cloudName === "Other" && (
+                  {(cloudDownload.cloudName === "Other" || !["Google Drive","MediaFire","Mega","OneDrive","Dropbox","pCloud","4shared","Zippyshare"].includes(cloudDownload.cloudName)) && (
                     <Input
                       className="bg-gray-700 border-gray-600 text-white mt-2"
                       placeholder="Enter custom cloud provider name"

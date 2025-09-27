@@ -103,9 +103,9 @@ export function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-700 transition-colors group"
+              className="flex items-center justify-between p-2 rounded-lg transition-colors group"
             >
-              <span className="text-gray-300 group-hover:text-white">{link.label}</span>
+              <span className="text-gray-300 group-hover:text-red-500">{link.label}</span>
               <Badge variant="secondary" className="bg-red-600 text-white">
                 {link.count}
               </Badge>

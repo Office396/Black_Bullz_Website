@@ -16,6 +16,7 @@ export default function DownloadPage() {
   const params = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const tokenParam = searchParams.get('token')
   const [downloadPage, setDownloadPage] = useState<DownloadPageData | null>(null)
   const [gameData, setGameData] = useState<any>(null)
   const [cloudData, setCloudData] = useState<any>(null)
@@ -37,7 +38,8 @@ export default function DownloadPage() {
     // Load download page data
     const gameId = Number.parseInt(params.id as string)
     const cloudIndex = searchParams.get('cloud') ? Number.parseInt(searchParams.get('cloud') as string) : 0
-    const page = getDownloadPage(gameId, cloudIndex)
+    const token = searchParams.get('token') || undefined
+    const page = getDownloadPage(gameId, cloudIndex, token)
     
     if (page) {
       setDownloadPage(page)
@@ -59,20 +61,30 @@ export default function DownloadPage() {
     }
   }, [params.id, searchParams])
 
+  // If arriving with a valid token from survey, mark visit so access isn't restricted
   useEffect(() => {
-    if (isUnlocked && timeLeft > 0) {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            setIsUnlocked(false)
-            return 300
-          }
-          return prev - 1
-        })
-      }, 1000)
-      return () => clearInterval(timer)
+    if (tokenParam) {
+      try {
+        localStorage.setItem("last_main_visit", Date.now().toString())
+      } catch (e) {
+        // ignore
+      }
     }
-  }, [isUnlocked, timeLeft])
+  }, [tokenParam])
+
+  useEffect(() => {
+    if (!downloadPage) return
+    const expiresAt = new Date(downloadPage.expiresAt).getTime()
+    const timer = setInterval(() => {
+      const now = Date.now()
+      const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))
+      setTimeLeft(remaining)
+      if (remaining === 0) {
+        setIsUnlocked(false)
+      }
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [downloadPage])
 
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,7 +93,7 @@ export default function DownloadPage() {
     if (pinInput === downloadPage.pinCode) {
       setIsUnlocked(true)
       setError("")
-      setTimeLeft(300) // Reset timer
+      // Do not reset timer; it reflects true expiry
     } else {
       setError("Invalid pin code. Please try again.")
     }
@@ -101,9 +113,10 @@ export default function DownloadPage() {
   }
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
+    const hrs = Math.floor(seconds / 3600)
+    const mins = Math.floor((seconds % 3600) / 60)
     const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, "0")}`
+    return `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
   if (!downloadPage) {
@@ -122,7 +135,7 @@ export default function DownloadPage() {
     )
   }
 
-  if (!hasVisitedMain) {
+  if (!hasVisitedMain && !tokenParam) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <Card className="bg-gray-800 border-gray-700 max-w-md w-full mx-4">

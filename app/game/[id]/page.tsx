@@ -179,7 +179,7 @@ export default function GamePage({ params }: GamePageProps) {
           <main className="flex-1">
             <GameDetails game={game} />
             <div className="mt-8">
-              <Comments gameId={gameId} />
+              <Comments gameId={gameId} itemName={game.title} />
             </div>
           </main>
           <aside className="w-80 hidden lg:block">

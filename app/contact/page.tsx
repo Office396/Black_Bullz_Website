@@ -21,8 +21,26 @@ export default function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log("Form submitted:", formData)
+    // Persist to central messages store for admin portal
+    try {
+      const existing = JSON.parse(localStorage.getItem("site_messages") || "[]")
+      const list = Array.isArray(existing) ? existing : []
+      const entry = {
+        id: Date.now(),
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
+        timestamp: new Date().toISOString(),
+        status: "new",
+      }
+      localStorage.setItem("site_messages", JSON.stringify([entry, ...list]))
+      alert("Message sent successfully!")
+      setFormData({ name: "", email: "", subject: "", message: "" })
+    } catch (err) {
+      console.error("Failed to save message", err)
+      alert("Failed to send message. Please try again.")
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AdminItemForm } from "@/components/admin-item-form"
 import { AdminItemList } from "@/components/admin-item-list"
 import { AdminSettings } from "@/components/admin-settings"
-import { LogOut, Plus, List, Settings, Search } from "lucide-react"
+import { AdminFeedback } from "@/components/admin-feedback"
+import { LogOut, Plus, List, Settings, Search, MessageSquare } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -62,6 +63,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </TabsTrigger>
+            <TabsTrigger value="feedback" className="data-[state=active]:bg-red-600">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Feedback
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="list" className="space-y-6">
@@ -99,6 +104,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
           <TabsContent value="settings">
             <AdminSettings />
+          </TabsContent>
+
+          <TabsContent value="feedback">
+            <AdminFeedback />
           </TabsContent>
         </Tabs>
       </div>
