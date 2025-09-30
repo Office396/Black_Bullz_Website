@@ -51,16 +51,29 @@ interface AdminItemListProps {
 export function AdminItemList({ searchQuery }: AdminItemListProps) {
   const [items, setItems] = useState<any[]>([])
   const [editingItem, setEditingItem] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchItems = async () => {
+    try {
+      const response = await fetch("/api/items")
+      const result = await response.json()
+      if (result.success) {
+        setItems(result.data)
+      } else {
+        console.error("Failed to fetch items:", result.error)
+        // Fallback to mock data if API fails
+        setItems(mockItems)
+      }
+    } catch (error) {
+      console.error("Error fetching items:", error)
+      setItems(mockItems)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // Load items from localStorage, fallback to mock data
-    const savedItems = JSON.parse(localStorage.getItem("admin_items") || "[]")
-    if (savedItems.length === 0) {
-      setItems(mockItems)
-      localStorage.setItem("admin_items", JSON.stringify(mockItems))
-    } else {
-      setItems(savedItems)
-    }
+    fetchItems()
   }, [])
 
   const filteredItems = items.filter(
@@ -70,11 +83,26 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
       item.developer.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this item?")) {
-      const updatedItems = items.filter((item) => item.id !== id)
-      setItems(updatedItems)
-      localStorage.setItem("admin_items", JSON.stringify(updatedItems))
+      try {
+        const response = await fetch("/api/items", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        })
+        const result = await response.json()
+        if (result.success) {
+          fetchItems() // Refetch items
+        } else {
+          alert("Failed to delete item: " + result.error)
+        }
+      } catch (error) {
+        console.error("Error deleting item:", error)
+        alert("Failed to delete item. Please try again.")
+      }
     }
   }
 
@@ -83,8 +111,7 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
   }
 
   const handleSaveEdit = () => {
-    const updatedItems = JSON.parse(localStorage.getItem("admin_items") || "[]")
-    setItems(updatedItems)
+    fetchItems()
     setEditingItem(null)
   }
 
@@ -112,6 +139,14 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
         <p className="text-gray-400">
           {searchQuery ? `No items found matching "${searchQuery}"` : "No items found. Add some items to get started."}
         </p>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-400">Loading items...</p>
       </div>
     )
   }

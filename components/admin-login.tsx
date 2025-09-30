@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,54 +21,85 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
   const [isUpdateMode, setIsUpdateMode] = useState(false)
   const [newCredentials, setNewCredentials] = useState({ username: "", password: "" })
   const [successMessage, setSuccessMessage] = useState("")
+  const [currentUsername, setCurrentUsername] = useState("admin")
 
-  // Default admin credentials (used only if no credentials are stored)
-  const defaultCredentials = {
-    username: "admin",
-    password: "blackbullz2024",
-  }
+  useEffect(() => {
+    // Fetch current username from server
+    const fetchUsername = async () => {
+      try {
+        const response = await fetch("/api/admin")
+        const result = await response.json()
+        if (result.success) {
+          setCurrentUsername(result.username)
+        }
+      } catch (error) {
+        console.error("Error fetching username:", error)
+      }
+    }
+    fetchUsername()
+  }, [])
 
-  // Get stored or default credentials
-  const getStoredCredentials = () => {
-    const storedCredentials = localStorage.getItem("admin_credentials")
-    return storedCredentials ? JSON.parse(storedCredentials) : defaultCredentials
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setSuccessMessage("")
 
-    const adminCredentials = getStoredCredentials()
+    try {
+      const response = await fetch("/api/admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      })
 
-    if (credentials.username === adminCredentials.username && credentials.password === adminCredentials.password) {
-      localStorage.setItem("admin_token", "authenticated")
-      onLogin()
-    } else {
-      setError("Invalid username or password")
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        localStorage.setItem("admin_token", "authenticated")
+        onLogin()
+      } else {
+        setError(result.error || "Login failed")
+      }
+    } catch (err) {
+      console.error("Login error:", err)
+      setError("Login failed. Please try again.")
     }
   }
 
-  const handleUpdateCredentials = (e: React.FormEvent) => {
+  const handleUpdateCredentials = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setSuccessMessage("")
 
-    // Validate current credentials before allowing update
-    const currentCredentials = getStoredCredentials()
-    
-    if (credentials.username === currentCredentials.username && credentials.password === currentCredentials.password) {
-      // Store new credentials
-      localStorage.setItem("admin_credentials", JSON.stringify({
-        username: newCredentials.username,
-        password: newCredentials.password
-      }))
-      
-      setSuccessMessage("Credentials updated successfully!")
-      setIsUpdateMode(false)
-      setCredentials({ username: "", password: "" }) // Clear the form
-    } else {
-      setError("Please enter your current credentials correctly to update")
+    try {
+      const response = await fetch("/api/admin", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentUsername: credentials.username,
+          currentPassword: credentials.password,
+          newUsername: newCredentials.username,
+          newPassword: newCredentials.password,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        setSuccessMessage("Credentials updated successfully!")
+        setCurrentUsername(newCredentials.username)
+        setIsUpdateMode(false)
+        setCredentials({ username: "", password: "" })
+        setNewCredentials({ username: "", password: "" })
+      } else {
+        setError(result.error || "Failed to update credentials")
+      }
+    } catch (err) {
+      console.error("Update credentials error:", err)
+      setError("Failed to update credentials. Please try again.")
     }
   }
 
@@ -228,14 +259,6 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
                 </Button>
               </div>
             </form>
-          )}
-          
-          {!isUpdateMode && (
-            <div className="mt-6 p-4 bg-gray-700 rounded-lg">
-              <p className="text-gray-300 text-sm mb-2">Default Credentials:</p>
-              <p className="text-gray-400 text-xs">Username: admin</p>
-              <p className="text-gray-400 text-xs">Password: blackbullz2024</p>
-            </div>
           )}
         </CardContent>
       </Card>

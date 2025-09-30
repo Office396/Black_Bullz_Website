@@ -1,5 +1,7 @@
 // GP Links and V2Links API Integration
 
+// Download pages functions moved to API to avoid client-side fs import
+
 const GP_LINKS_API_TOKEN = 'b6bc57fccf0a18409483ce920d4a611acbb23de1'
 const V2_LINKS_API_TOKEN = 'dda37e26b732c2c143a0f4e3de09bb4edfb8ee26'
 
@@ -260,92 +262,42 @@ export interface DownloadPageData {
   token: string
 }
 
-export function createDownloadPage(gameId: number, cloudIndex?: number): DownloadPageData {
-  // Get game data from localStorage
-  const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
-  const gameData = adminItems.find((item: any) => item.id === gameId)
-  
-  // Support both old downloadPage structure and new cloudDownloads structure
-  let downloadConfig
-  let pinCode
-  let rarPassword
-  
-  if (cloudIndex !== undefined && gameData?.cloudDownloads?.[cloudIndex]) {
-    // New structure with shared PIN and RAR password
-    downloadConfig = gameData.cloudDownloads[cloudIndex]
-    pinCode = gameData.sharedPinCode || '0000'
-    rarPassword = gameData.sharedRarPassword
-  } else if (gameData?.downloadPage) {
-    // Old structure for backward compatibility
-    downloadConfig = gameData.downloadPage
-    pinCode = downloadConfig.pinCode
-    rarPassword = downloadConfig.rarPassword
-  } else {
-    throw new Error('Game data or download page configuration not found')
+export async function createDownloadPage(gameId: number, cloudIndex?: number): Promise<DownloadPageData> {
+  const response = await fetch('/api/download-pages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ gameId, cloudIndex }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}))
+    throw new Error(error.error || 'Failed to create download page')
   }
-  
-  const now = new Date()
-  const expiresAt = new Date(now.getTime() + 12 * 60 * 60 * 1000) // 12 hours from now
-  const token = Math.random().toString(36).slice(2, 10) + now.getTime().toString(36)
-  const id = cloudIndex !== undefined ? `${gameId}_c${cloudIndex}_${token}` : `${gameId}_${token}`
-  
-  const downloadPageData: DownloadPageData = {
-    id,
-    gameId,
-    pinCode: pinCode,
-    actualDownloadLinks: downloadConfig.actualDownloadLinks,
-    rarPassword: rarPassword,
-    createdAt: now.toISOString(),
-    expiresAt: expiresAt.toISOString(),
-    token
-  }
-  
-  // Store in localStorage with expiration
-  const existingPages = JSON.parse(localStorage.getItem('active_download_pages') || '[]')
-  const updatedPages = existingPages.filter((page: DownloadPageData) => 
-    new Date(page.expiresAt) > now // Remove expired pages
-  )
-  
-  // Always push new unique page
-  updatedPages.push(downloadPageData)
-  
-  localStorage.setItem('active_download_pages', JSON.stringify(updatedPages))
-  
-  return downloadPageData
+
+  return await response.json()
 }
 
 // Get active download page data
-export function getDownloadPage(gameId: number, cloudIndex?: number, token?: string): DownloadPageData | null {
-  const activePages = JSON.parse(localStorage.getItem('active_download_pages') || '[]')
-  const now = new Date()
-  
-  // Clean expired pages
-  const validPages = activePages.filter((page: DownloadPageData) => 
-    new Date(page.expiresAt) > now
-  )
-  localStorage.setItem('active_download_pages', JSON.stringify(validPages))
-  
-  // Find the requested page
-  if (token) {
-    const pageIdWithToken = cloudIndex !== undefined ? `${gameId}_c${cloudIndex}_${token}` : `${gameId}_${token}`
-    const pageById = validPages.find((page: DownloadPageData) => page.id === pageIdWithToken)
-    if (pageById) return pageById
-    // Fallback: match by token and gameId
-    const pageByToken = validPages.find((page: DownloadPageData) => page.token === token && page.gameId === gameId)
-    if (pageByToken) return pageByToken
+export async function getDownloadPage(gameId: number, cloudIndex?: number, token?: string): Promise<DownloadPageData | null> {
+  const params = new URLSearchParams({
+    gameId: gameId.toString(),
+    ...(cloudIndex !== undefined && { cloudIndex: cloudIndex.toString() }),
+    ...(token && { token }),
+  })
+
+  const response = await fetch(`/api/download-pages?${params}`)
+  if (response.ok) {
+    return await response.json()
+  } else if (response.status === 404) {
+    return null
+  } else {
+    throw new Error('Failed to get download page')
   }
-  // Require token-based session strictly; no legacy fallback
-  return null
 }
 
 // Clean up expired download pages
-export function cleanupExpiredPages(): void {
-  const activePages = JSON.parse(localStorage.getItem('active_download_pages') || '[]')
-  const now = new Date()
-  
-  const validPages = activePages.filter((page: DownloadPageData) => 
-    new Date(page.expiresAt) > now
-  )
-  
-  localStorage.setItem('active_download_pages', JSON.stringify(validPages))
+export async function cleanupExpiredPages(): Promise<void> {
+  await fetch('/api/download-pages', { method: 'DELETE' })
 }

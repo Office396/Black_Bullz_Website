@@ -9,16 +9,21 @@ import { useEffect, useState } from "react"
 import { notFound } from "next/navigation"
 
 // Helper function to get game data
-function getGameData(gameId: number) {
-  if (typeof window === 'undefined') return null
-  
-  // Try to get from admin items first
-  const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
-  const adminGame = adminItems.find((item: any) => item.id === gameId)
-  if (adminGame) return adminGame
+async function getGameData(gameId: number) {
+  try {
+    const response = await fetch("/api/items")
+    const result = await response.json()
+    if (result.success) {
+      const adminItems = result.data
+      const adminGame = adminItems.find((item: any) => item.id === gameId)
+      if (adminGame) return adminGame
+    }
+  } catch (error) {
+    console.error("Error fetching items:", error)
+  }
 
   // If not found in admin items, check static games
-  return staticGames.find(game => game.id === gameId)
+  return staticGames.find(game => game.id === gameId) || null
 }
 
 // Static games data - in real app this would come from database
@@ -158,9 +163,12 @@ export default function GamePage({ params }: GamePageProps) {
   const gameId = Number.parseInt(params.id)
 
   useEffect(() => {
-    const foundGame = getGameData(gameId)
-    setGame(foundGame)
-    setIsLoading(false)
+    const fetchGame = async () => {
+      const foundGame = await getGameData(gameId)
+      setGame(foundGame)
+      setIsLoading(false)
+    }
+    fetchGame()
   }, [gameId])
 
   if (!game) {

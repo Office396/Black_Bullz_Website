@@ -46,17 +46,23 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
   const itemsPerPage = activeTab === "android-games" ? 10 : 8 // Reduced number of items per page
 
   useEffect(() => {
-    setIsLoaded(false) // Start loading
-    if (typeof window !== "undefined") {
+    const fetchItems = async () => {
+      setIsLoaded(false) // Start loading
       try {
-        const items = JSON.parse(localStorage.getItem("admin_items") || "[]") as GameItem[]
-        setAdminItems(items)
+        const response = await fetch("/api/items")
+        const result = await response.json()
+        if (result.success) {
+          setAdminItems(result.data)
+        } else {
+          console.error("Failed to fetch items:", result.error)
+        }
       } catch (error) {
-        console.error("Error loading items:", error)
+        console.error("Error fetching items:", error)
       } finally {
         setIsLoaded(true)
       }
     }
+    fetchItems()
   }, [])
 
   const allGames = useMemo(() => 
@@ -73,7 +79,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
     if (filterLatest) {
       games = games.filter((game) => {
         if (game.latest) return true
-        const gameDate = new Date(game.releaseDate || game.uploadDate)
+        const gameDate = new Date(game.releaseDate || game.uploadDate || Date.now())
         const thirtyDaysAgo = new Date()
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
         return gameDate >= thirtyDaysAgo

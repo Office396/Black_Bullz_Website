@@ -36,27 +36,38 @@ export default function DownloadPage() {
   const [gpLinkUrl, setGpLinkUrl] = useState("")
 
   useEffect(() => {
-    // Get the download ID from the URL
-    const downloadId = getDownloadIdFromPath(window.location.pathname)
-    if (!downloadId) {
-      router.push('/')
-      return
-    }
+    const loadData = async () => {
+      // Get the download ID from the URL
+      const downloadId = getDownloadIdFromPath(window.location.pathname)
+      if (!downloadId) {
+        router.push('/')
+        return
+      }
 
-    // Check if the download link is valid and not expired
-    const downloadLink = getValidDownloadLink(downloadId)
-    if (!downloadLink) {
-      setLinkExpired(true)
-      return
-    }
+      // Check if the download link is valid and not expired
+      const downloadLink = getValidDownloadLink(downloadId)
+      if (!downloadLink) {
+        setLinkExpired(true)
+        return
+      }
 
-    // Get the game details
-    const items = JSON.parse(localStorage.getItem("admin_items") || "[]")
-    const item = items.find((i: any) => i.id === downloadLink.gameId)
-    if (item) {
-      setDownloadItem(item)
-      setGpLinkUrl(downloadLink.gpLink)
+      // Get the game details
+      try {
+        const response = await fetch('/api/items')
+        const result = await response.json()
+        if (result.success) {
+          const items = result.data
+          const item = items.find((i: any) => i.id === downloadLink.gameId)
+          if (item) {
+            setDownloadItem(item)
+            setGpLinkUrl(downloadLink.gpLink)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching game data:", error)
+      }
     }
+    loadData()
   }, [router])
 
   useEffect(() => {

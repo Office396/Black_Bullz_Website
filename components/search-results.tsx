@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
 import { Calendar, Star, Search } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const allGames = [
   {
@@ -84,13 +84,31 @@ interface SearchResultsProps {
 
 export function SearchResults({ query }: SearchResultsProps) {
   const [activeFilter, setActiveFilter] = useState("all")
+  const [serverItems, setServerItems] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const adminItems = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("admin_items") || "[]") : []
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await fetch("/api/items")
+        const result = await response.json()
+        if (result.success) {
+          setServerItems(result.data)
+        }
+      } catch (error) {
+        console.error("Error fetching items for search:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchItems()
+  }, [])
+
   const combinedGames = [
     ...allGames,
-    ...adminItems.map((item: any) => ({
+    ...serverItems.map((item: any) => ({
       ...item,
-      rating: typeof item.rating === "number" && !isNaN(item.rating) ? item.rating : 4.0,
+      rating: typeof item.rating === "string" ? parseFloat(item.rating) || 4.0 : typeof item.rating === "number" && !isNaN(item.rating) ? item.rating : 4.0,
       tab: item.category === "PC Games" ? "pc-games" : item.category === "Android Games" ? "android-games" : "software",
       tags: item.tags || [],
     })),
@@ -103,13 +121,17 @@ export function SearchResults({ query }: SearchResultsProps) {
           const matchesSearch =
             game.title.toLowerCase().includes(searchTerm) ||
             game.description.toLowerCase().includes(searchTerm) ||
+            (game.longDescription && game.longDescription.toLowerCase().includes(searchTerm)) ||
             game.category.toLowerCase().includes(searchTerm) ||
             game.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm)) ||
+            (game.developer && game.developer.toLowerCase().includes(searchTerm)) ||
+            (game.keyFeatures && game.keyFeatures.some((feature: string) => feature.toLowerCase().includes(searchTerm))) ||
             game.title
               .toLowerCase()
               .split(" ")
-              .some((word) => word.startsWith(searchTerm)) ||
-            game.tags.some((tag: string) => tag.toLowerCase().startsWith(searchTerm))
+              .some((word: string) => word.startsWith(searchTerm)) ||
+            game.tags.some((tag: string) => tag.toLowerCase().startsWith(searchTerm)) ||
+            (game.developer && game.developer.toLowerCase().split(" ").some((word: string) => word.startsWith(searchTerm)))
 
           const matchesFilter = activeFilter === "all" || game.tab === activeFilter
 
@@ -125,6 +147,16 @@ export function SearchResults({ query }: SearchResultsProps) {
           return bRating - aRating
         })
     : combinedGames.filter((game) => activeFilter === "all" || game.tab === activeFilter)
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto mb-4"></div>
+        <h2 className="text-xl font-semibold text-white mb-2">Searching...</h2>
+        <p className="text-gray-400">Loading available items</p>
+      </div>
+    )
+  }
 
   if (!query) {
     return (

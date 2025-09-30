@@ -16,9 +16,10 @@ interface GameDetailsProps {
     title: string
     category: string
     image: string
-    rating: number
+    rating: number | string
     size: string
     releaseDate: string
+    uploadDate?: string
     description: string
     longDescription: string
     developer: string
@@ -41,45 +42,34 @@ interface GameDetailsProps {
       }
     }
     keyFeatures?: string[]
-    downloadPage?: {
-      pinCode: string
+    cloudDownloads?: Array<{
+      cloudName: string
       actualDownloadLinks: Array<{ name: string; url: string; size: string }>
-      rarPassword?: string
-    }
-    tab: string
+    }>
+    sharedPinCode?: string
+    sharedRarPassword?: string
+    trending?: boolean
+    latest?: boolean
+    tab?: string
   }
 }
 
 export function GameDetails({ game }: GameDetailsProps) {
-  const [gameData, setGameData] = useState<any>(null)
-
-  useEffect(() => {
-    // Get game data from localStorage
-    const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
-    const foundGame = adminItems.find((item: any) => item.id === game.id)
-    setGameData(foundGame)
-  }, [game.id])
+  const [gameData, setGameData] = useState<any>(game)
 
   const handleCloudDownload = async (gameId: number, cloudIndex: number, cloudName: string) => {
     try {
-      // Mark that user started from main site to satisfy access check on return
-      try {
-        localStorage.setItem('last_main_visit', Date.now().toString())
-      } catch (e) {
-        // ignore storage errors
-      }
-      // First, ensure we have game data with cloud downloads configuration
-      const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
-      const gameData = adminItems.find((item: any) => item.id === gameId)
-      
-      if (!gameData?.cloudDownloads?.[cloudIndex]?.actualDownloadLinks?.length) {
+      // Access control removed - no browser cache
+
+      const validLinks = gameData?.cloudDownloads?.[cloudIndex]?.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()) || []
+      if (!validLinks.length) {
         alert(`${cloudName} download not configured for this item. Please contact admin.`)
         return
       }
 
       // Create download page data first for this specific cloud
       console.log(`Creating download page data for ${cloudName}...`)
-      const pageData = createDownloadPage(gameId, cloudIndex)
+      const pageData = await createDownloadPage(gameId, cloudIndex)
       
       // Show loading state - target the specific download button
       const downloadButton = document.querySelector(`[data-cloud-download="${cloudIndex}"]`) as HTMLButtonElement
@@ -102,19 +92,11 @@ export function GameDetails({ game }: GameDetailsProps) {
           // Reset button
           if (downloadButton) {
             downloadButton.disabled = false
-            downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${cloudName}`
+            downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Download`
           }
           
-          // Record site visit again to extend freshness, then open survey link
-          try {
-            localStorage.setItem('last_main_visit', Date.now().toString())
-          } catch (e) {
-            // ignore
-          }
+          // Open survey link
           window.open(result.shortenedUrl, '_blank')
-          
-          // Show success message
-          alert(`Survey link created successfully using ${result.provider?.toUpperCase()}! Complete the survey to get access to ${cloudName} download page.`)
           
         } else {
           throw new Error(result.error || 'Failed to create survey link')
@@ -126,11 +108,13 @@ export function GameDetails({ game }: GameDetailsProps) {
         // Reset button
         if (downloadButton) {
           downloadButton.disabled = false
-          downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${cloudName}`
+          downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Download`
         }
         
-        // Enforce survey step: do not bypass to PIN page
-        alert('Survey services are temporarily unavailable. Please try again shortly. A valid survey link is required to access the download page.')
+        // BACKUP: Redirect directly to PIN page if survey fails
+        console.log('Redirecting to PIN page as backup...')
+        const pinPageUrl = `${window.location.origin}/download/${gameId}?cloud=${cloudIndex}&token=${pageData.token}`
+        window.open(pinPageUrl, '_blank')
       }
       
     } catch (error) {
@@ -140,7 +124,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       const downloadButton = document.querySelector(`[data-cloud-download="${cloudIndex}"]`) as HTMLButtonElement
       if (downloadButton) {
         downloadButton.disabled = false
-        downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${cloudName}`
+        downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Download`
       }
       
       alert(`${cloudName} download temporarily unavailable. Please try again later.`)
@@ -197,7 +181,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                 )}
                 <div>
                   <span className="text-gray-400">Date Uploaded:</span>
-                  <p className="text-white font-medium">{new Date().toLocaleDateString()}</p>
+                  <p className="text-white font-medium">{game.uploadDate ? new Date(game.uploadDate).toLocaleDateString() : new Date().toLocaleDateString()}</p>
                 </div>
                 {game.rating && (
                   <div>
@@ -428,8 +412,8 @@ export function GameDetails({ game }: GameDetailsProps) {
                 <ul className="text-blue-100 text-x space-y-1 list-disc pl-4 font-semibold">
                   <li>Choose your preferred cloud provider below</li>
                   <li>Click the cloud download button</li>
-                  <li>Complete Ad-survey to get access</li>
-                  <li>Enter the PIN code for that cloud provider</li>
+                  <li>Complete Ad-survey to access download page</li>
+                  <li>Enter the PIN code shown</li>
                   <li>Access download page with direct links</li>
                   <li>Download expires in 12 hours</li>
                 </ul>
@@ -459,7 +443,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="text-white font-medium">{cloudDownload.cloudName || `Cloud ${index + 1}`}</h4>
                         <div className="bg-green-900/20 border border-green-600 px-2 py-1 rounded">
-                          <span className="text-green-300 text-xs">Parts: {cloudDownload.actualDownloadLinks?.length || 0}</span>
+                          <span className="text-green-300 text-xs">Parts: {cloudDownload.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()).length || 0}</span>
                         </div>
                       </div>
                       <p className="text-gray-400 text-xs mb-3">

@@ -27,48 +27,51 @@ export default function DownloadPage() {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    // Check if user visited main site recently
-    const lastVisit = localStorage.getItem("last_main_visit")
-    const now = Date.now()
-    if (lastVisit && now - Number.parseInt(lastVisit) < 600000) {
-      // 10 minutes
+    const loadData = async () => {
+      // Access control removed - no browser cache
       setHasVisitedMain(true)
-    }
 
-    // Load download page data
-    const gameId = Number.parseInt(params.id as string)
-    const cloudIndex = searchParams.get('cloud') ? Number.parseInt(searchParams.get('cloud') as string) : 0
-    const token = searchParams.get('token') || undefined
-    const page = getDownloadPage(gameId, cloudIndex, token)
-    
-    if (page) {
-      setDownloadPage(page)
-      
-      // Calculate remaining time
-      const expiresAt = new Date(page.expiresAt).getTime()
-      const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))
-      setTimeLeft(remaining)
-      
-      // Get game data for title and cloud data
-      const adminItems = JSON.parse(localStorage.getItem('admin_items') || '[]')
-      const game = adminItems.find((item: any) => item.id === gameId)
-      setGameData(game)
-      
-      // Get specific cloud data
-      if (game?.cloudDownloads?.[cloudIndex]) {
-        setCloudData(game.cloudDownloads[cloudIndex])
+      // Load download page data
+      const gameId = Number.parseInt(params.id as string)
+      const cloudIndex = searchParams.get('cloud') ? Number.parseInt(searchParams.get('cloud') as string) : 0
+      const token = searchParams.get('token') || undefined
+      const page = await getDownloadPage(gameId, cloudIndex, token)
+
+      if (page) {
+        setDownloadPage(page)
+
+        // Calculate remaining time
+        const now = Date.now()
+        const expiresAt = new Date(page.expiresAt).getTime()
+        const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))
+        setTimeLeft(remaining)
+
+        // Get game data for title and cloud data
+        try {
+          const response = await fetch('/api/items')
+          const result = await response.json()
+          if (result.success) {
+            const adminItems = result.data
+            const game = adminItems.find((item: any) => item.id === gameId)
+            setGameData(game)
+
+            // Get specific cloud data
+            if (game?.cloudDownloads?.[cloudIndex]) {
+              setCloudData(game.cloudDownloads[cloudIndex])
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching game data:", error)
+        }
       }
     }
+    loadData()
   }, [params.id, searchParams])
 
-  // If arriving with a valid token from survey, mark visit so access isn't restricted
+  // Token handling - no browser cache
   useEffect(() => {
     if (tokenParam) {
-      try {
-        localStorage.setItem("last_main_visit", Date.now().toString())
-      } catch (e) {
-        // ignore
-      }
+      // Token present, allow access
     }
   }, [tokenParam])
 
@@ -108,7 +111,6 @@ export default function DownloadPage() {
   }
 
   const visitMainSite = () => {
-    localStorage.setItem("last_main_visit", Date.now().toString())
     router.push("/")
   }
 
@@ -135,27 +137,7 @@ export default function DownloadPage() {
     )
   }
 
-  if (!hasVisitedMain && !tokenParam) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <Card className="bg-gray-800 border-gray-700 max-w-md w-full mx-4">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Shield className="h-5 w-5 mr-2 text-red-500" />
-              Access Restricted
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-gray-300">To access this download page, you must first visit our main website.</p>
-            <Button onClick={visitMainSite} className="w-full bg-red-600 hover:bg-red-700">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Visit BlackBullz Main Site
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // Access control removed - no browser cache restrictions
 
   if (!isUnlocked) {
     return (

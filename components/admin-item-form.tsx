@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Trash2, Save } from "lucide-react"
+import Editor from "@monaco-editor/react"
 
 interface FormData {
   title: string
@@ -98,27 +99,34 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
     return initialFormData
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // In real app, this would save to database
-    console.log("Saving item:", formData)
+    try {
+      const url = "/api/items"
+      const method = editItem ? "PUT" : "POST"
+      const body = editItem ? { id: editItem.id, ...formData } : formData
 
-    const currentDate = new Date().toISOString().split("T")[0]
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      })
 
-    // Save to localStorage for demo
-    const existingItems = JSON.parse(localStorage.getItem("admin_items") || "[]")
-    if (editItem) {
-      const updatedItems = existingItems.map((item: any) =>
-        item.id === editItem.id ? { ...formData, id: editItem.id, uploadDate: item.uploadDate || currentDate } : item,
-      )
-      localStorage.setItem("admin_items", JSON.stringify(updatedItems))
-    } else {
-      const newItem = { ...formData, id: Date.now(), uploadDate: currentDate }
-      localStorage.setItem("admin_items", JSON.stringify([...existingItems, newItem]))
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        alert(editItem ? "Item updated successfully!" : "Item saved successfully!")
+        if (onSave) onSave()
+        if (!editItem) setFormData(initialFormData)
+      } else {
+        throw new Error(result.error || "Failed to save item.")
+      }
+    } catch (err) {
+      console.error("Failed to save item", err)
+      alert("Failed to save item. Please try again.")
     }
-
-    if (onSave) onSave()
-    if (!editItem) setFormData(initialFormData)
   }
 
   const addKeyFeature = () => {
@@ -317,12 +325,13 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
             <Label htmlFor="description" className="text-white">
               Short Description
             </Label>
-            <Textarea
-              id="description"
+            <Editor
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-gray-600 border-gray-500 text-white"
-              rows={2}
+              onChange={(value) => setFormData({ ...formData, description: value || "" })}
+              language="plaintext"
+              theme="vs-dark"
+              height="80px"
+              options={{ minimap: { enabled: false }, fontSize: 14, wordWrap: "on" }}
             />
           </div>
 
@@ -330,12 +339,13 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
             <Label htmlFor="longDescription" className="text-white">
               Long Description
             </Label>
-            <Textarea
-              id="longDescription"
+            <Editor
               value={formData.longDescription}
-              onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })}
-              className="bg-gray-600 border-gray-500 text-white"
-              rows={4}
+              onChange={(value) => setFormData({ ...formData, longDescription: value || "" })}
+              language="plaintext"
+              theme="vs-dark"
+              height="120px"
+              options={{ minimap: { enabled: false }, fontSize: 14, wordWrap: "on" }}
             />
           </div>
         </CardContent>
@@ -696,6 +706,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                       <SelectValue placeholder="Select cloud provider" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-700 border-gray-600">
+                      <SelectItem value="Direct Link">Direct Link</SelectItem>
                       <SelectItem value="Google Drive">Google Drive</SelectItem>
                       <SelectItem value="MediaFire">MediaFire</SelectItem>
                       <SelectItem value="Mega">Mega</SelectItem>
@@ -704,6 +715,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                       <SelectItem value="pCloud">pCloud</SelectItem>
                       <SelectItem value="4shared">4shared</SelectItem>
                       <SelectItem value="Zippyshare">Zippyshare</SelectItem>
+                      <SelectItem value="Direct Link"></SelectItem>
                       <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>

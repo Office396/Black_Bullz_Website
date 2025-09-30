@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Mail, MessageSquare, Phone, MapPin } from "lucide-react"
+import { Mail, MessageSquare, Phone, MapPin, Facebook, Instagram, Youtube } from "lucide-react"
 import { useState } from "react"
 
 export default function ContactPage() {
@@ -19,24 +19,25 @@ export default function ContactPage() {
     message: "",
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Persist to central messages store for admin portal
     try {
-      const existing = JSON.parse(localStorage.getItem("site_messages") || "[]")
-      const list = Array.isArray(existing) ? existing : []
-      const entry = {
-        id: Date.now(),
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        subject: formData.subject.trim(),
-        message: formData.message.trim(),
-        timestamp: new Date().toISOString(),
-        status: "new",
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        alert("Message sent successfully!")
+        setFormData({ name: "", email: "", subject: "", message: "" })
+      } else {
+        throw new Error(result.error || "Failed to send message.")
       }
-      localStorage.setItem("site_messages", JSON.stringify([entry, ...list]))
-      alert("Message sent successfully!")
-      setFormData({ name: "", email: "", subject: "", message: "" })
     } catch (err) {
       console.error("Failed to save message", err)
       alert("Failed to send message. Please try again.")
@@ -136,43 +137,35 @@ export default function ContactPage() {
                         <Mail className="h-5 w-5 text-red-400" />
                         <div>
                           <p className="text-white font-medium">Email</p>
-                          <p className="text-gray-400">contact@blackbullz.com</p>
+                          <p className="text-gray-400">blackbullzweb@gmail.com</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <Phone className="h-5 w-5 text-red-400" />
                         <div>
-                          <p className="text-white font-medium">Phone</p>
-                          <p className="text-gray-400">+1 (555) 123-4567</p>
+                          <p className="text-white font-medium">WhatsApp</p>
+                          <p className="text-gray-400">+92 (320) 1446656</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <MapPin className="h-5 w-5 text-red-400" />
+                        <Facebook className="h-5 w-5 text-red-400" />
                         <div>
-                          <p className="text-white font-medium">Address</p>
-                          <p className="text-gray-400">123 Gaming Street, Tech City, TC 12345</p>
+                          <p className="text-white font-medium">Facebook</p>
+                          <p className="text-gray-400">facebook.com/blackbullz</p>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="bg-gray-800 border-gray-700">
-                    <CardHeader>
-                      <CardTitle className="text-white">Business Hours</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2 text-gray-400">
-                        <div className="flex justify-between">
-                          <span>Monday - Friday</span>
-                          <span>9:00 AM - 6:00 PM</span>
+                      <div className="flex items-center gap-3">
+                        <Instagram className="h-5 w-5 text-red-400" />
+                        <div>
+                          <p className="text-white font-medium">Instagram</p>
+                          <p className="text-gray-400">instagram.com/blackbullz</p>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Saturday</span>
-                          <span>10:00 AM - 4:00 PM</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Sunday</span>
-                          <span>Closed</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Youtube className="h-5 w-5 text-red-400" />
+                        <div>
+                          <p className="text-white font-medium">YouTube</p>
+                          <p className="text-gray-400">youtube.com/@blackbullz</p>
                         </div>
                       </div>
                     </CardContent>

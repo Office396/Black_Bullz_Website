@@ -11,32 +11,84 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Save, Key, User } from "lucide-react"
 
 export function AdminSettings() {
-  const [credentials, setCredentials] = useState({ username: "", password: "" })
+  const [credentials, setCredentials] = useState({ username: "", currentPassword: "", newPassword: "" })
   const [message, setMessage] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({ total: 0, pcGames: 0, software: 0 })
 
   useEffect(() => {
-    // Load current credentials
-    const stored = localStorage.getItem("admin_credentials")
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      setCredentials({ username: parsed.username, password: "" })
-    } else {
-      setCredentials({ username: "admin", password: "" })
+    // Load current username and stats from server
+    const fetchData = async () => {
+      try {
+        // Fetch username
+        const adminResponse = await fetch("/api/admin")
+        const adminResult = await adminResponse.json()
+        if (adminResult.success) {
+          setCredentials({ username: adminResult.username, currentPassword: "", newPassword: "" })
+        } else {
+          setCredentials({ username: "admin", currentPassword: "", newPassword: "" })
+        }
+
+        // Fetch items for stats
+        const itemsResponse = await fetch("/api/items")
+        const itemsResult = await itemsResponse.json()
+        if (itemsResult.success) {
+          const items = itemsResult.data
+          const total = items.length
+          const pcGames = items.filter((item: any) => item.category === "PC Games").length
+          const software = items.filter((item: any) => item.category === "Software").length
+          setStats({ total, pcGames, software })
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error)
+        setCredentials({ username: "admin", currentPassword: "", newPassword: "" })
+      } finally {
+        setLoading(false)
+      }
     }
+    fetchData()
   }, [])
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!credentials.username || !credentials.password) {
-      setMessage("Please fill in both username and password")
+    if (!credentials.username || !credentials.newPassword) {
+      setMessage("Please fill in username and new password")
       return
     }
 
-    localStorage.setItem("admin_credentials", JSON.stringify(credentials))
-    setMessage("Credentials updated successfully!")
+    if (!credentials.currentPassword) {
+      setMessage("Please enter your current password for verification")
+      return
+    }
 
-    setTimeout(() => setMessage(""), 3000)
+    try {
+      const response = await fetch("/api/admin", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentUsername: credentials.username,
+          currentPassword: credentials.currentPassword,
+          newUsername: credentials.username,
+          newPassword: credentials.newPassword,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        setMessage("Credentials updated successfully!")
+        setCredentials({ ...credentials, currentPassword: "", newPassword: "" })
+        setTimeout(() => setMessage(""), 3000)
+      } else {
+        setMessage(result.error || "Failed to update credentials")
+      }
+    } catch (error) {
+      console.error("Error updating credentials:", error)
+      setMessage("Failed to update credentials. Please try again.")
+    }
   }
 
   return (
@@ -67,16 +119,33 @@ export function AdminSettings() {
               </div>
             </div>
             <div>
-              <Label htmlFor="password" className="text-white">
+              <Label htmlFor="currentPassword" className="text-white">
+                Current Password
+              </Label>
+              <div className="relative">
+                <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={credentials.currentPassword}
+                  onChange={(e) => setCredentials({ ...credentials, currentPassword: e.target.value })}
+                  className="pl-10 bg-gray-700 border-gray-600 text-white"
+                  placeholder="Enter current password"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="newPassword" className="text-white">
                 New Password
               </Label>
               <div className="relative">
                 <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
-                  id="password"
+                  id="newPassword"
                   type="password"
-                  value={credentials.password}
-                  onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                  value={credentials.newPassword}
+                  onChange={(e) => setCredentials({ ...credentials, newPassword: e.target.value })}
                   className="pl-10 bg-gray-700 border-gray-600 text-white"
                   placeholder="Enter new password"
                   required
@@ -108,33 +177,25 @@ export function AdminSettings() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-400">
-                {JSON.parse(localStorage.getItem("admin_items") || "[]").length}
-              </div>
-              <div className="text-gray-400 text-sm">Total Items</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">
-                {
-                  JSON.parse(localStorage.getItem("admin_items") || "[]").filter(
-                    (item: any) => item.category === "PC Games",
-                  ).length
-                }
-              </div>
-              <div className="text-gray-400 text-sm">PC Games</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">
-                {
-                  JSON.parse(localStorage.getItem("admin_items") || "[]").filter(
-                    (item: any) => item.category === "Software",
-                  ).length
-                }
-              </div>
-              <div className="text-gray-400 text-sm">Software</div>
-            </div>
-          </div>
+             <div className="text-center">
+               <div className="text-2xl font-bold text-red-400">
+                 {stats.total}
+               </div>
+               <div className="text-gray-400 text-sm">Total Items</div>
+             </div>
+             <div className="text-center">
+               <div className="text-2xl font-bold text-blue-400">
+                 {stats.pcGames}
+               </div>
+               <div className="text-gray-400 text-sm">PC Games</div>
+             </div>
+             <div className="text-center">
+               <div className="text-2xl font-bold text-green-400">
+                 {stats.software}
+               </div>
+               <div className="text-gray-400 text-sm">Software</div>
+             </div>
+           </div>
         </CardContent>
       </Card>
     </div>

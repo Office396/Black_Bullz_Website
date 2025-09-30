@@ -38,6 +38,27 @@ export function Comments({ gameId, itemName }: CommentsProps) {
   const [replyContent, setReplyContent] = useState("")
   const [isAdmin, setIsAdmin] = useState(false)
 
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0) {
+      // Today - show time
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    } else if (diffDays === 1) {
+      // Yesterday
+      return 'Yesterday'
+    } else if (diffDays < 7) {
+      // This week - show day name
+      return date.toLocaleDateString([], { weekday: 'long' })
+    } else {
+      // Older - show date
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+    }
+  }
+
   // Load comments on mount
   useEffect(() => {
     // admin token check for delete controls
@@ -197,7 +218,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                   <div className="bg-gray-700 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-white font-medium">{comment.author}</span>
-                      <span className="text-gray-400 text-sm">{comment.timestamp}</span>
+                      <span className="text-gray-400 text-sm">{formatTimestamp(comment.timestamp)}</span>
                     </div>
                     <p className="text-gray-300">{comment.content}</p>
                   </div>
@@ -296,7 +317,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                             <div className="bg-gray-700 rounded-lg p-3">
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-white font-medium text-sm">{reply.author}</span>
-                                <span className="text-gray-400 text-xs">{reply.timestamp}</span>
+                                <span className="text-gray-400 text-xs">{formatTimestamp(reply.timestamp)}</span>
                               </div>
                               <p className="text-gray-300 text-sm">{reply.content}</p>
                             </div>
