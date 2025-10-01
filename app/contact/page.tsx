@@ -12,12 +12,13 @@ import { Mail, MessageSquare, Phone, MapPin, Facebook, Instagram, Youtube } from
 import { useState } from "react"
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  })
+   const [formData, setFormData] = useState({
+     name: "",
+     email: "",
+     subject: "",
+     message: "",
+   })
+   const [copiedEmail, setCopiedEmail] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,6 +50,29 @@ export default function ContactPage() {
       ...formData,
       [e.target.name]: e.target.value,
     })
+  }
+
+  const copyEmailToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText("blackbullzweb@gmail.com")
+      setCopiedEmail(true)
+      setTimeout(() => setCopiedEmail(false), 2000)
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea")
+      textArea.value = "blackbullzweb@gmail.com"
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        setCopiedEmail(true)
+        setTimeout(() => setCopiedEmail(false), 2000)
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed:', fallbackErr)
+      }
+      document.body.removeChild(textArea)
+    }
   }
 
   return (
@@ -124,7 +148,7 @@ export default function ContactPage() {
                 </Card>
 
                 {/* Contact Information */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <Card className="bg-gray-800 border-gray-700">
                     <CardHeader>
                       <CardTitle className="text-white flex items-center gap-2">
@@ -133,39 +157,61 @@ export default function ContactPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <Mail className="h-5 w-5 text-red-400" />
+                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
+                        <Mail className="h-7 w-7 text-red-400" />
                         <div>
-                          <p className="text-white font-medium">Email</p>
-                          <p className="text-gray-400">blackbullzweb@gmail.com</p>
+                          <p
+                            onClick={() => window.open("https://mail.google.com/mail/?view=cm&fs=1&to=blackbullzweb@gmail.com&su=Problem%20With%20BlackBullz&body=I%20got%20problem%20with%20BlackBullz", "_blank")}
+                            className="text-white font-medium hover:text-red-600 cursor-pointer"
+                          >
+                            Email
+                          </p>
+                          <p
+                            onClick={copyEmailToClipboard}
+                            className="text-gray-400 text-sm hover:text-red-600 cursor-pointer"
+                          >
+                            blackbullzweb@gmail.com {copiedEmail && <span className="text-green-400 ml-2">✓ Copied!</span>}
+                          </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Phone className="h-5 w-5 text-red-400" />
+                      <div
+                        onClick={() => window.open("https://wa.me/923494081854?text=Hello%2C%20I%E2%80%99m%20interested%20in%20your%20services%21", "_blank")}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors"
+                      >
+                        <Phone className="h-7 w-7 text-green-400" />
                         <div>
-                          <p className="text-white font-medium">WhatsApp</p>
-                          <p className="text-gray-400">+92 (320) 1446656</p>
+                          <p className="text-white font-medium hover:text-red-600">WhatsApp</p>
+                          <p className="text-gray-400 text-sm">Start a chat</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Facebook className="h-5 w-5 text-red-400" />
+                      <div
+                        onClick={() => window.open("https://facebook.com/miantaha.aslam.7", "_blank")}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors"
+                      >
+                        <Facebook className="h-7 w-7 text-blue-400" />
                         <div>
-                          <p className="text-white font-medium">Facebook</p>
-                          <p className="text-gray-400">facebook.com/blackbullz</p>
+                          <p className="text-white font-medium hover:text-red-600">Facebook</p>
+                          <p className="text-gray-400 text-sm">Connect with us</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Instagram className="h-5 w-5 text-red-400" />
+                      <div
+                        onClick={() => window.open("https://www.instagram.com/tahachoudhary16?igsh=YTh4b3N2amZwNm5z", "_blank")}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors"
+                      >
+                        <Instagram className="h-7 w-7 text-pink-400" />
                         <div>
-                          <p className="text-white font-medium">Instagram</p>
-                          <p className="text-gray-400">instagram.com/blackbullz</p>
+                          <p className="text-white font-medium hover:text-red-600">Instagram</p>
+                          <p className="text-gray-400 text-sm">Connect with us</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Youtube className="h-5 w-5 text-red-400" />
+                      <div
+                        onClick={() => window.open("https://www.youtube.com/@unaffordablz?sub_confirmation=1", "_blank")}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors"
+                      >
+                        <Youtube className="h-7 w-7 text-red-400" />
                         <div>
-                          <p className="text-white font-medium">YouTube</p>
-                          <p className="text-gray-400">youtube.com/@blackbullz</p>
+                          <p className="text-white font-medium hover:text-red-600">YouTube</p>
+                          <p className="text-gray-400 text-sm">Connect with us</p>
                         </div>
                       </div>
                     </CardContent>
@@ -182,3 +228,4 @@ export default function ContactPage() {
     </div>
   )
 }
+
