@@ -9,6 +9,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 })
     }
 
+    
     const { error } = await supabase
       .from('contact_messages')
       .insert({
