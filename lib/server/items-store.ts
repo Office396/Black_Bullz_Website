@@ -1,5 +1,4 @@
-import { promises as fs } from 'fs'
-import path from 'path'
+import { supabase } from '../supabase'
 
 export interface Item {
   id: number
@@ -42,62 +41,142 @@ export interface Item {
   uploadDate: string
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data')
-const ITEMS_FILE = path.join(DATA_DIR, 'items.json')
-
-async function ensureDataDir() {
-  await fs.mkdir(DATA_DIR, { recursive: true })
-}
-
-async function readJsonFile<T>(filePath: string, fallback: T): Promise<T> {
-  try {
-    const data = await fs.readFile(filePath, 'utf-8')
-    return JSON.parse(data) as T
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return fallback
-    throw e
-  }
-}
-
-async function writeJsonFile<T>(filePath: string, data: T): Promise<void> {
-  await ensureDataDir()
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8')
-}
-
 export async function getItems(): Promise<Item[]> {
-  return await readJsonFile<Item[]>(ITEMS_FILE, [])
-}
+  const { data, error } = await supabase
+    .from('items')
+    .select('*')
+    .order('upload_date', { ascending: false })
 
-export async function saveItems(items: Item[]): Promise<void> {
-  await writeJsonFile(ITEMS_FILE, items)
+  if (error) {
+    console.error('Error fetching items:', error)
+    throw error
+  }
+
+  // Transform database fields to match interface
+  return (data || []).map(item => ({
+    ...item,
+    longDescription: item.long_description,
+    releaseDate: item.release_date,
+    keyFeatures: item.key_features || [],
+    screenshots: item.screenshots || [],
+    systemRequirements: item.system_requirements,
+    androidRequirements: item.android_requirements,
+    sharedPinCode: item.shared_pin_code,
+    sharedRarPassword: item.shared_rar_password,
+    cloudDownloads: item.cloud_downloads || []
+  }))
 }
 
 export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate'>): Promise<Item> {
-  const items = await getItems()
   const now = new Date()
-  const newItem: Item = {
-    ...itemData,
-    id: Date.now(),
-    uploadDate: now.toISOString().split('T')[0], // YYYY-MM-DD
+  const dbItem = {
+    title: itemData.title,
+    category: itemData.category,
+    description: itemData.description,
+    long_description: itemData.longDescription,
+    developer: itemData.developer,
+    size: itemData.size,
+    release_date: itemData.releaseDate,
+    image: itemData.image,
+    rating: itemData.rating,
+    trending: itemData.trending,
+    latest: itemData.latest,
+    key_features: itemData.keyFeatures,
+    screenshots: itemData.screenshots,
+    system_requirements: itemData.systemRequirements,
+    android_requirements: itemData.androidRequirements,
+    shared_pin_code: itemData.sharedPinCode,
+    shared_rar_password: itemData.sharedRarPassword,
+    cloud_downloads: itemData.cloudDownloads,
+    upload_date: now.toISOString().split('T')[0]
   }
-  items.unshift(newItem) // Add to beginning
-  await saveItems(items)
-  return newItem
+
+  const { data, error } = await supabase
+    .from('items')
+    .insert(dbItem)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error adding item:', error)
+    throw error
+  }
+
+  // Transform back to interface format
+  return {
+    ...data,
+    longDescription: data.long_description,
+    releaseDate: data.release_date,
+    keyFeatures: data.key_features || [],
+    screenshots: data.screenshots || [],
+    systemRequirements: data.system_requirements,
+    androidRequirements: data.android_requirements,
+    sharedPinCode: data.shared_pin_code,
+    sharedRarPassword: data.shared_rar_password,
+    cloudDownloads: data.cloud_downloads || []
+  }
 }
 
 export async function updateItem(id: number, itemData: Partial<Item>): Promise<Item | null> {
-  const items = await getItems()
-  const index = items.findIndex(item => item.id === id)
-  if (index === -1) return null
-  items[index] = { ...items[index], ...itemData }
-  await saveItems(items)
-  return items[index]
+  // Transform interface fields to database fields
+  const dbUpdate: any = {}
+  if (itemData.title !== undefined) dbUpdate.title = itemData.title
+  if (itemData.category !== undefined) dbUpdate.category = itemData.category
+  if (itemData.description !== undefined) dbUpdate.description = itemData.description
+  if (itemData.longDescription !== undefined) dbUpdate.long_description = itemData.longDescription
+  if (itemData.developer !== undefined) dbUpdate.developer = itemData.developer
+  if (itemData.size !== undefined) dbUpdate.size = itemData.size
+  if (itemData.releaseDate !== undefined) dbUpdate.release_date = itemData.releaseDate
+  if (itemData.image !== undefined) dbUpdate.image = itemData.image
+  if (itemData.rating !== undefined) dbUpdate.rating = itemData.rating
+  if (itemData.trending !== undefined) dbUpdate.trending = itemData.trending
+  if (itemData.latest !== undefined) dbUpdate.latest = itemData.latest
+  if (itemData.keyFeatures !== undefined) dbUpdate.key_features = itemData.keyFeatures
+  if (itemData.screenshots !== undefined) dbUpdate.screenshots = itemData.screenshots
+  if (itemData.systemRequirements !== undefined) dbUpdate.system_requirements = itemData.systemRequirements
+  if (itemData.androidRequirements !== undefined) dbUpdate.android_requirements = itemData.androidRequirements
+  if (itemData.sharedPinCode !== undefined) dbUpdate.shared_pin_code = itemData.sharedPinCode
+  if (itemData.sharedRarPassword !== undefined) dbUpdate.shared_rar_password = itemData.sharedRarPassword
+  if (itemData.cloudDownloads !== undefined) dbUpdate.cloud_downloads = itemData.cloudDownloads
+  if (itemData.uploadDate !== undefined) dbUpdate.upload_date = itemData.uploadDate
+
+  const { data, error } = await supabase
+    .from('items')
+    .update(dbUpdate)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating item:', error)
+    return null
+  }
+
+  // Transform back to interface format
+  return {
+    ...data,
+    longDescription: data.long_description,
+    releaseDate: data.release_date,
+    keyFeatures: data.key_features || [],
+    screenshots: data.screenshots || [],
+    systemRequirements: data.system_requirements,
+    androidRequirements: data.android_requirements,
+    sharedPinCode: data.shared_pin_code,
+    sharedRarPassword: data.shared_rar_password,
+    cloudDownloads: data.cloud_downloads || []
+  }
 }
 
 export async function deleteItem(id: number): Promise<boolean> {
-  const items = await getItems()
-  const filtered = items.filter(item => item.id !== id)
-  if (filtered.length === items.length) return false
-  await saveItems(filtered)
+  const { error } = await supabase
+    .from('items')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting item:', error)
+    return false
+  }
+
   return true
 }

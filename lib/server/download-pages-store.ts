@@ -1,5 +1,5 @@
-import { promises as fs } from 'fs'
-import path from 'path'
+import { supabase } from '../supabase'
+import { getItems } from './items-store'
 
 export interface DownloadPage {
   id: string
@@ -12,54 +12,58 @@ export interface DownloadPage {
   token: string
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data')
-const DOWNLOAD_PAGES_FILE = path.join(DATA_DIR, 'download-pages.json')
-
-async function ensureDataDir() {
-  await fs.mkdir(DATA_DIR, { recursive: true })
-}
-
-async function readJsonFile<T>(filePath: string, fallback: T): Promise<T> {
-  try {
-    const data = await fs.readFile(filePath, 'utf-8')
-    return JSON.parse(data) as T
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return fallback
-    throw e
-  }
-}
-
-async function writeJsonFile<T>(filePath: string, data: T): Promise<void> {
-  await ensureDataDir()
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8')
-}
-
 export async function getDownloadPages(): Promise<DownloadPage[]> {
-  const pages = await readJsonFile<DownloadPage[]>(DOWNLOAD_PAGES_FILE, [])
-  // Clean expired pages
-  const now = new Date()
-  const validPages = pages.filter(page => new Date(page.expiresAt) > now)
-  if (validPages.length !== pages.length) {
-    await writeJsonFile(DOWNLOAD_PAGES_FILE, validPages)
+  const now = new Date().toISOString()
+
+  // Clean expired pages and get valid ones
+  const { data, error } = await supabase
+    .from('download_pages')
+    .select('*')
+    .gt('expires_at', now)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching download pages:', error)
+    return []
   }
-  return validPages
+
+  // Transform database fields to interface format
+  return data.map(page => ({
+    id: page.id,
+    gameId: page.game_id,
+    pinCode: page.pin_code,
+    actualDownloadLinks: page.actual_download_links,
+    rarPassword: page.rar_password,
+    createdAt: page.created_at,
+    expiresAt: page.expires_at,
+    token: page.token
+  }))
 }
 
 export async function saveDownloadPage(page: DownloadPage): Promise<void> {
-  const pages = await getDownloadPages()
-  pages.push(page)
-  await writeJsonFile(DOWNLOAD_PAGES_FILE, pages)
+  const { error } = await supabase
+    .from('download_pages')
+    .insert({
+      id: page.id,
+      game_id: page.gameId,
+      pin_code: page.pinCode,
+      actual_download_links: page.actualDownloadLinks,
+      rar_password: page.rarPassword,
+      created_at: page.createdAt,
+      expires_at: page.expiresAt,
+      token: page.token
+    })
+
+  if (error) {
+    console.error('Error saving download page:', error)
+    throw error
+  }
 }
 
 export async function createDownloadPage(gameId: number, cloudIndex?: number): Promise<DownloadPage> {
-  // Get game data from server API
-  const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/items`)
-  const result = await response.json()
-  if (!result.success) {
-    throw new Error('Failed to fetch items from server')
-  }
-  const adminItems = result.data
-  const gameData = adminItems.find((item: any) => item.id === gameId)
+  // Get game data from items store
+  const items = await getItems()
+  const gameData = items.find(item => item.id === gameId)
 
   // Support both old downloadPage structure and new cloudDownloads structure
   let downloadConfig
@@ -71,11 +75,11 @@ export async function createDownloadPage(gameId: number, cloudIndex?: number): P
     downloadConfig = gameData.cloudDownloads[cloudIndex]
     pinCode = gameData.sharedPinCode || '0000'
     rarPassword = gameData.sharedRarPassword
-  } else if (gameData?.downloadPage) {
-    // Old structure for backward compatibility
-    downloadConfig = gameData.downloadPage
-    pinCode = downloadConfig.pinCode
-    rarPassword = downloadConfig.rarPassword
+  } else if (gameData?.cloudDownloads?.[0]) {
+    // Default to first cloud download if no index specified
+    downloadConfig = gameData.cloudDownloads[0]
+    pinCode = gameData.sharedPinCode || '0000'
+    rarPassword = gameData.sharedRarPassword
   } else {
     throw new Error('Game data or download page configuration not found')
   }
@@ -102,21 +106,68 @@ export async function createDownloadPage(gameId: number, cloudIndex?: number): P
 }
 
 export async function getDownloadPage(gameId: number, cloudIndex?: number, token?: string): Promise<DownloadPage | null> {
-  const pages = await getDownloadPages()
+  if (!token) return null
 
-  if (token) {
-    const pageIdWithToken = cloudIndex !== undefined ? `${gameId}_c${cloudIndex}_${token}` : `${gameId}_${token}`
-    const pageById = pages.find(page => page.id === pageIdWithToken)
-    if (pageById) return pageById
-    // Fallback: match by token and gameId
-    const pageByToken = pages.find(page => page.token === token && page.gameId === gameId)
-    if (pageByToken) return pageByToken
+  const pageIdWithToken = cloudIndex !== undefined ? `${gameId}_c${cloudIndex}_${token}` : `${gameId}_${token}`
+
+  // Try exact ID match first
+  let { data, error } = await supabase
+    .from('download_pages')
+    .select('*')
+    .eq('id', pageIdWithToken)
+    .gt('expires_at', new Date().toISOString())
+    .single()
+
+  if (data && !error) {
+    return {
+      id: data.id,
+      gameId: data.game_id,
+      pinCode: data.pin_code,
+      actualDownloadLinks: data.actual_download_links,
+      rarPassword: data.rar_password,
+      createdAt: data.created_at,
+      expiresAt: data.expires_at,
+      token: data.token
+    }
+  }
+
+  // Fallback: match by token and gameId
+  const { data: fallbackData, error: fallbackError } = await supabase
+    .from('download_pages')
+    .select('*')
+    .eq('token', token)
+    .eq('game_id', gameId)
+    .gt('expires_at', new Date().toISOString())
+    .single()
+
+  if (fallbackData && !fallbackError) {
+    return {
+      id: fallbackData.id,
+      gameId: fallbackData.game_id,
+      pinCode: fallbackData.pin_code,
+      actualDownloadLinks: fallbackData.actual_download_links,
+      rarPassword: fallbackData.rar_password,
+      createdAt: fallbackData.created_at,
+      expiresAt: fallbackData.expires_at,
+      token: fallbackData.token
+    }
   }
 
   return null
 }
 
 export async function cleanupExpiredPages(): Promise<void> {
-  // Already cleaned in getDownloadPages
-  await getDownloadPages()
+  // Supabase handles this automatically through the expires_at filter
+  // But we can clean up old records periodically if needed
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+  const { error } = await supabase
+    .from('download_pages')
+    .delete()
+    .lt('expires_at', thirtyDaysAgo.toISOString())
+
+  if (error) {
+    console.error('Error cleaning up expired pages:', error)
+  }
 }

@@ -1,5 +1,4 @@
-import { promises as fs } from 'fs'
-import path from 'path'
+import { supabase } from '../supabase'
 
 export type Status = 'new' | 'read'
 
@@ -31,47 +30,57 @@ export interface FlattenedComment {
   status: Status
 }
 
-type CommentsStore = Record<string, SiteCommentRecord[]>
-
-const DATA_DIR = path.join(process.cwd(), 'data')
-const COMMENTS_FILE = path.join(DATA_DIR, 'comments.json')
-
-async function ensureDataDir() {
-  await fs.mkdir(DATA_DIR, { recursive: true })
-}
-
-async function readJsonFile<T>(filePath: string, fallback: T): Promise<T> {
-  try {
-    const data = await fs.readFile(filePath, 'utf-8')
-    return JSON.parse(data) as T
-  } catch (e: any) {
-    if (e?.code === 'ENOENT') return fallback
-    throw e
-  }
-}
-
-async function writeJsonFile<T>(filePath: string, data: T): Promise<void> {
-  await ensureDataDir()
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8')
-}
-
-export async function readCommentsStore(): Promise<CommentsStore> {
-  return await readJsonFile<CommentsStore>(COMMENTS_FILE, {})
-}
-
-export async function writeCommentsStore(store: CommentsStore): Promise<void> {
-  await writeJsonFile(COMMENTS_FILE, store)
-}
-
 export async function getComments(itemId: number): Promise<SiteCommentRecord[]> {
-  const store = await readCommentsStore()
-  return store[String(itemId)] || []
-}
+  // Get all comments for this item (both top-level and replies)
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*')
+    .eq('item_id', itemId)
+    .order('timestamp', { ascending: false })
 
-export async function setComments(itemId: number, list: SiteCommentRecord[]): Promise<void> {
-  const store = await readCommentsStore()
-  store[String(itemId)] = list
-  await writeCommentsStore(store)
+  if (error) {
+    console.error('Error fetching comments:', error)
+    return []
+  }
+
+  // Group comments by parent_id to reconstruct the nested structure
+  const topLevelComments: SiteCommentRecord[] = []
+  const repliesMap: Record<number, SiteCommentRecord[]> = {}
+
+  data.forEach(comment => {
+    const commentRecord: SiteCommentRecord = {
+      id: comment.id,
+      itemId: comment.item_id,
+      itemName: comment.item_name,
+      author: comment.author,
+      email: comment.email,
+      avatar: comment.avatar,
+      content: comment.content,
+      timestamp: comment.timestamp,
+      likes: comment.likes,
+      dislikes: comment.dislikes,
+      status: comment.status,
+      replies: []
+    }
+
+    if (comment.parent_id) {
+      // This is a reply
+      if (!repliesMap[comment.parent_id]) {
+        repliesMap[comment.parent_id] = []
+      }
+      repliesMap[comment.parent_id].push(commentRecord)
+    } else {
+      // This is a top-level comment
+      topLevelComments.push(commentRecord)
+    }
+  })
+
+  // Attach replies to their parent comments
+  topLevelComments.forEach(comment => {
+    comment.replies = repliesMap[comment.id] || []
+  })
+
+  return topLevelComments
 }
 
 export async function addComment(params: {
@@ -83,25 +92,32 @@ export async function addComment(params: {
   avatar?: string
 }): Promise<SiteCommentRecord[]> {
   const { itemId, itemName, author, email, content, avatar } = params
-  const list = await getComments(itemId)
-  const now = new Date()
-  const record: SiteCommentRecord = {
-    id: Date.now(),
-    itemId,
-    itemName,
-    author: author.trim(),
-    email: email?.trim() || '',
-    avatar,
-    content: content.trim(),
-    timestamp: now.toISOString(),
-    likes: 0,
-    dislikes: 0,
-    status: 'new',
-    replies: [],
+
+  const { data, error } = await supabase
+    .from('comments')
+    .insert({
+      item_id: itemId,
+      item_name: itemName,
+      author: author.trim(),
+      email: email?.trim() || '',
+      avatar,
+      content: content.trim(),
+      timestamp: new Date().toISOString(),
+      likes: 0,
+      dislikes: 0,
+      status: 'new',
+      parent_id: null
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error adding comment:', error)
+    throw error
   }
-  const updated = [record, ...list]
-  await setComments(itemId, updated)
-  return updated
+
+  // Return updated comments list
+  return await getComments(itemId)
 }
 
 export async function addReply(params: {
@@ -114,58 +130,45 @@ export async function addReply(params: {
   avatar?: string
 }): Promise<SiteCommentRecord[]> {
   const { itemId, parentId, itemName, author, email, content, avatar } = params
-  const list = await getComments(itemId)
-  const now = new Date()
-  const reply: SiteCommentRecord = {
-    id: Date.now(),
-    itemId,
-    itemName,
-    author: author.trim(),
-    email: email?.trim() || '',
-    avatar,
-    content: content.trim(),
-    timestamp: now.toISOString(),
-    likes: 0,
-    dislikes: 0,
-    status: 'new',
+
+  const { error } = await supabase
+    .from('comments')
+    .insert({
+      item_id: itemId,
+      item_name: itemName,
+      author: author.trim(),
+      email: email?.trim() || '',
+      avatar,
+      content: content.trim(),
+      timestamp: new Date().toISOString(),
+      likes: 0,
+      dislikes: 0,
+      status: 'new',
+      parent_id: parentId
+    })
+
+  if (error) {
+    console.error('Error adding reply:', error)
+    throw error
   }
 
-  const updated = list.map((c) => {
-    if (c.id === parentId) {
-      const replies = [...(c.replies || []), reply]
-      return { ...c, replies }
-    }
-    return c
-  })
-
-  await setComments(itemId, updated)
-  return updated
+  // Return updated comments list
+  return await getComments(itemId)
 }
 
 export async function deleteCommentOrReply(itemId: number, targetId: number): Promise<{ updated: SiteCommentRecord[]; deleted: boolean }> {
-  const list = await getComments(itemId)
-  let deleted = false
+  const { error } = await supabase
+    .from('comments')
+    .delete()
+    .eq('id', targetId)
 
-  // Try delete top-level
-  let updated = list.filter((c) => {
-    if (c.id === targetId) {
-      deleted = true
-      return false
-    }
-    return true
-  })
+  const deleted = !error
 
-  if (!deleted) {
-    // Try delete a reply
-    updated = updated.map((c) => {
-      const before = c.replies?.length || 0
-      const replies = (c.replies || []).filter((r) => r.id !== targetId)
-      if (replies.length !== before) deleted = true
-      return { ...c, replies }
-    })
+  if (error) {
+    console.error('Error deleting comment/reply:', error)
   }
 
-  if (deleted) await setComments(itemId, updated)
+  const updated = await getComments(itemId)
   return { updated, deleted }
 }
 
@@ -174,70 +177,75 @@ export async function reactToComment(params: {
   targetId: number
   reaction: 'like' | 'dislike'
 }): Promise<SiteCommentRecord[]> {
-  const { itemId, targetId, reaction } = params
-  const list = await getComments(itemId)
-  const updated = list.map((c) => {
-    if (c.id === targetId) {
-      return { ...c, [reaction === 'like' ? 'likes' : 'dislikes']: (c[reaction === 'like' ? 'likes' : 'dislikes'] || 0) + 1 }
-    }
-    const replies = (c.replies || []).map((r) => {
-      if (r.id === targetId) {
-        return { ...r, [reaction === 'like' ? 'likes' : 'dislikes']: (r[reaction === 'like' ? 'likes' : 'dislikes'] || 0) + 1 }
-      }
-      return r
+  const { targetId, reaction } = params
+
+  // First get current values
+  const { data: currentComment, error: fetchError } = await supabase
+    .from('comments')
+    .select('likes, dislikes')
+    .eq('id', targetId)
+    .single()
+
+  if (fetchError) {
+    console.error('Error fetching comment for reaction:', fetchError)
+    throw fetchError
+  }
+
+  const incrementField = reaction === 'like' ? 'likes' : 'dislikes'
+  const newValue = (currentComment[incrementField] || 0) + 1
+
+  const { error } = await supabase
+    .from('comments')
+    .update({
+      [incrementField]: newValue
     })
-    return { ...c, replies }
-  })
-  await setComments(itemId, updated)
-  return updated
+    .eq('id', targetId)
+
+  if (error) {
+    console.error('Error reacting to comment:', error)
+    throw error
+  }
+
+  // Return updated comments list
+  return await getComments(params.itemId)
 }
 
 export async function setCommentStatus(itemId: number, targetId: number, status: Status): Promise<SiteCommentRecord[]> {
-  const list = await getComments(itemId)
-  const updated = list.map((c) => {
-    if (c.id === targetId) return { ...c, status }
-    const replies = (c.replies || []).map((r) => (r.id === targetId ? { ...r, status } : r))
-    return { ...c, replies }
-  })
-  await setComments(itemId, updated)
-  return updated
+  const { error } = await supabase
+    .from('comments')
+    .update({ status })
+    .eq('id', targetId)
+
+  if (error) {
+    console.error('Error updating comment status:', error)
+    throw error
+  }
+
+  // Return updated comments list
+  return await getComments(itemId)
 }
 
 export async function flattenCommentsForAdmin(): Promise<FlattenedComment[]> {
-  const store = await readCommentsStore()
-  const rows: FlattenedComment[] = []
-  Object.keys(store).forEach((key) => {
-    const itemId = Number(key)
-    const list = store[key]
-    list.forEach((c) => {
-      rows.push({
-        id: c.id,
-        itemId,
-        itemName: c.itemName,
-        author: c.author,
-        email: c.email || '',
-        content: c.content,
-        type: 'comment',
-        timestamp: c.timestamp,
-        status: c.status,
-      })
-      ;(c.replies || []).forEach((r) => {
-        rows.push({
-          id: r.id,
-          itemId,
-          itemName: r.itemName || c.itemName,
-          author: r.author,
-          email: r.email || '',
-          content: r.content,
-          type: 'reply',
-          parentId: c.id,
-          timestamp: r.timestamp,
-          status: r.status,
-        })
-      })
-    })
-  })
-  // Newest first by timestamp
-  rows.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-  return rows
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*')
+    .order('timestamp', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching flattened comments:', error)
+    return []
+  }
+
+  return data.map(comment => ({
+    id: comment.id,
+    itemId: comment.item_id,
+    itemName: comment.item_name,
+    author: comment.author,
+    email: comment.email,
+    content: comment.content,
+    type: comment.parent_id ? 'reply' : 'comment',
+    parentId: comment.parent_id,
+    timestamp: comment.timestamp,
+    status: comment.status
+  }))
 }
