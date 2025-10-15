@@ -62,6 +62,17 @@ CREATE TABLE IF NOT EXISTS download_pages (
   token TEXT NOT NULL
 );
 
+-- Create contact_messages table
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  status TEXT DEFAULT 'new' CHECK (status IN ('new', 'read'))
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_items_category ON items(category);
 CREATE INDEX IF NOT EXISTS idx_items_trending ON items(trending);
@@ -87,3 +98,4 @@ CREATE POLICY "Allow all operations on items" ON items FOR ALL USING (true);
 CREATE POLICY "Allow all operations on admin_credentials" ON admin_credentials FOR ALL USING (true);
 CREATE POLICY "Allow all operations on comments" ON comments FOR ALL USING (true);
 CREATE POLICY "Allow all operations on download_pages" ON download_pages FOR ALL USING (true);
+CREATE POLICY "Allow all operations on contact_messages" ON contact_messages FOR ALL USING (true);

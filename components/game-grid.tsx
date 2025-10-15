@@ -26,9 +26,9 @@ interface GameItem {
 
 const tabs = [
   { id: "all", label: "All" },
-  { id: "pc-games", label: "PC Games" },
-  { id: "android-games", label: "Android Games" },
-  { id: "software", label: "Software" },
+  { id: "pc-games", label: "Free PC Games" },
+  { id: "android-games", label: "Free Android Apps" },
+  { id: "software", label: "Free Software" },
 ]
 
 interface GameGridProps {
@@ -149,10 +149,10 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
             : activeTab === "all"
               ? "Latest Games & Software"
               : activeTab === "pc-games"
-                ? "PC Games"
+                ? "Free PC Games"
                 : activeTab === "android-games"
-                  ? "Android Games"
-                  : "Software"}
+                  ? "Free Android Apps"
+                  : "Free Software"}
         </h1>
       </div>
 

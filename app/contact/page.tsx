@@ -20,8 +20,11 @@ export default function ContactPage() {
    })
    const [copiedEmail, setCopiedEmail] = useState(false)
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
@@ -42,6 +45,8 @@ export default function ContactPage() {
     } catch (err) {
       console.error("Failed to save message", err)
       alert("Failed to send message. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -140,8 +145,8 @@ export default function ContactPage() {
                           required
                         />
                       </div>
-                      <Button type="submit" className="w-full bg-red-600 hover:bg-red-700">
-                        Send Message
+                      <Button type="submit" className="w-full bg-red-600 hover:bg-red-700" disabled={isSubmitting}>
+                        {isSubmitting ? "Sending..." : "Send Message"}
                       </Button>
                     </form>
                   </CardContent>
