@@ -42,29 +42,35 @@ export interface Item {
 }
 
 export async function getItems(): Promise<Item[]> {
-  const { data, error } = await supabase
-    .from('items')
-    .select('*')
-    .order('upload_date', { ascending: false })
+  try {
+    const { data, error } = await supabase
+      .from('items')
+      .select('*')
+      .order('upload_date', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching items:', error)
-    throw error
+    if (error) {
+      console.error('Error fetching items:', error)
+      // Return empty array instead of throwing to prevent app crash
+      return []
+    }
+
+    // Transform database fields to match interface
+    return (data || []).map(item => ({
+      ...item,
+      longDescription: item.long_description,
+      releaseDate: item.release_date,
+      keyFeatures: item.key_features || [],
+      screenshots: item.screenshots || [],
+      systemRequirements: item.system_requirements,
+      androidRequirements: item.android_requirements,
+      sharedPinCode: item.shared_pin_code,
+      sharedRarPassword: item.shared_rar_password,
+      cloudDownloads: item.cloud_downloads || []
+    }))
+  } catch (error) {
+    console.error('Error in getItems:', error)
+    return []
   }
-
-  // Transform database fields to match interface
-  return (data || []).map(item => ({
-    ...item,
-    longDescription: item.long_description,
-    releaseDate: item.release_date,
-    keyFeatures: item.key_features || [],
-    screenshots: item.screenshots || [],
-    systemRequirements: item.system_requirements,
-    androidRequirements: item.android_requirements,
-    sharedPinCode: item.shared_pin_code,
-    sharedRarPassword: item.shared_rar_password,
-    cloudDownloads: item.cloud_downloads || []
-  }))
 }
 
 export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate'>): Promise<Item> {

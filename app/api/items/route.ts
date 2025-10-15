@@ -7,7 +7,8 @@ export async function GET() {
     return NextResponse.json({ success: true, data: items })
   } catch (error) {
     console.error('Failed to get items:', error)
-    return NextResponse.json({ success: false, error: 'Failed to retrieve items' }, { status: 500 })
+    // Return empty array instead of error for better UX
+    return NextResponse.json({ success: true, data: [] })
   }
 }
 

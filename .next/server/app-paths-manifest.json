@@ -1,7 +1,9 @@
 {
   "/page": "app/page.js",
-  "/latest/page": "app/latest/page.js",
-  "/categories/page": "app/categories/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/api/contact/route": "app/api/contact/route.js",
+  "/admin/portal/page": "app/admin/portal/page.js",
   "/api/items/route": "app/api/items/route.js",
-  "/contact/page": "app/contact/page.js"
+  "/api/comments/route": "app/api/comments/route.js",
+  "/api/monitoring/route": "app/api/monitoring/route.js"
 }

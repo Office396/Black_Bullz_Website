@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'placeholder-key'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
@@ -228,6 +228,35 @@ export interface Database {
           created_at?: string
           expires_at?: string
           token?: string
+        }
+      }
+      contact_messages: {
+        Row: {
+          id: number
+          name: string
+          email: string
+          subject: string
+          message: string
+          timestamp: string
+          status: 'new' | 'read'
+        }
+        Insert: {
+          id?: number
+          name: string
+          email: string
+          subject: string
+          message: string
+          timestamp: string
+          status?: 'new' | 'read'
+        }
+        Update: {
+          id?: number
+          name?: string
+          email?: string
+          subject?: string
+          message?: string
+          timestamp?: string
+          status?: 'new' | 'read'
         }
       }
     }

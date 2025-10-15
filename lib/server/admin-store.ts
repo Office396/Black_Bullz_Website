@@ -11,20 +11,25 @@ const DEFAULT_CREDENTIALS: AdminCredentials = {
 }
 
 export async function getAdminCredentials(): Promise<AdminCredentials> {
-  const { data, error } = await supabase
-    .from('admin_credentials')
-    .select('username, password')
-    .single()
+  try {
+    const { data, error } = await supabase
+      .from('admin_credentials')
+      .select('username, password')
+      .single()
 
-  if (error) {
-    console.error('Error fetching admin credentials:', error)
-    // Return default credentials if none exist in database
+    if (error) {
+      console.error('Error fetching admin credentials:', error)
+      // Return default credentials if none exist in database
+      return DEFAULT_CREDENTIALS
+    }
+
+    return {
+      username: data.username,
+      password: data.password
+    }
+  } catch (error) {
+    console.error('Error in getAdminCredentials:', error)
     return DEFAULT_CREDENTIALS
-  }
-
-  return {
-    username: data.username,
-    password: data.password
   }
 }
 
