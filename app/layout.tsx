@@ -8,8 +8,8 @@ import { PageLoader } from "@/components/page-loader"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "BlackBullz - Download Games & Software",
-  description: "Download the latest PC games, Android games, and software for free",
+  title: "BlackBullz - Free PC Games, Android Apps & Software",
+  description: "Download the latest free PC games, Android apps, and software for free. No registration required.",
   generator: "BlackBullz",
 }
 

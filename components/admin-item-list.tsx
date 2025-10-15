@@ -205,7 +205,7 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
                   <div className="flex items-center gap-4 text-xs text-gray-400">
                     <span>Size: {item.size}</span>
                     <span>Rating: {item.rating}/5</span>
-                    <span>Added: {item.dateAdded || new Date(item.id).toLocaleDateString()}</span>
+                    <span>Added: {item.uploadDate ? new Date(item.uploadDate).toLocaleDateString() : new Date(item.id).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>

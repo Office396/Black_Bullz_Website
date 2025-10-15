@@ -73,9 +73,18 @@ export function AdminFeedback() {
       } catch {}
 
       try {
-        // Keep messages from localStorage for now; will centralize via API next
-        const sm = JSON.parse(localStorage.getItem("site_messages") || "[]")
-        if (Array.isArray(sm)) setMessages(sm)
+        // Fetch messages from Supabase API
+        const mRes = await fetch('/api/contact', { cache: 'no-store' })
+        const mJson = await mRes.json()
+        if (Array.isArray(mJson?.data)) setMessages(mJson.data.map((msg: any) => ({
+          id: msg.id,
+          name: msg.name,
+          email: msg.email,
+          subject: msg.subject,
+          message: msg.message,
+          timestamp: msg.timestamp,
+          status: msg.status
+        })))
       } catch {}
     }
     fetchData()
