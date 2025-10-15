@@ -14,6 +14,8 @@ export async function POST(request: Request) {
     const templateId = process.env.EMAILJS_TEMPLATE_ID
     const publicKey = process.env.EMAILJS_PUBLIC_KEY
 
+    console.log("EmailJS Config:", { serviceId: serviceId ? "set" : "missing", templateId: templateId ? "set" : "missing", publicKey: publicKey ? "set" : "missing" })
+
     if (!serviceId || !templateId || !publicKey) {
       console.error("EmailJS configuration missing")
       return NextResponse.json({ success: false, error: "Email service not configured" }, { status: 500 })
@@ -26,6 +28,8 @@ export async function POST(request: Request) {
       message: formData.message.trim(),
       to_email: "blackbullzweb@gmail.com", // Your email address
     }
+
+    console.log("Sending email with params:", templateParams)
 
     try {
       const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -41,11 +45,15 @@ export async function POST(request: Request) {
         }),
       })
 
+      console.log("EmailJS response status:", response.status)
+
       if (!response.ok) {
         const errorText = await response.text()
         console.error("EmailJS API error:", response.status, errorText)
-        return NextResponse.json({ success: false, error: "Failed to send email" }, { status: 500 })
+        return NextResponse.json({ success: false, error: `Failed to send email: ${errorText}` }, { status: 500 })
       }
+
+      console.log("Email sent successfully")
     } catch (emailError) {
       console.error("Failed to send email:", emailError)
       return NextResponse.json({ success: false, error: "Failed to send email" }, { status: 500 })
@@ -66,6 +74,8 @@ export async function POST(request: Request) {
     if (error) {
       console.error("Failed to save message to database:", error)
       // Don't fail the request if database save fails, since email was sent
+    } else {
+      console.log("Message saved to database successfully")
     }
 
     return NextResponse.json({ success: true, message: "Message sent successfully!" })
