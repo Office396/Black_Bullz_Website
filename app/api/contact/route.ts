@@ -9,8 +9,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 })
     }
 
-    // Send email using EmailJS
-    const emailjs = (await import("@emailjs/browser")).default
+    // Send email using EmailJS REST API
     const serviceId = process.env.EMAILJS_SERVICE_ID
     const templateId = process.env.EMAILJS_TEMPLATE_ID
     const publicKey = process.env.EMAILJS_PUBLIC_KEY
@@ -29,7 +28,24 @@ export async function POST(request: Request) {
     }
 
     try {
-      await emailjs.send(serviceId, templateId, templateParams, publicKey)
+      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          service_id: serviceId,
+          template_id: templateId,
+          user_id: publicKey,
+          template_params: templateParams,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("EmailJS API error:", response.status, errorText)
+        return NextResponse.json({ success: false, error: "Failed to send email" }, { status: 500 })
+      }
     } catch (emailError) {
       console.error("Failed to send email:", emailError)
       return NextResponse.json({ success: false, error: "Failed to send email" }, { status: 500 })
