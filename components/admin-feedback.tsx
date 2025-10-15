@@ -73,18 +73,25 @@ export function AdminFeedback() {
       } catch {}
 
       try {
-        // Fetch messages from Supabase API
-        const mRes = await fetch('/api/contact', { cache: 'no-store' })
-        const mJson = await mRes.json()
-        if (Array.isArray(mJson?.data)) setMessages(mJson.data.map((msg: any) => ({
-          id: msg.id,
-          name: msg.name,
-          email: msg.email,
-          subject: msg.subject,
-          message: msg.message,
-          timestamp: msg.timestamp,
-          status: msg.status
-        })))
+        // Fetch messages from Supabase API or localStorage for development
+        if (process.env.NODE_ENV === 'development' && (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder'))) {
+          // In development without Supabase, use localStorage
+          const storedMessages = JSON.parse(localStorage.getItem('site_messages') || '[]')
+          if (Array.isArray(storedMessages)) setMessages(storedMessages)
+        } else {
+          // Production: fetch from API
+          const mRes = await fetch('/api/contact', { cache: 'no-store' })
+          const mJson = await mRes.json()
+          if (Array.isArray(mJson?.data)) setMessages(mJson.data.map((msg: any) => ({
+            id: msg.id,
+            name: msg.name,
+            email: msg.email,
+            subject: msg.subject,
+            message: msg.message,
+            timestamp: msg.timestamp,
+            status: msg.status
+          })))
+        }
       } catch {}
     }
     fetchData()
