@@ -9,29 +9,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 })
     }
 
-    // For development/local testing, save to localStorage instead of database
-    if (process.env.NODE_ENV === 'development' && (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder'))) {
-      console.log('Development mode: Contact form submission saved to localStorage', formData)
-      try {
-        const existingMessages = JSON.parse(localStorage.getItem('contact_messages') || '[]')
-        const newMessage = {
-          id: Date.now(),
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          subject: formData.subject.trim(),
-          message: formData.message.trim(),
-          timestamp: new Date().toISOString(),
-          status: "new",
-        }
-        existingMessages.unshift(newMessage)
-        // Note: localStorage doesn't work in server-side code, but this is just for development
-        console.log('Message would be saved:', newMessage)
-      } catch (e) {
-        console.log('Local storage not available in server context')
-      }
-      return NextResponse.json({ success: true, message: "Message sent successfully!" })
+    // Send email using EmailJS
+    const emailjs = (await import("@emailjs/browser")).default
+    const serviceId = process.env.EMAILJS_SERVICE_ID
+    const templateId = process.env.EMAILJS_TEMPLATE_ID
+    const publicKey = process.env.EMAILJS_PUBLIC_KEY
+
+    if (!serviceId || !templateId || !publicKey) {
+      console.error("EmailJS configuration missing")
+      return NextResponse.json({ success: false, error: "Email service not configured" }, { status: 500 })
     }
 
+    const templateParams = {
+      from_name: formData.name.trim(),
+      from_email: formData.email.trim(),
+      subject: formData.subject.trim(),
+      message: formData.message.trim(),
+      to_email: "blackbullzweb@gmail.com", // Your email address
+    }
+
+    try {
+      await emailjs.send(serviceId, templateId, templateParams, publicKey)
+    } catch (emailError) {
+      console.error("Failed to send email:", emailError)
+      return NextResponse.json({ success: false, error: "Failed to send email" }, { status: 500 })
+    }
+
+    // Save to Supabase database
     const { error } = await supabase
       .from('contact_messages')
       .insert({
@@ -44,13 +48,13 @@ export async function POST(request: Request) {
       })
 
     if (error) {
-      console.error("Failed to save message:", error)
-      return NextResponse.json({ success: false, error: "Failed to send message" }, { status: 500 })
+      console.error("Failed to save message to database:", error)
+      // Don't fail the request if database save fails, since email was sent
     }
 
     return NextResponse.json({ success: true, message: "Message sent successfully!" })
   } catch (error) {
-    console.error("Failed to save message:", error)
+    console.error("Failed to process message:", error)
     return NextResponse.json({ success: false, error: "Failed to send message" }, { status: 500 })
   }
 }

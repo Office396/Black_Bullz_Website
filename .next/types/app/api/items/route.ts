@@ -1,4 +1,4 @@
-// File: C:\wd\Web\app\api\items\route.ts
+// File: C:\wd\web2\app\api\items\route.ts
 import * as entry from '../../../../../app/api/items/route.js'
 import type { NextRequest } from 'next/server.js'
 
