@@ -1,4 +1,4 @@
-// File: C:\wd\Web\app\contact\page.tsx
+// File: C:\wd\web2\app\contact\page.tsx
 import * as entry from '../../../../app/contact/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
