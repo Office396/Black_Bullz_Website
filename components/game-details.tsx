@@ -58,75 +58,79 @@ export function GameDetails({ game }: GameDetailsProps) {
   const [gameData, setGameData] = useState<any>(game)
 
   const handleCloudDownload = async (gameId: number, cloudIndex: number, cloudName: string) => {
+    // Immediately show loading state to prevent multiple clicks
+    const downloadButton = document.querySelector(`[data-cloud-download="${cloudIndex}"]`) as HTMLButtonElement
+    if (downloadButton) {
+      downloadButton.disabled = true
+      downloadButton.innerHTML = '<div class="flex items-center justify-center"><div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>Creating Link...</div>'
+    }
+
     try {
       // Access control removed - no browser cache
 
       const validLinks = gameData?.cloudDownloads?.[cloudIndex]?.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()) || []
       if (!validLinks.length) {
         alert(`${cloudName} download not configured for this item. Please contact admin.`)
+        // Reset button immediately
+        if (downloadButton) {
+          downloadButton.disabled = false
+          downloadButton.innerHTML = '<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Download'
+        }
         return
       }
 
       // Create download page data first for this specific cloud
       console.log(`Creating download page data for ${cloudName}...`)
       const pageData = await createDownloadPage(gameId, cloudIndex)
-      
-      // Show loading state - target the specific download button
-      const downloadButton = document.querySelector(`[data-cloud-download="${cloudIndex}"]`) as HTMLButtonElement
-      if (downloadButton) {
-        downloadButton.disabled = true
-        downloadButton.textContent = 'Creating Download Link...'
-      }
-      
+
       console.log(`Attempting to create survey link for ${cloudName}:`, gameId)
       console.log('Download page URL will be:', `${window.location.origin}/download/${gameId}?cloud=${cloudIndex}&token=${pageData.token}`)
-      
+
       try {
         // Try to create survey link with comprehensive fallback
         const result = await createSurveyLink(gameId, cloudIndex, pageData.token)
-        
+
         if (result.success && result.shortenedUrl) {
           console.log('✅ Survey link created successfully:', result.shortenedUrl)
           console.log('Provider used:', result.provider)
-          
-          // Reset button
+
+          // Reset button and open link immediately
           if (downloadButton) {
             downloadButton.disabled = false
-            downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Download`
+            downloadButton.innerHTML = '<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Download'
           }
-          
-          // Open survey link
+
+          // Open survey link immediately
           window.open(result.shortenedUrl, '_blank')
-          
+
         } else {
           throw new Error(result.error || 'Failed to create survey link')
         }
-        
+
       } catch (apiError) {
         console.error('❌ Survey link creation failed:', apiError)
-        
+
         // Reset button
         if (downloadButton) {
           downloadButton.disabled = false
-          downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Download`
+          downloadButton.innerHTML = '<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Download'
         }
-        
+
         // BACKUP: Redirect directly to PIN page if survey fails
         console.log('Redirecting to PIN page as backup...')
         const pinPageUrl = `${window.location.origin}/download/${gameId}?cloud=${cloudIndex}&token=${pageData.token}`
         window.open(pinPageUrl, '_blank')
       }
-      
+
     } catch (error) {
       console.error('💥 Download process completely failed:', error)
-      
-      // Reset button
-      const downloadButton = document.querySelector(`[data-cloud-download="${cloudIndex}"]`) as HTMLButtonElement
+
+      // Reset button immediately
       if (downloadButton) {
         downloadButton.disabled = false
-        downloadButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Download`
+        downloadButton.innerHTML = '<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Download'
       }
-      
+
       alert(`${cloudName} download temporarily unavailable. Please try again later.`)
     }
   }

@@ -31,66 +31,70 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
               <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">BB</span>
               </div>
-              <h1 className="text-xl font-bold text-white">Admin Portal</h1>
+              <h1 className="text-lg md:text-xl font-bold text-white">Admin Portal</h1>
             </div>
             <Button
               onClick={handleLogout}
               variant="outline"
+              size="sm"
               className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-gray-800 border-gray-700">
-            <TabsTrigger value="list" className="data-[state=active]:bg-red-600">
-              <List className="h-4 w-4 mr-2" />
-              Manage Items
+      <div className="container mx-auto px-2 md:px-4 py-4 md:py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <TabsList className="bg-gray-800 border-gray-700 grid w-full grid-cols-3 md:flex md:w-auto">
+            <TabsTrigger value="list" className="data-[state=active]:bg-red-600 text-xs md:text-sm">
+              <List className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Manage Items</span>
+              <span className="md:hidden">Items</span>
             </TabsTrigger>
-            <TabsTrigger value="add" className="data-[state=active]:bg-red-600">
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Item
+            <TabsTrigger value="add" className="data-[state=active]:bg-red-600 text-xs md:text-sm">
+              <Plus className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Add New Item</span>
+              <span className="md:hidden">Add</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-red-600">
+            <TabsTrigger value="feedback" className="data-[state=active]:bg-red-600 text-xs md:text-sm">
+              <MessageSquare className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Feedback</span>
+              <span className="md:hidden">Msgs</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-red-600 text-xs md:text-sm hidden md:flex">
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </TabsTrigger>
-            <TabsTrigger value="feedback" className="data-[state=active]:bg-red-600">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Feedback
-            </TabsTrigger>
-            <TabsTrigger value="system" className="data-[state=active]:bg-red-600">
+            <TabsTrigger value="system" className="data-[state=active]:bg-red-600 text-xs md:text-sm hidden md:flex">
               <Activity className="h-4 w-4 mr-2" />
               System Status
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="list" className="space-y-6">
+          <TabsContent value="list" className="space-y-4 md:space-y-6">
             <Card className="bg-gray-800 border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white">Manage Items</CardTitle>
-                <div className="flex items-center space-x-4">
-                  <div className="relative flex-1 max-w-md">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-white text-lg md:text-xl">Manage Items</CardTitle>
+                <div className="flex items-center space-x-2 md:space-x-4">
+                  <div className="relative flex-1 max-w-full md:max-w-md">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       placeholder="Search items..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
                     />
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-2 md:px-6">
                 <AdminItemList searchQuery={searchQuery} />
               </CardContent>
             </Card>
@@ -99,15 +103,15 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <TabsContent value="add">
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
-                <CardTitle className="text-white">Add New Item</CardTitle>
+                <CardTitle className="text-white text-lg md:text-xl">Add New Item</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-2 md:px-6">
                 <AdminItemForm />
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="settings">
+          <TabsContent value="settings" className="hidden md:block">
             <AdminSettings />
           </TabsContent>
 
@@ -115,7 +119,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <AdminFeedback />
           </TabsContent>
 
-          <TabsContent value="system">
+          <TabsContent value="system" className="hidden md:block">
             <AdminSystemStatus />
           </TabsContent>
         </Tabs>

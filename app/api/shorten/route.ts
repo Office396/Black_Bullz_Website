@@ -17,7 +17,7 @@ function generateAlias(gameId?: number, cloudIndex?: number): string {
 async function shortenWithGPLinks(originalUrl: string, alias: string) {
   try {
     const textApiUrl = `https://api.gplinks.com/api?api=${GP_LINKS_API_TOKEN}&url=${encodeURIComponent(originalUrl)}&alias=${alias}&format=text`
-    const textResp = await fetch(textApiUrl, { method: "GET" })
+    const textResp = await fetch(textApiUrl, { method: "GET", signal: AbortSignal.timeout(5000) })
     if (textResp.ok) {
       const txt = (await textResp.text()).trim()
       if (txt && txt.startsWith("http")) {
@@ -28,7 +28,7 @@ async function shortenWithGPLinks(originalUrl: string, alias: string) {
 
   try {
     const jsonApiUrl = `https://api.gplinks.com/api?api=${GP_LINKS_API_TOKEN}&url=${encodeURIComponent(originalUrl)}&alias=${alias}`
-    const jsonResp = await fetch(jsonApiUrl, { method: "GET" })
+    const jsonResp = await fetch(jsonApiUrl, { method: "GET", signal: AbortSignal.timeout(5000) })
     if (jsonResp.ok) {
       const data = await jsonResp.json()
       const candidate = data?.shortenedUrl || data?.shorturl || data?.url
@@ -49,7 +49,7 @@ async function shortenWithGPLinks(originalUrl: string, alias: string) {
 async function shortenWithV2Links(originalUrl: string, alias: string) {
   try {
     const textApiUrl = `https://v2links.com/api?api=${V2_LINKS_API_TOKEN}&url=${encodeURIComponent(originalUrl)}&alias=${alias}&format=text`
-    const textResp = await fetch(textApiUrl, { method: "GET" })
+    const textResp = await fetch(textApiUrl, { method: "GET", signal: AbortSignal.timeout(5000) })
     if (textResp.ok) {
       const txt = (await textResp.text()).trim()
       if (txt && txt.startsWith("http")) {
@@ -60,7 +60,7 @@ async function shortenWithV2Links(originalUrl: string, alias: string) {
 
   try {
     const jsonApiUrl = `https://v2links.com/api?api=${V2_LINKS_API_TOKEN}&url=${encodeURIComponent(originalUrl)}&alias=${alias}`
-    const jsonResp = await fetch(jsonApiUrl, { method: "GET" })
+    const jsonResp = await fetch(jsonApiUrl, { method: "GET", signal: AbortSignal.timeout(5000) })
     if (jsonResp.ok) {
       const data = await jsonResp.json()
       const candidate = data?.shortenedUrl || data?.shorturl || data?.url
@@ -94,20 +94,20 @@ export async function POST(req: Request) {
 
     if (tryGPFirst) {
       const gp = await shortenWithGPLinks(url, alias)
-      if ((gp as any).success) return NextResponse.json(gp)
+      if (gp.success) return NextResponse.json(gp)
 
       const v2 = await shortenWithV2Links(url, alias)
-      if ((v2 as any).success) return NextResponse.json(v2)
+      if (v2.success) return NextResponse.json(v2)
 
-      return NextResponse.json({ success: false, error: `Both services failed. GP: ${(gp as any).error || "n/a"}, V2: ${(v2 as any).error || "n/a"}` }, { status: 502 })
+      return NextResponse.json({ success: false, error: `Both services failed. GP: ${gp.error || "n/a"}, V2: ${v2.error || "n/a"}` }, { status: 502 })
     } else {
       const v2 = await shortenWithV2Links(url, alias)
-      if ((v2 as any).success) return NextResponse.json(v2)
+      if (v2.success) return NextResponse.json(v2)
 
       const gp = await shortenWithGPLinks(url, alias)
-      if ((gp as any).success) return NextResponse.json(gp)
+      if (gp.success) return NextResponse.json(gp)
 
-      return NextResponse.json({ success: false, error: `Both services failed. V2: ${(v2 as any).error || "n/a"}, GP: ${(gp as any).error || "n/a"}` }, { status: 502 })
+      return NextResponse.json({ success: false, error: `Both services failed. V2: ${v2.error || "n/a"}, GP: ${gp.error || "n/a"}` }, { status: 502 })
     }
   } catch (err: any) {
     return NextResponse.json({ success: false, error: `Server error: ${err?.message || "unknown"}` }, { status: 500 })
