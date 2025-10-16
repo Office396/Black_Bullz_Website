@@ -340,72 +340,77 @@ export function AdminFeedback() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <Card className="bg-gray-800 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-white flex items-center gap-2 text-lg md:text-xl">
             <MessageSquare className="h-5 w-5" />
             Feedback Inbox
-            <span className="ml-2 text-xs text-gray-400 font-normal">Manage comments and messages</span>
+            <span className="ml-2 text-xs text-gray-400 font-normal hidden md:inline">Manage comments and messages</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="comments" className="space-y-6">
-            <TabsList className="bg-gray-800 border-gray-700">
-              <TabsTrigger value="comments" className="data-[state=active]:bg-red-600">
-                <MessageSquare className="h-4 w-4 mr-2" /> Comments
-                {unreadComments > 0 && <Badge className="ml-2 bg-blue-600">{unreadComments}</Badge>}
+        <CardContent className="px-2 md:px-6">
+          <Tabs defaultValue="comments" className="space-y-4 md:space-y-6">
+            <TabsList className="bg-gray-800 border-gray-700 grid w-full grid-cols-2 md:flex md:w-auto">
+              <TabsTrigger value="comments" className="data-[state=active]:bg-red-600 text-sm">
+                <MessageSquare className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Comments</span>
+                <span className="md:hidden">Comments</span>
+                {unreadComments > 0 && <Badge className="ml-1 md:ml-2 bg-blue-600 text-xs">{unreadComments}</Badge>}
               </TabsTrigger>
-              <TabsTrigger value="messages" className="data-[state=active]:bg-red-600">
-                <Mail className="h-4 w-4 mr-2" /> Messages
-                {unreadMessages > 0 && <Badge className="ml-2 bg-blue-600">{unreadMessages}</Badge>}
+              <TabsTrigger value="messages" className="data-[state=active]:bg-red-600 text-sm">
+                <Mail className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Messages</span>
+                <span className="md:hidden">Messages</span>
+                {unreadMessages > 0 && <Badge className="ml-1 md:ml-2 bg-blue-600 text-xs">{unreadMessages}</Badge>}
               </TabsTrigger>
             </TabsList>
 
             {/* Comments */}
             <TabsContent value="comments" className="space-y-4">
-              <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+              <div className="flex flex-col gap-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search comments, authors, emails or items..."
                     value={commentSearch}
                     onChange={(e) => setCommentSearch(e.target.value)}
-                    className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
                   />
                 </div>
                 <Input
                   placeholder="Filter by item name"
                   value={commentItemQuery}
                   onChange={(e) => setCommentItemQuery(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 md:w-64"
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => setCommentStatus("all")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 " + (commentStatus === "all" ? "ring-1 ring-red-600" : "")}
+                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (commentStatus === "all" ? "ring-1 ring-red-600" : "")}
                   >
                     All
                   </Button>
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => setCommentStatus("new")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 " + (commentStatus === "new" ? "ring-1 ring-red-600" : "")}
+                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (commentStatus === "new" ? "ring-1 ring-red-600" : "")}
                   >
                     New
                   </Button>
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => setCommentStatus("read")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 " + (commentStatus === "read" ? "ring-1 ring-red-600" : "")}
+                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (commentStatus === "read" ? "ring-1 ring-red-600" : "")}
                   >
                     Read
                   </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="bg-gray-700 border-gray-600 text-gray-300" onClick={clearComments}>
-                    <Trash2 className="h-4 w-4 mr-2" /> Clear All
+                  <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 text-gray-300 text-xs" onClick={clearComments}>
+                    <Trash2 className="h-4 w-4 mr-1" /> Clear All
                   </Button>
                 </div>
               </div>
@@ -416,86 +421,99 @@ export function AdminFeedback() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-gray-300">Date</TableHead>
-                      <TableHead className="text-gray-300">Item</TableHead>
-                      <TableHead className="text-gray-300">From</TableHead>
-                      <TableHead className="text-gray-300">Content</TableHead>
-                      <TableHead className="text-gray-300">Status</TableHead>
-                      <TableHead className="text-gray-300 text-right">Actions</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm">Date</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm">Item</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm">From</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm">Content</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm">Status</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredComments.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-gray-400">
+                        <TableCell colSpan={6} className="text-center text-gray-400 text-sm">
                           No comments
                         </TableCell>
                       </TableRow>
                     )}
                     {filteredComments.map((c) => (
                       <TableRow key={c.id} className="hover:bg-gray-800/60">
-                        <TableCell className="text-gray-400 whitespace-nowrap">{formatDate(c.timestamp)}</TableCell>
-                        <TableCell className="text-gray-200 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <Badge className={c.type === "reply" ? "bg-blue-700" : "bg-green-700"}>
+                        <TableCell className="text-gray-400 whitespace-nowrap text-xs md:text-sm">{formatDate(c.timestamp)}</TableCell>
+                        <TableCell className="text-gray-200">
+                          <div className="flex flex-col gap-1">
+                            <Badge className={`${c.type === "reply" ? "bg-blue-700" : "bg-green-700"} text-xs w-fit`}>
                               {c.type === "reply" ? "Reply" : "Comment"}
                             </Badge>
-                            <span className="text-white">{c.itemName}</span>
+                            <span className="text-white text-xs md:text-sm truncate max-w-[120px] md:max-w-none">{c.itemName}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-gray-300 whitespace-nowrap">
+                        <TableCell className="text-gray-300">
                           <div className="flex flex-col">
-                            <span className="text-white">{c.author}</span>
-                            <span className="text-gray-400 text-xs">{c.email}</span>
+                            <span className="text-white text-xs md:text-sm truncate max-w-[80px] md:max-w-none">{c.author}</span>
+                            <span className="text-gray-400 text-xs truncate max-w-[80px] md:max-w-none">{c.email}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-gray-300 max-w-[420px] truncate">{c.content}</TableCell>
+                        <TableCell className="text-gray-300">
+                          <div className="max-w-[150px] md:max-w-[420px] truncate text-xs md:text-sm" title={c.content}>
+                            {c.content}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           {c.status === "new" ? (
-                            <Badge className="bg-yellow-700 flex items-center gap-1">
-                              <CircleDot className="h-3 w-3" /> New
+                            <Badge className="bg-yellow-700 flex items-center gap-1 text-xs">
+                              <CircleDot className="h-2 w-2 md:h-3 md:w-3" /> New
                             </Badge>
                           ) : (
-                            <Badge className="bg-gray-700 flex items-center gap-1">
-                              <CheckCircle2 className="h-3 w-3" /> Read
+                            <Badge className="bg-gray-700 flex items-center gap-1 text-xs">
+                              <CheckCircle2 className="h-2 w-2 md:h-3 md:w-3" /> Read
                             </Badge>
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="bg-gray-700 border-gray-600 text-gray-300"
-                              onClick={() => openView(`${c.itemName} • ${c.author}`, c.content)}
-                            >
-                              <Eye className="h-3.5 w-3.5 mr-1" /> View
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="bg-gray-700 border-gray-600 text-gray-300"
-                              onClick={() => openReplyForComment(c)}
-                            >
-                              <Reply className="h-3.5 w-3.5 mr-1" /> Reply
-                            </Button>
-                            {c.status === "new" ? (
-                              <Button size="sm" className="bg-green-700 hover:bg-green-800" onClick={() => markCommentStatus(c.id, "read")}>
-                                Mark Read
-                              </Button>
-                            ) : (
+                          <div className="flex flex-col gap-1 md:flex-row md:justify-end md:gap-2">
+                            <div className="flex gap-1">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="bg-gray-700 border-gray-600 text-gray-300"
-                                onClick={() => markCommentStatus(c.id, "new")}
+                                className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
+                                onClick={() => openView(`${c.itemName} • ${c.author}`, c.content)}
                               >
-                                Mark New
+                                <Eye className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
+                                <span className="hidden md:inline">View</span>
                               </Button>
-                            )}
-                            <Button size="sm" variant="destructive" className="bg-red-700 hover:bg-red-800" onClick={() => deleteComment(c.id)}>
-                              <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
-                            </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
+                                onClick={() => openReplyForComment(c)}
+                              >
+                                <Reply className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
+                                <span className="hidden md:inline">Reply</span>
+                              </Button>
+                            </div>
+                            <div className="flex gap-1">
+                              {c.status === "new" ? (
+                                <Button size="sm" className="bg-green-700 hover:bg-green-800 h-7 text-xs md:h-8 md:text-sm" onClick={() => markCommentStatus(c.id, "read")}>
+                                  <span className="hidden md:inline">Mark Read</span>
+                                  <span className="md:hidden">Read</span>
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
+                                  onClick={() => markCommentStatus(c.id, "new")}
+                                >
+                                  <span className="hidden md:inline">Mark New</span>
+                                  <span className="md:hidden">New</span>
+                                </Button>
+                              )}
+                              <Button size="sm" variant="destructive" className="bg-red-700 hover:bg-red-800 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2" onClick={() => deleteComment(c.id)}>
+                                <Trash2 className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
+                                <span className="hidden md:inline">Delete</span>
+                              </Button>
+                            </div>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -507,42 +525,43 @@ export function AdminFeedback() {
 
             {/* Messages */}
             <TabsContent value="messages" className="space-y-4">
-              <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+              <div className="flex flex-col gap-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search by subject, name, email or message..."
                     value={messageSearch}
                     onChange={(e) => setMessageSearch(e.target.value)}
-                    className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => setMessageStatus("all")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 " + (messageStatus === "all" ? "ring-1 ring-red-600" : "")}
+                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (messageStatus === "all" ? "ring-1 ring-red-600" : "")}
                   >
                     All
                   </Button>
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => setMessageStatus("new")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 " + (messageStatus === "new" ? "ring-1 ring-red-600" : "")}
+                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (messageStatus === "new" ? "ring-1 ring-red-600" : "")}
                   >
                     New
                   </Button>
                   <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => setMessageStatus("read")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 " + (messageStatus === "read" ? "ring-1 ring-red-600" : "")}
+                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (messageStatus === "read" ? "ring-1 ring-red-600" : "")}
                   >
                     Read
                   </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="bg-gray-700 border-gray-600 text-gray-300" onClick={clearMessages}>
-                    <Trash2 className="h-4 w-4 mr-2" /> Clear All
+                  <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 text-gray-300 text-xs" onClick={clearMessages}>
+                    <Trash2 className="h-4 w-4 mr-1" /> Clear All
                   </Button>
                 </div>
               </div>
@@ -553,79 +572,96 @@ export function AdminFeedback() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-gray-300">Date</TableHead>
-                      <TableHead className="text-gray-300">Subject</TableHead>
-                      <TableHead className="text-gray-300">From</TableHead>
-                      <TableHead className="text-gray-300">Message</TableHead>
-                      <TableHead className="text-gray-300">Status</TableHead>
-                      <TableHead className="text-gray-300 text-right">Actions</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm">Date</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm">Subject</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm">From</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm">Message</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm">Status</TableHead>
+                      <TableHead className="text-gray-300 text-xs md:text-sm text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredMessages.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-gray-400">
+                        <TableCell colSpan={6} className="text-center text-gray-400 text-sm">
                           No messages
                         </TableCell>
                       </TableRow>
                     )}
                     {filteredMessages.map((m) => (
                       <TableRow key={m.id} className="hover:bg-gray-800/60">
-                        <TableCell className="text-gray-400 whitespace-nowrap">{formatDate(m.timestamp)}</TableCell>
-                        <TableCell className="text-white whitespace-nowrap">{m.subject}</TableCell>
-                        <TableCell className="text-gray-300 whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <span className="text-white">{m.name}</span>
-                            <span className="text-gray-400 text-xs">{m.email}</span>
+                        <TableCell className="text-gray-400 whitespace-nowrap text-xs md:text-sm">{formatDate(m.timestamp)}</TableCell>
+                        <TableCell className="text-white">
+                          <div className="max-w-[120px] md:max-w-none truncate text-xs md:text-sm" title={m.subject}>
+                            {m.subject}
                           </div>
                         </TableCell>
-                        <TableCell className="text-gray-300 max-w-[420px] truncate">{m.message}</TableCell>
+                        <TableCell className="text-gray-300">
+                          <div className="flex flex-col">
+                            <span className="text-white text-xs md:text-sm truncate max-w-[80px] md:max-w-none">{m.name}</span>
+                            <span className="text-gray-400 text-xs truncate max-w-[80px] md:max-w-none">{m.email}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-gray-300">
+                          <div className="max-w-[150px] md:max-w-[420px] truncate text-xs md:text-sm" title={m.message}>
+                            {m.message}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           {m.status === "new" ? (
-                            <Badge className="bg-yellow-700 flex items-center gap-1">
-                              <CircleDot className="h-3 w-3" /> New
+                            <Badge className="bg-yellow-700 flex items-center gap-1 text-xs">
+                              <CircleDot className="h-2 w-2 md:h-3 md:w-3" /> New
                             </Badge>
                           ) : (
-                            <Badge className="bg-gray-700 flex items-center gap-1">
-                              <CheckCircle2 className="h-3 w-3" /> Read
+                            <Badge className="bg-gray-700 flex items-center gap-1 text-xs">
+                              <CheckCircle2 className="h-2 w-2 md:h-3 md:w-3" /> Read
                             </Badge>
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="bg-gray-700 border-gray-600 text-gray-300"
-                              onClick={() => openView(m.subject, m.message)}
-                            >
-                              <Eye className="h-3.5 w-3.5 mr-1" /> View
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="bg-gray-700 border-gray-600 text-gray-300"
-                              onClick={() => openReplyForMessage(m)}
-                            >
-                              <Reply className="h-3.5 w-3.5 mr-1" /> Reply
-                            </Button>
-                            {m.status === "new" ? (
-                              <Button size="sm" className="bg-green-700 hover:bg-green-800" onClick={() => markMessageStatus(m.id, "read")}>
-                                Mark Read
-                              </Button>
-                            ) : (
+                          <div className="flex flex-col gap-1 md:flex-row md:justify-end md:gap-2">
+                            <div className="flex gap-1">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="bg-gray-700 border-gray-600 text-gray-300"
-                                onClick={() => markMessageStatus(m.id, "new")}
+                                className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
+                                onClick={() => openView(m.subject, m.message)}
                               >
-                                Mark New
+                                <Eye className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
+                                <span className="hidden md:inline">View</span>
                               </Button>
-                            )}
-                            <Button size="sm" variant="destructive" className="bg-red-700 hover:bg-red-800" onClick={() => deleteMessage(m.id)}>
-                              <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
-                            </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
+                                onClick={() => openReplyForMessage(m)}
+                              >
+                                <Reply className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
+                                <span className="hidden md:inline">Reply</span>
+                              </Button>
+                            </div>
+                            <div className="flex gap-1">
+                              {m.status === "new" ? (
+                                <Button size="sm" className="bg-green-700 hover:bg-green-800 h-7 text-xs md:h-8 md:text-sm" onClick={() => markMessageStatus(m.id, "read")}>
+                                  <span className="hidden md:inline">Mark Read</span>
+                                  <span className="md:hidden">Read</span>
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
+                                  onClick={() => markMessageStatus(m.id, "new")}
+                                >
+                                  <span className="hidden md:inline">Mark New</span>
+                                  <span className="md:hidden">New</span>
+                                </Button>
+                              )}
+                              <Button size="sm" variant="destructive" className="bg-red-700 hover:bg-red-800 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2" onClick={() => deleteMessage(m.id)}>
+                                <Trash2 className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
+                                <span className="hidden md:inline">Delete</span>
+                              </Button>
+                            </div>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -640,20 +676,23 @@ export function AdminFeedback() {
 
       {/* View dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-[95vw] md:max-w-[600px] max-h-[80vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle>{viewContent?.title}</DialogTitle>
+            <DialogTitle className="text-sm md:text-lg pr-8">{viewContent?.title}</DialogTitle>
           </DialogHeader>
-          <div className="text-gray-300 whitespace-pre-wrap">{viewContent?.body}</div>
+          <div className="text-gray-300 whitespace-pre-wrap text-sm md:text-base leading-relaxed">{viewContent?.body}</div>
         </DialogContent>
       </Dialog>
 
       {/* Comment reply dialog */}
       <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-[95vw] md:max-w-[500px] max-h-[80vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle>
-              Reply to {replyTarget?.author} on {replyTarget?.itemName}
+            <DialogTitle className="text-sm md:text-lg pr-8">
+              Reply to {replyTarget?.author}
+              <div className="text-xs md:text-sm text-gray-400 font-normal mt-1 truncate">
+                on {replyTarget?.itemName}
+              </div>
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
@@ -663,18 +702,19 @@ export function AdminFeedback() {
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               rows={4}
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
             />
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-2">
               <Button
                 onClick={() => setReplyDialogOpen(false)}
                 variant="outline"
-                className="bg-gray-700 border-gray-600 text-gray-300"
+                size="sm"
+                className="bg-gray-700 border-gray-600 text-gray-300 w-full sm:w-auto"
                 disabled={replySubmitting}
               >
                 Cancel
               </Button>
-              <Button onClick={sendAdminReplyToComment} className="bg-red-600 hover:bg-red-700" disabled={replySubmitting}>
+              <Button onClick={sendAdminReplyToComment} className="bg-red-600 hover:bg-red-700 w-full sm:w-auto" disabled={replySubmitting} size="sm">
                 {replySubmitting ? "Sending..." : "Send Reply"}
               </Button>
             </div>
@@ -684,38 +724,39 @@ export function AdminFeedback() {
 
       {/* Message reply dialog (EmailJS) */}
       <Dialog open={msgReplyDialogOpen} onOpenChange={setMsgReplyDialogOpen}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-[95vw] md:max-w-[600px] max-h-[80vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle>Reply to {msgReplyTarget?.name}</DialogTitle>
+            <DialogTitle className="text-sm md:text-lg pr-8">Reply to {msgReplyTarget?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Input
               placeholder="Subject"
               value={msgReplySubject}
               onChange={(e) => setMsgReplySubject(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
             />
             <Textarea
               placeholder="Write your message..."
               value={msgReplyBody}
               onChange={(e) => setMsgReplyBody(e.target.value)}
               rows={6}
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
             />
-            <div className="flex justify-between text-xs text-gray-400">
+            <div className="flex flex-col gap-1 text-xs text-gray-400">
               <span>Will send to: {msgReplyTarget?.email}</span>
               <span>Powered by EmailJS (free)</span>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-2">
               <Button
                 onClick={() => setMsgReplyDialogOpen(false)}
                 variant="outline"
-                className="bg-gray-700 border-gray-600 text-gray-300"
+                size="sm"
+                className="bg-gray-700 border-gray-600 text-gray-300 w-full sm:w-auto"
                 disabled={msgSending}
               >
                 Cancel
               </Button>
-              <Button onClick={sendEmailReply} className="bg-red-600 hover:bg-red-700" disabled={msgSending}>
+              <Button onClick={sendEmailReply} className="bg-red-600 hover:bg-red-700 w-full sm:w-auto" disabled={msgSending} size="sm">
                 {msgSending ? "Sending..." : "Send Email"}
               </Button>
             </div>
