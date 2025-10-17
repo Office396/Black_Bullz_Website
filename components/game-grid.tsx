@@ -43,7 +43,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
   const [adminItems, setAdminItems] = useState<GameItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
 
-  const itemsPerPage = activeTab === "android-games" ? 10 : 8 // Reduced number of items per page
+  const itemsPerPage = 12 // Show 12 items per page on home page
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -108,7 +108,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
       <div className="space-y-6">
         <div className="animate-pulse bg-gray-800 h-8 w-32 rounded"></div>
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
             <div key={i} className="bg-gray-800 rounded-lg h-64 animate-pulse"></div>
           ))}
         </div>
@@ -165,16 +165,19 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
       >
         {paginatedGames.map((game) => (
           <Link key={game.id} href={`/game/${game.id}`}>
-            <Card className="bg-gray-800 border-gray-700 hover:border-red-500 transition-all duration-300 group overflow-hidden">
-              <div className="aspect-[4/3] relative overflow-hidden">
+            <Card className="bg-gray-800 border-gray-700 hover:border-red-500 transition-all duration-300 group overflow-hidden p-0 rounded-lg">
+              {/* Image container — must be first child so it sits flush at the top of the card */}
+              <div className="relative aspect-[3/3] w-full overflow-hidden bg-gray-800">
                 <Image
                   src={game.image || "/placeholder.svg"}
                   alt={game.title}
-                  fill={true}
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                  fill
+                  className="absolute inset-0 w-full h-full object-cover object-top block group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 640px) 40vw, (max-width: 768px) 33vw, 30vw"
                 />
-                <Badge className="absolute top-0.5 right-0.5 bg-red-600 text-white text-[9px] px-1 py-0">{game.category}</Badge>
+                <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[9px] px-1 py-0 z-10">
+                  {game.category}
+                </Badge>
               </div>
               <CardContent className="p-1.5">
                 <div className="flex flex-col gap-1">
@@ -230,3 +233,5 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
     </div>
   )
 }
+
+
