@@ -22,8 +22,7 @@ interface FormData {
   releaseDate: string
   image: string
   rating: string
-  trending: boolean
-  latest: boolean // Added latest checkbox
+  latest: boolean
   keyFeatures: string[]
   screenshots: string[] // Added screenshots array
   systemRequirements: {
@@ -63,8 +62,7 @@ const initialFormData: FormData = {
   releaseDate: "",
   image: "",
   rating: "4.0",
-  trending: false,
-  latest: false, // Added latest field
+  latest: false,
   keyFeatures: [""],
   screenshots: [], // Added empty screenshots array
   systemRequirements: {
@@ -258,26 +256,21 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
             <div className="flex flex-col gap-2">
               <Label className="text-white text-sm md:text-base">Options</Label>
               <div className="flex flex-wrap gap-4">
-                <Label htmlFor="trending" className="text-white flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    id="trending"
-                    checked={formData.trending}
-                    onChange={(e) => setFormData({ ...formData, trending: e.target.checked })}
-                    className="w-4 h-4 text-red-600 bg-gray-600 border-gray-500 rounded focus:ring-red-500"
-                  />
-                  <span>Trending</span>
-                </Label>
                 <Label htmlFor="latest" className="text-white flex items-center space-x-2 text-sm">
                   <input
                     type="checkbox"
                     id="latest"
                     checked={formData.latest}
                     onChange={(e) => setFormData({ ...formData, latest: e.target.checked })}
-                    className="w-4 h-4 text-red-600 bg-gray-600 border-gray-500 rounded focus:ring-red-500"
+                    className="w-4 h-4 text-green-600 bg-gray-600 border-gray-500 rounded focus:ring-green-500"
                   />
                   <span>Latest</span>
                 </Label>
+              </div>
+              <div className="bg-blue-900/20 border border-blue-600 p-3 rounded-lg">
+                <p className="text-blue-300 text-sm">
+                  📊 Use the "Trending Management" tab to add/remove items from trending section.
+                </p>
               </div>
             </div>
           </div>
