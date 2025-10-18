@@ -103,7 +103,7 @@ export function Sidebar() {
           ]
 
           // Update trending display items
-          setDisplayTrending(combinedTrending.slice(0, 5))
+          setDisplayTrending(combinedTrending.slice(0, 7))
         }
       } catch (error) {
         console.error("Error fetching items:", error)
@@ -113,13 +113,13 @@ export function Sidebar() {
   }, [])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Trending */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-white text-lg">Trending</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-1">
           {displayTrending.map((game) => (
             <Link
               key={game.id}

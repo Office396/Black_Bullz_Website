@@ -9,8 +9,9 @@ import { AdminItemForm } from "@/components/admin-item-form"
 import { AdminItemList } from "@/components/admin-item-list"
 import { AdminSettings } from "@/components/admin-settings"
 import { AdminFeedback } from "@/components/admin-feedback"
+import { AdminTrendingManagement } from "@/components/admin-trending-management"
 import AdminSystemStatus from "@/components/admin-system-status"
-import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity } from "lucide-react"
+import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, TrendingUp, Menu } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -19,6 +20,7 @@ interface AdminDashboardProps {
 export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState("list")
   const [searchQuery, setSearchQuery] = useState("")
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = () => {
     localStorage.removeItem("admin_token")
@@ -52,27 +54,101 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       <div className="container mx-auto px-2 md:px-4 py-4 md:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <TabsList className="bg-gray-800 border-gray-700 grid w-full grid-cols-3 md:flex md:w-auto">
-            <TabsTrigger value="list" className="data-[state=active]:bg-red-600 text-xs md:text-sm">
-              <List className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Manage Items</span>
-              <span className="md:hidden">Items</span>
+          {/* Mobile Tabs - Only 3 main tabs */}
+          <div className="md:hidden">
+            <TabsList className="bg-gray-800 border-gray-700 grid w-full grid-cols-3">
+              <TabsTrigger value="list" className="data-[state=active]:bg-red-600 text-xs">
+                <List className="h-4 w-4 mr-1" />
+                Items
+              </TabsTrigger>
+              <TabsTrigger value="add" className="data-[state=active]:bg-red-600 text-xs">
+                <Plus className="h-4 w-4 mr-1" />
+                Add
+              </TabsTrigger>
+              <TabsTrigger value="feedback" className="data-[state=active]:bg-red-600 text-xs">
+                <MessageSquare className="h-4 w-4 mr-1" />
+                Msgs
+              </TabsTrigger>
+            </TabsList>
+            {/* Hamburger Menu for additional tabs */}
+            <div className="flex justify-center mt-2">
+              <Button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                variant="outline"
+                size="sm"
+                className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+              >
+                <Menu className="h-4 w-4 mr-1" />
+                More
+              </Button>
+            </div>
+            {mobileMenuOpen && (
+              <div className="mt-2 bg-gray-800 border border-gray-700 rounded-lg p-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={() => {
+                      setActiveTab("trending")
+                      setMobileMenuOpen(false)
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-300 hover:bg-gray-700 justify-start"
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Trending
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setActiveTab("settings")
+                      setMobileMenuOpen(false)
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-300 hover:bg-gray-700 justify-start"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setActiveTab("system")
+                      setMobileMenuOpen(false)
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-300 hover:bg-gray-700 justify-start"
+                  >
+                    <Activity className="h-4 w-4 mr-2" />
+                    System
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Tabs - All tabs */}
+          <TabsList className="bg-gray-800 border-gray-700 hidden md:flex md:w-auto">
+            <TabsTrigger value="list" className="data-[state=active]:bg-red-600 text-sm">
+              <List className="h-4 w-4 mr-2" />
+              Manage Items
             </TabsTrigger>
-            <TabsTrigger value="add" className="data-[state=active]:bg-red-600 text-xs md:text-sm">
-              <Plus className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Add New Item</span>
-              <span className="md:hidden">Add</span>
+            <TabsTrigger value="add" className="data-[state=active]:bg-red-600 text-sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Item
             </TabsTrigger>
-            <TabsTrigger value="feedback" className="data-[state=active]:bg-red-600 text-xs md:text-sm">
-              <MessageSquare className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Feedback</span>
-              <span className="md:hidden">Msgs</span>
+            <TabsTrigger value="trending" className="data-[state=active]:bg-red-600 text-sm">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Trending
             </TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-red-600 text-xs md:text-sm hidden md:flex">
+            <TabsTrigger value="feedback" className="data-[state=active]:bg-red-600 text-sm">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Feedback
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-red-600 text-sm">
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </TabsTrigger>
-            <TabsTrigger value="system" className="data-[state=active]:bg-red-600 text-xs md:text-sm hidden md:flex">
+            <TabsTrigger value="system" className="data-[state=active]:bg-red-600 text-sm">
               <Activity className="h-4 w-4 mr-2" />
               System Status
             </TabsTrigger>
@@ -111,7 +187,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             </Card>
           </TabsContent>
 
-          <TabsContent value="settings" className="hidden md:block">
+          <TabsContent value="trending">
+            <AdminTrendingManagement />
+          </TabsContent>
+
+          <TabsContent value="settings">
             <AdminSettings />
           </TabsContent>
 
@@ -119,7 +199,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <AdminFeedback />
           </TabsContent>
 
-          <TabsContent value="system" className="hidden md:block">
+          <TabsContent value="system">
             <AdminSystemStatus />
           </TabsContent>
         </Tabs>

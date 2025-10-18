@@ -1,48 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AdminItemForm } from "@/components/admin-item-form"
-import { Edit, Trash2, Eye } from "lucide-react"
+import { Edit, Trash2, Eye, Star, TrendingUp } from "lucide-react"
 import Image from "next/image"
-
-const mockItems = [
-  {
-    id: 1,
-    title: "Grand Theft Auto V",
-    category: "PC Games",
-    image: "/gta-v-game-cover.jpg",
-    developer: "Rockstar Games",
-    description: "Open world action-adventure game set in Los Santos.",
-    size: "65 GB",
-    rating: 4.8,
-    dateAdded: "2024-01-15",
-  },
-  {
-    id: 2,
-    title: "Adobe Photoshop 2024",
-    category: "Software",
-    image: "/adobe-photoshop-icon.jpg",
-    developer: "Adobe Inc.",
-    description: "Professional image editing and graphic design software.",
-    size: "3.2 GB",
-    rating: 4.9,
-    dateAdded: "2024-01-10",
-  },
-  {
-    id: 3,
-    title: "PUBG Mobile",
-    category: "Android Games",
-    image: "/pubg-mobile-game-cover.jpg",
-    developer: "Tencent Games",
-    description: "Battle royale game for mobile devices.",
-    size: "2.1 GB",
-    rating: 4.3,
-    dateAdded: "2024-01-08",
-  },
-]
 
 interface AdminItemListProps {
   searchQuery: string
@@ -52,6 +16,10 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
   const [items, setItems] = useState<any[]>([])
   const [editingItem, setEditingItem] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [globalSearch, setGlobalSearch] = useState("")
+
+  const itemsPerPage = 10
 
   const fetchItems = async () => {
     try {
@@ -61,12 +29,11 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
         setItems(result.data)
       } else {
         console.error("Failed to fetch items:", result.error)
-        // Fallback to mock data if API fails
-        setItems(mockItems)
+        setItems([])
       }
     } catch (error) {
       console.error("Error fetching items:", error)
-      setItems(mockItems)
+      setItems([])
     } finally {
       setLoading(false)
     }
@@ -76,12 +43,41 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
     fetchItems()
   }, [])
 
-  const filteredItems = items.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.developer.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  // Global search across all items
+  const globalFilteredItems = useMemo(() => {
+    if (!globalSearch.trim()) return items
+
+    const searchTerm = globalSearch.toLowerCase()
+    return items.filter((item) =>
+      item.title?.toLowerCase().includes(searchTerm) ||
+      item.category?.toLowerCase().includes(searchTerm) ||
+      item.developer?.toLowerCase().includes(searchTerm) ||
+      item.description?.toLowerCase().includes(searchTerm) ||
+      item.size?.toLowerCase().includes(searchTerm)
+    )
+  }, [items, globalSearch])
+
+  // Local search for current tab (backward compatibility)
+  const filteredItems = useMemo(() => {
+    let filtered = globalSearch.trim() ? globalFilteredItems : items
+
+    if (searchQuery.trim()) {
+      const localSearchTerm = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (item) =>
+          item.title.toLowerCase().includes(localSearchTerm) ||
+          item.category.toLowerCase().includes(localSearchTerm) ||
+          item.developer.toLowerCase().includes(localSearchTerm),
+      )
+    }
+
+    return filtered
+  }, [items, searchQuery, globalFilteredItems, globalSearch])
+
+  // Pagination
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage)
 
   const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this item?")) {
@@ -137,7 +133,7 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-400">
-          {searchQuery ? `No items found matching "${searchQuery}"` : "No items found. Add some items to get started."}
+          {globalSearch || searchQuery ? `No items found matching "${globalSearch || searchQuery}"` : "No items found. Add some items to get started."}
         </p>
       </div>
     )
@@ -153,8 +149,43 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
 
   return (
     <div className="space-y-4">
+      {/* Global Search */}
+      <div className="flex items-center space-x-4 mb-4">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Search all items (title, category, developer, description, size)..."
+            value={globalSearch}
+            onChange={(e) => {
+              setGlobalSearch(e.target.value)
+              setCurrentPage(1) // Reset to first page when searching
+            }}
+            className="w-full pl-4 pr-4 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+          />
+        </div>
+        {globalSearch && (
+          <Button
+            onClick={() => {
+              setGlobalSearch("")
+              setCurrentPage(1)
+            }}
+            variant="outline"
+            size="sm"
+            className="bg-gray-700 border-gray-600 text-gray-300"
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+
+      {/* Results count */}
+      <div className="text-sm text-gray-400 mb-4">
+        Showing {paginatedItems.length} of {filteredItems.length} items
+        {globalSearch && ` (filtered from ${items.length} total)`}
+      </div>
+
       <div className="grid grid-cols-1 gap-4">
-        {filteredItems.map((item) => (
+        {paginatedItems.map((item) => (
           <Card key={item.id} className="bg-gray-700 border-gray-600">
             <CardContent className="p-4">
               <div className="flex gap-4">
@@ -173,6 +204,18 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge className="bg-red-600 text-white">{item.category}</Badge>
+                      {item.trending && (
+                        <Badge className="bg-orange-600 text-white flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          Trending
+                        </Badge>
+                      )}
+                      {item.latest && (
+                        <Badge className="bg-green-600 text-white flex items-center gap-1">
+                          <Star className="h-3 w-3" />
+                          Latest
+                        </Badge>
+                      )}
                       <div className="flex gap-1">
                         <Button
                           onClick={() => window.open(`/game/${item.id}`, "_blank")}
@@ -213,6 +256,62 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
           </Card>
         ))}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-8">
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+            >
+              Previous
+            </Button>
+
+            {/* Page numbers */}
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let pageNum
+              if (totalPages <= 5) {
+                pageNum = i + 1
+              } else if (currentPage <= 3) {
+                pageNum = i + 1
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i
+              } else {
+                pageNum = currentPage - 2 + i
+              }
+
+              return (
+                <Button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`px-3 py-2 rounded-lg transition-colors ${
+                    currentPage === pageNum ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
+                  }`}
+                >
+                  {pageNum}
+                </Button>
+              )
+            })}
+
+            <Button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Page info */}
+      {totalPages > 1 && (
+        <div className="text-center text-sm text-gray-400 mt-4">
+          Page {currentPage} of {totalPages} ({filteredItems.length} total items)
+        </div>
+      )}
     </div>
   )
 }

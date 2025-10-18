@@ -77,13 +77,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
     let games = activeTab === "all" ? allGames : allGames.filter((game) => game.tab === activeTab)
 
     if (filterLatest) {
-      games = games.filter((game) => {
-        if (game.latest) return true
-        const gameDate = new Date(game.releaseDate || game.uploadDate || Date.now())
-        const thirtyDaysAgo = new Date()
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-        return gameDate >= thirtyDaysAgo
-      })
+      games = games.filter((game) => game.latest)
     }
 
     return games
@@ -175,7 +169,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
                   className="absolute inset-0 w-full h-full object-cover object-top block group-hover:scale-105 transition-transform duration-300"
                   sizes="(max-width: 640px) 40vw, (max-width: 768px) 33vw, 30vw"
                 />
-                <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[9px] px-1 py-0 z-10">
+                <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[13px] px-1 py-0 z-10">
                   {game.category}
                 </Badge>
               </div>
