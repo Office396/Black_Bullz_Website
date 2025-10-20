@@ -1,6 +1,6 @@
 {
-  "/page": "app/page.js",
   "/game/[id]/page": "app/game/[id]/page.js",
-  "/api/comments/route": "app/api/comments/route.js",
-  "/api/items/route": "app/api/items/route.js"
+  "/admin/portal/page": "app/admin/portal/page.js",
+  "/download/[id]/page": "app/download/[id]/page.js",
+  "/page": "app/page.js"
 }

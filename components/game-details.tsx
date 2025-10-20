@@ -51,6 +51,18 @@ interface GameDetailsProps {
     trending?: boolean
     latest?: boolean
     tab?: string
+    // Update section
+    hasUpdates?: boolean
+    updateServiceProvider?: string
+    updateSharedPinCode?: string
+    updateSharedRarPassword?: string
+    updateLinks?: Array<{
+      updateName: string
+      updateUrl: string
+      updateSize: string
+      updateVersion: string
+      updateDate: string
+    }>
   }
 }
 
@@ -451,7 +463,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                         </div>
                       </div>
                       <p className="text-gray-400 text-xs mb-3">
-                        Provider: {cloudDownload.cloudName || `Cloud ${index + 1}`}
+                        Provider: {cloudDownload.actualProvider || cloudDownload.cloudName || `Cloud ${index + 1}`}
                       </p>
                       <Button
                         data-cloud-download={index}
@@ -474,6 +486,87 @@ export function GameDetails({ game }: GameDetailsProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Updates Section - Shows below download section if hasUpdates is true */}
+      {game.hasUpdates && game.updateLinks && game.updateLinks.length > 0 && (
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-green-500 flex items-center gap-2">
+              <Download className="h-5 w-5" />
+              Updates Available
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-green-900/20 border border-green-600 p-4 rounded-lg mb-4">
+              <p className="text-green-300 text-sm mb-2">🔄 Update Information:</p>
+              <ul className="text-green-200 text-xs space-y-1 list-disc pl-4">
+                <li>Updates are separate from main downloads</li>
+                <li>No surveys required for updates</li>
+                <li>Each update has its own PIN code</li>
+                <li>Updates expire in 12 hours</li>
+                <li>Service Provider: {game.updateServiceProvider || 'Direct Link'}</li>
+              </ul>
+            </div>
+
+            {/* Update PIN */}
+            {game.updateSharedPinCode && (
+              <div className="bg-green-900/20 border border-green-600 p-4 rounded-lg">
+                <p className="text-white text-sm mb-2 font-semibold">🔑 Update PIN Code:</p>
+                <p className="bg-green-800/40 p-3 rounded text-center border border-green-500 max-w-xs mx-auto">
+                  <span className="text-white text-lg font-bold font-mono tracking-wider">{game.updateSharedPinCode}</span>
+                </p>
+                <p className="text-green-200 text-xs mt-2 text-center">
+                  Use this PIN to access update download pages
+                </p>
+              </div>
+            )}
+
+            {/* Update Links */}
+            <div className="space-y-4">
+              <h3 className="text-white font-semibold text-lg">Available Updates:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {game.updateLinks.map((updateLink, index) => (
+                  <div key={index} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-white font-medium">{updateLink.updateName}</h4>
+                        <div className="bg-blue-900/20 border border-blue-600 px-2 py-1 rounded">
+                          <span className="text-blue-300 text-xs">v{updateLink.updateVersion}</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span className="text-gray-400">Size:</span>
+                          <p className="text-gray-300">{updateLink.updateSize}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-400">Date:</span>
+                          <p className="text-gray-300">
+                            {updateLink.updateDate ? new Date(updateLink.updateDate).toLocaleDateString() : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={() => {
+                          // Create update download page
+                          const updatePageUrl = `${window.location.origin}/update/${game.id}?update=${index}`
+                          window.open(updatePageUrl, '_blank')
+                        }}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download Update
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
