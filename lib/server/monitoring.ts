@@ -87,15 +87,63 @@ export async function getSupabaseUsage(): Promise<{
     bandwidth: string
   }
 }> {
-  // This is a simplified version - in real Supabase you'd use their REST API
-  // For now, we'll return static free tier info
-  return {
-    databaseSize: '0 MB',
-    bandwidthUsed: '0 GB',
-    tier: 'Free',
-    limits: {
-      databaseSize: '500 MB',
-      bandwidth: '50 GB'
+  try {
+    // Get actual database size by querying the items table
+    const { data: itemsData, error: itemsError } = await supabase
+      .from('items')
+      .select('*')
+
+    let databaseSizeBytes = 0
+    if (!itemsError && itemsData) {
+      // Estimate size based on number of items and average item size
+      // Each item has multiple fields, estimate ~2KB per item
+      databaseSizeBytes = itemsData.length * 2048
+
+      // Add comments table size
+      const { data: commentsData, error: commentsError } = await supabase
+        .from('comments')
+        .select('*')
+      if (!commentsError && commentsData) {
+        databaseSizeBytes += commentsData.length * 512 // ~512 bytes per comment
+      }
+
+      // Add download pages table size
+      const { data: downloadPagesData, error: downloadPagesError } = await supabase
+        .from('download_pages')
+        .select('*')
+      if (!downloadPagesError && downloadPagesData) {
+        databaseSizeBytes += downloadPagesData.length * 1024 // ~1KB per download page
+      }
+    }
+
+    // Convert bytes to MB
+    const databaseSizeMB = Math.round(databaseSizeBytes / (1024 * 1024) * 100) / 100
+
+    // For bandwidth, we can't get real data from Supabase API without authentication
+    // This would require Supabase service role key and REST API access
+    // For now, return estimated bandwidth based on Vercel analytics or static data
+    const bandwidthUsed = '0 GB' // This would need to be tracked separately
+
+    return {
+      databaseSize: `${databaseSizeMB} MB`,
+      bandwidthUsed: bandwidthUsed,
+      tier: 'Free',
+      limits: {
+        databaseSize: '500 MB',
+        bandwidth: '50 GB'
+      }
+    }
+  } catch (error) {
+    console.error('Error getting Supabase usage:', error)
+    // Fallback to static data
+    return {
+      databaseSize: '0 MB',
+      bandwidthUsed: '0 GB',
+      tier: 'Free',
+      limits: {
+        databaseSize: '500 MB',
+        bandwidth: '50 GB'
+      }
     }
   }
 }

@@ -158,7 +158,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                 alt={game.title}
                 width={200}
                 height={300}
-                className="rounded-lg object-cover w-full md:w-48 h-64 md:h-72"
+                className="rounded-lg object-cover w-full h-full md:object-top"
               />
             </div>
             <div className="flex-1 space-y-4">
