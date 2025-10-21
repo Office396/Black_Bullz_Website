@@ -468,7 +468,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                             </div>
                           </div>
                           <p className="text-gray-400 text-xs mb-3">
-                            Provider: {cloudDownload.actualProvider || cloudDownload.cloudName || `Cloud ${originalIndex + 1}`}
+                            Provider: {cloudDownload.actualProvider || cloudDownload.customProvider || cloudDownload.cloudName || `Cloud ${originalIndex + 1}`}
                           </p>
                           <Button
                             data-cloud-download={originalIndex}
@@ -547,9 +547,9 @@ export function GameDetails({ game }: GameDetailsProps) {
                           </div>
 
                           <p className="text-gray-400 text-xs mb-3">
-                            Provider: {cloudDownload.actualProvider || 'Direct Link'}
+                            Provider: { cloudDownload.customProvider || cloudDownload.actualProvider || 'Direct Link'}
                           </p>
-
+                          
                           <Button
                             data-cloud-download={originalIndex}
                             onClick={() => {

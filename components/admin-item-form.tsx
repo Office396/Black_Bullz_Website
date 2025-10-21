@@ -116,9 +116,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
         sharedRarPassword: editItem.sharedRarPassword || "",
         cloudDownloads: editItem.cloudDownloads || [{
           cloudName: "",
-          actualProvider: editItem.actualProvider || "",
-          customProvider: editItem.customProvider || "",
-          actualDownloadLinks: editItem.downloadLinks || [{ name: "", url: "", size: "" }],
+          actualDownloadLinks: [{ name: "", url: "", size: "" }],
         }],
         // Update section
         hasUpdates: editItem.hasUpdates || false,
@@ -132,6 +130,23 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
           updateVersion: "",
           updateDate: "",
         }],
+        systemRequirements: editItem.systemRequirements || {
+          recommended: {
+            os: "",
+            processor: "",
+            memory: "",
+            graphics: "",
+            storage: "",
+          },
+        },
+        androidRequirements: editItem.androidRequirements || {
+          recommended: {
+            os: "",
+            ram: "",
+            storage: "",
+            processor: "",
+          },
+        },
       }
     }
     return initialFormData
@@ -984,11 +999,15 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                       <SelectItem value="Google Drive">Google Drive</SelectItem>
                       <SelectItem value="MediaFire">MediaFire</SelectItem>
                       <SelectItem value="Mega">Mega</SelectItem>
-                      <SelectItem value="OneDrive">OneDrive</SelectItem>
                       <SelectItem value="Dropbox">Dropbox</SelectItem>
                       <SelectItem value="pCloud">pCloud</SelectItem>
-                      <SelectItem value="4shared">4shared</SelectItem>
                       <SelectItem value="Zippyshare">Zippyshare</SelectItem>
+                      <SelectItem value="FileUpload.io">FileUpload.io</SelectItem>
+                      <SelectItem value="Upload.io">Upload.io</SelectItem>
+                      <SelectItem value="KrakenFiles">KrakenFiles</SelectItem>
+                      <SelectItem value="GoFile">GoFile</SelectItem>
+                      <SelectItem value="File.io">File.io</SelectItem>
+                      <SelectItem value="Transfer.sh">Transfer.sh</SelectItem>
                       <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
@@ -1007,20 +1026,24 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                           <SelectValue placeholder="Select actual cloud provider" />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-700 border-gray-600">
-                          <SelectItem value="Google Drive">Google Drive</SelectItem>
-                          <SelectItem value="MediaFire">MediaFire</SelectItem>
-                          <SelectItem value="Mega">Mega</SelectItem>
-                          <SelectItem value="OneDrive">OneDrive</SelectItem>
-                          <SelectItem value="Dropbox">Dropbox</SelectItem>
-                          <SelectItem value="pCloud">pCloud</SelectItem>
-                          <SelectItem value="4shared">4shared</SelectItem>
-                          <SelectItem value="Zippyshare">Zippyshare</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
+                            <SelectItem value="Google Drive">Google Drive</SelectItem>
+                            <SelectItem value="MediaFire">MediaFire</SelectItem>
+                            <SelectItem value="Mega">Mega</SelectItem>
+                            <SelectItem value="Dropbox">Dropbox</SelectItem>
+                            <SelectItem value="pCloud">pCloud</SelectItem>
+                            <SelectItem value="Zippyshare">Zippyshare</SelectItem>
+                            <SelectItem value="FileUpload.io">FileUpload.io</SelectItem>
+                            <SelectItem value="Upload.io">Upload.io</SelectItem>
+                            <SelectItem value="KrakenFiles">KrakenFiles</SelectItem>
+                            <SelectItem value="GoFile">GoFile</SelectItem>
+                            <SelectItem value="File.io">File.io</SelectItem>
+                            <SelectItem value="Transfer.sh">Transfer.sh</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
                       </Select>
                     </div>
                   )}
-                  {cloudDownload.actualProvider === "Other" && (cloudDownload.cloudName === "Direct Link" || cloudDownload.cloudName === "Update") && (
+                  {cloudDownload.actualProvider === "Other" || cloudDownload.cloudName === "Other" ? (
                     <Input
                       className="bg-gray-700 border-gray-600 text-white mt-2 text-sm"
                       placeholder="Enter custom cloud provider name"
@@ -1031,15 +1054,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                         setFormData({ ...formData, cloudDownloads: updated })
                       }}
                     />
-                  )}
-                  {cloudDownload.cloudName === "Other" && (
-                    <Input
-                      className="bg-gray-700 border-gray-600 text-white mt-2 text-sm"
-                      placeholder="Enter custom cloud provider name"
-                      value=""
-                      onChange={(e) => updateCloudDownload(cloudIndex, "cloudName", e.target.value)}
-                    />
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Download Links for this cloud */}
