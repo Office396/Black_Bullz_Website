@@ -450,31 +450,37 @@ export function GameDetails({ game }: GameDetailsProps) {
             </div>
 
             {/* Cloud Download Buttons */}
-            {gameData?.cloudDownloads && gameData.cloudDownloads.length > 0 ? (
+            {gameData?.cloudDownloads && gameData.cloudDownloads.filter((cd: any) => cd.cloudName !== "Update").length > 0 ? (
               <div className="space-y-4">
                 <h3 className="text-white font-semibold text-lg">Choose Download Options:</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {gameData.cloudDownloads.map((cloudDownload: any, index: number) => (
-                    <div key={index} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-white font-medium">{cloudDownload.cloudName || `Cloud ${index + 1}`}</h4>
-                        <div className="bg-green-900/20 border border-green-600 px-2 py-1 rounded">
-                          <span className="text-green-300 text-xs">Parts: {cloudDownload.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()).length || 0}</span>
+                  {gameData.cloudDownloads
+                    .map((cloudDownload: any, index: number) => ({ cloudDownload, originalIndex: index }))
+                    .filter((item: { cloudDownload: any; originalIndex: number }) => item.cloudDownload.cloudName !== "Update")
+                    .map((item: { cloudDownload: any; originalIndex: number }) => {
+                      const { cloudDownload, originalIndex } = item
+                      return (
+                        <div key={originalIndex} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-white font-medium">{cloudDownload.cloudName || `Cloud ${originalIndex + 1}`}</h4>
+                            <div className="bg-blue-900/20 border border-blue-600 px-2 py-1 rounded">
+                              <span className="text-blue-300 text-xs">Parts: {cloudDownload.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()).length || 0}</span>
+                            </div>
+                          </div>
+                          <p className="text-gray-400 text-xs mb-3">
+                            Provider: {cloudDownload.actualProvider || cloudDownload.cloudName || `Cloud ${originalIndex + 1}`}
+                          </p>
+                          <Button
+                            data-cloud-download={originalIndex}
+                            onClick={() => handleCloudDownload(game.id, originalIndex, cloudDownload.cloudName || `Cloud ${originalIndex + 1}`)}
+                            className="w-full bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </Button>
                         </div>
-                      </div>
-                      <p className="text-gray-400 text-xs mb-3">
-                        Provider: {cloudDownload.actualProvider || cloudDownload.cloudName || `Cloud ${index + 1}`}
-                      </p>
-                      <Button
-                        data-cloud-download={index}
-                        onClick={() => handleCloudDownload(game.id, index, cloudDownload.cloudName || `Cloud ${index + 1}`)}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                  ))}
+                      )
+                    })}
                 </div>
               </div>
             ) : (
@@ -487,8 +493,8 @@ export function GameDetails({ game }: GameDetailsProps) {
         </CardContent>
       </Card>
 
-      {/* Updates Section - Shows below download section if hasUpdates is true */}
-      {game.hasUpdates && game.updateLinks && game.updateLinks.length > 0 && (
+      {/* Updates Section - Shows below download section if hasUpdates is true or if Update cloud provider exists */}
+      {(game.hasUpdates && game.updateLinks && game.updateLinks.length > 0) || (gameData?.cloudDownloads && gameData.cloudDownloads.some((cd: any) => cd.cloudName === "Update")) ? (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
             <CardTitle className="text-green-500 flex items-center gap-2">
@@ -497,14 +503,14 @@ export function GameDetails({ game }: GameDetailsProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-green-900/20 border border-green-600 p-4 rounded-lg mb-4">
-              <p className="text-green-300 text-sm mb-2">🔄 Update Information:</p>
-              <ul className="text-green-200 text-xs space-y-1 list-disc pl-4">
+            <div className="inline-block w-fit max-w-full bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
+              <p className="text-white text-sm mb-3 font-bold">🔄 Update Information:</p>
+              <ul className="text-blue-100 text-x space-y-1 list-disc pl-4 font-semibold">
                 <li>Updates are separate from main downloads</li>
-                <li>No surveys required for updates</li>
-                <li>Each update has its own PIN code</li>
-                <li>Updates expire in 12 hours</li>
-                <li>Service Provider: {game.updateServiceProvider || 'Direct Link'}</li>
+                <li>Click update download button to start survey</li>
+                <li>Complete Ad-survey to access download page</li>
+                <li>Enter the update PIN to get download links</li>
+                <li>Update download pages expire in 12 hours</li>
               </ul>
             </div>
 
@@ -521,52 +527,104 @@ export function GameDetails({ game }: GameDetailsProps) {
               </div>
             )}
 
-            {/* Update Links */}
-            <div className="space-y-4">
-              <h3 className="text-white font-semibold text-lg">Available Updates:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {game.updateLinks.map((updateLink, index) => (
-                  <div key={index} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-white font-medium">{updateLink.updateName}</h4>
-                        <div className="bg-blue-900/20 border border-blue-600 px-2 py-1 rounded">
-                          <span className="text-blue-300 text-xs">v{updateLink.updateVersion}</span>
-                        </div>
-                      </div>
+            {/* Update Cloud Download */}
+            {gameData?.cloudDownloads && gameData.cloudDownloads.filter((cd: any) => cd.cloudName === "Update").length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-white font-semibold text-lg">Update Downloads:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {gameData.cloudDownloads
+                    .map((cloudDownload: any, index: number) => ({ cloudDownload, originalIndex: index }))
+                    .filter((item: { cloudDownload: any; originalIndex: number }) => item.cloudDownload.cloudName === "Update")
+                    .map((item: { cloudDownload: any; originalIndex: number }) => {
+                      const { cloudDownload, originalIndex } = item
+                      return (
+                        <div key={originalIndex} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-white font-medium">Update Download</h4>
+                            <div className="bg-blue-900/20 border border-blue-600 px-2 py-1 rounded">
+                              <span className="text-blue-300 text-xs">Parts: {cloudDownload.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()).length || 0}</span>
+                            </div>
+                          </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <span className="text-gray-400">Size:</span>
-                          <p className="text-gray-300">{updateLink.updateSize}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Date:</span>
-                          <p className="text-gray-300">
-                            {updateLink.updateDate ? new Date(updateLink.updateDate).toLocaleDateString() : 'N/A'}
+                          <p className="text-gray-400 text-xs mb-3">
+                            Provider: {cloudDownload.actualProvider || 'Direct Link'}
                           </p>
-                        </div>
-                      </div>
 
-                      <Button
-                        onClick={() => {
-                          // Create update download page
-                          const updatePageUrl = `${window.location.origin}/update/${game.id}?update=${index}`
-                          window.open(updatePageUrl, '_blank')
-                        }}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download Update
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                          <Button
+                            data-cloud-download={originalIndex}
+                            onClick={() => {
+                              // For update downloads, use update PIN instead of shared PIN
+                              const updatePin = game.updateSharedPinCode || game.sharedPinCode
+                              // Update the game data temporarily for this download
+                              const updatedGameData = { ...gameData }
+                              if (updatedGameData.cloudDownloads && updatedGameData.cloudDownloads[originalIndex]) {
+                                updatedGameData.sharedPinCode = updatePin
+                              }
+                              setGameData(updatedGameData)
+
+                              // Call the download handler
+                              handleCloudDownload(game.id, originalIndex, cloudDownload.cloudName || `Update`)
+                            }}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download Update
+                          </Button>
+                        </div>
+                      )
+                    })}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Traditional Update Links */}
+            {game.hasUpdates && game.updateLinks && game.updateLinks.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-white font-semibold text-lg">Available Updates:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {game.updateLinks.map((updateLink, index) => (
+                    <div key={index} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-white font-medium">{updateLink.updateName}</h4>
+                          <div className="bg-blue-900/20 border border-blue-600 px-2 py-1 rounded">
+                            <span className="text-blue-300 text-xs">v{updateLink.updateVersion}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-gray-400">Size:</span>
+                            <p className="text-gray-300">{updateLink.updateSize}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Date:</span>
+                            <p className="text-gray-300">
+                              {updateLink.updateDate ? new Date(updateLink.updateDate).toLocaleDateString() : 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Button
+                          onClick={() => {
+                            // Create update download page
+                            const updatePageUrl = `${window.location.origin}/update/${game.id}?update=${index}`
+                            window.open(updatePageUrl, '_blank')
+                          }}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download Update
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   )
 }

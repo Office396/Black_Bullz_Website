@@ -73,8 +73,10 @@ export async function createDownloadPage(gameId: number, cloudIndex?: number): P
   if (cloudIndex !== undefined && gameData?.cloudDownloads?.[cloudIndex]) {
     // New structure with shared PIN and RAR password
     downloadConfig = gameData.cloudDownloads[cloudIndex]
-    pinCode = gameData.sharedPinCode || '0000'
-    rarPassword = gameData.sharedRarPassword
+    // For update downloads, use update PIN if available
+    const isUpdateDownload = downloadConfig.cloudName === "Update"
+    pinCode = isUpdateDownload ? ((gameData as any).updateSharedPinCode || gameData.sharedPinCode || '0000') : (gameData.sharedPinCode || '0000')
+    rarPassword = isUpdateDownload ? ((gameData as any).updateSharedRarPassword || gameData.sharedRarPassword) : gameData.sharedRarPassword
   } else if (gameData?.cloudDownloads?.[0]) {
     // Default to first cloud download if no index specified
     downloadConfig = gameData.cloudDownloads[0]
