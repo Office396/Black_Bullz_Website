@@ -506,10 +506,10 @@ export function GameDetails({ game }: GameDetailsProps) {
             <div className="inline-block w-fit max-w-full bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
               <p className="text-white text-sm mb-3 font-bold">🔄 Update Information:</p>
               <ul className="text-blue-100 text-x space-y-1 list-disc pl-4 font-semibold">
-                <li>Updates are separate from main downloads</li>
+                <li>Updates are used to upadte the game (if you got any issue in installing the game use this update)</li>
                 <li>Click update download button to start survey</li>
                 <li>Complete Ad-survey to access download page</li>
-                <li>Enter the update PIN to get download links</li>
+                <li>Enter the update PIN (same like download PIN before) to get download links</li>
                 <li>Update download pages expire in 12 hours</li>
               </ul>
             </div>
