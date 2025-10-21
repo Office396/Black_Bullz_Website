@@ -462,7 +462,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                       return (
                         <div key={originalIndex} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
                           <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-white font-medium">{cloudDownload.cloudName || `Cloud ${originalIndex + 1}`}</h4>
+                            <h4 className="text-white font-medium">{cloudDownload.actualProvider || cloudDownload.customProvider || cloudDownload.cloudName || `Cloud ${originalIndex + 1}`}</h4>
                             <div className="bg-blue-900/20 border border-blue-600 px-2 py-1 rounded">
                               <span className="text-blue-300 text-xs">Parts: {cloudDownload.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()).length || 0}</span>
                             </div>
