@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, Save } from "lucide-react"
+import { Plus, Trash2, Save, Copy } from "lucide-react"
 import Editor from "@monaco-editor/react"
 
 interface FormData {
@@ -215,6 +215,17 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
       ...formData,
       cloudDownloads: formData.cloudDownloads.filter((_, i) => i !== cloudIndex),
     })
+  }
+
+  const duplicateCloudDownload = (cloudIndex: number) => {
+    const cloudToDuplicate = formData.cloudDownloads[cloudIndex]
+    const duplicatedCloud = {
+      ...cloudToDuplicate,
+      actualDownloadLinks: cloudToDuplicate.actualDownloadLinks.map(link => ({ ...link }))
+    }
+    const updated = [...formData.cloudDownloads]
+    updated.splice(cloudIndex + 1, 0, duplicatedCloud)
+    setFormData({ ...formData, cloudDownloads: updated })
   }
 
   const updateCloudDownload = (cloudIndex: number, field: string, value: string) => {
@@ -966,18 +977,30 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                   <CardTitle className="text-white text-base md:text-lg">
                     Cloud Provider {cloudIndex + 1}
                   </CardTitle>
-                  {formData.cloudDownloads.length > 1 && (
+                  <div className="flex gap-2 w-full sm:w-auto">
                     <Button
                       type="button"
-                      onClick={() => removeCloudDownload(cloudIndex)}
+                      onClick={() => duplicateCloudDownload(cloudIndex)}
                       variant="outline"
                       size="sm"
-                      className="bg-gray-700 border-gray-600 text-red-400 hover:bg-red-600 hover:text-white w-full sm:w-auto"
+                      className="bg-gray-700 border-gray-600 text-blue-400 hover:bg-blue-600 hover:text-white w-full sm:w-auto"
                     >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">Remove</span>
+                      <Copy className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Duplicate</span>
                     </Button>
-                  )}
+                    {formData.cloudDownloads.length > 1 && (
+                      <Button
+                        type="button"
+                        onClick={() => removeCloudDownload(cloudIndex)}
+                        variant="outline"
+                        size="sm"
+                        className="bg-gray-700 border-gray-600 text-red-400 hover:bg-red-600 hover:text-white w-full sm:w-auto"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Remove</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 px-4 md:px-6">
@@ -998,16 +1021,14 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                       <SelectItem value="Update">Update</SelectItem>
                       <SelectItem value="Google Drive">Google Drive</SelectItem>
                       <SelectItem value="MediaFire">MediaFire</SelectItem>
-                      <SelectItem value="Mega">Mega</SelectItem>
+                      <SelectItem value="MEGA UP">MEGA UP</SelectItem>
                       <SelectItem value="Dropbox">Dropbox</SelectItem>
                       <SelectItem value="pCloud">pCloud</SelectItem>
-                      <SelectItem value="Zippyshare">Zippyshare</SelectItem>
-                      <SelectItem value="FileUpload.io">FileUpload.io</SelectItem>
-                      <SelectItem value="Upload.io">Upload.io</SelectItem>
-                      <SelectItem value="KrakenFiles">KrakenFiles</SelectItem>
+                      <SelectItem value="Data Nodes">Data Nodes</SelectItem>
+                      <SelectItem value="Pixel Drain">Pixel Drain</SelectItem>
+                      <SelectItem value="Viking File">Viking File</SelectItem>
+                      <SelectItem value="Fucking Fast">Fucking Fast</SelectItem>
                       <SelectItem value="GoFile">GoFile</SelectItem>
-                      <SelectItem value="File.io">File.io</SelectItem>
-                      <SelectItem value="Transfer.sh">Transfer.sh</SelectItem>
                       <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
@@ -1028,16 +1049,14 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                         <SelectContent className="bg-gray-700 border-gray-600">
                             <SelectItem value="Google Drive">Google Drive</SelectItem>
                             <SelectItem value="MediaFire">MediaFire</SelectItem>
-                            <SelectItem value="Mega">Mega</SelectItem>
+                            <SelectItem value="MEGA UP">MEGA UP</SelectItem>
                             <SelectItem value="Dropbox">Dropbox</SelectItem>
                             <SelectItem value="pCloud">pCloud</SelectItem>
-                            <SelectItem value="Zippyshare">Zippyshare</SelectItem>
-                            <SelectItem value="FileUpload.io">FileUpload.io</SelectItem>
-                            <SelectItem value="Upload.io">Upload.io</SelectItem>
-                            <SelectItem value="KrakenFiles">KrakenFiles</SelectItem>
+                            <SelectItem value="Data Nodes">Data Nodes</SelectItem>
+                            <SelectItem value="Pixel Drain">Pixel Drain</SelectItem>
+                            <SelectItem value="Viking File">Viking File</SelectItem>
+                            <SelectItem value="Fucking Fast">Fucking Fast</SelectItem>
                             <SelectItem value="GoFile">GoFile</SelectItem>
-                            <SelectItem value="File.io">File.io</SelectItem>
-                            <SelectItem value="Transfer.sh">Transfer.sh</SelectItem>
                             <SelectItem value="Other">Other</SelectItem>
                           </SelectContent>
                       </Select>
