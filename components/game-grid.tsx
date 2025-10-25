@@ -5,6 +5,28 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
+
+// ImageSkeleton component
+const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, priority }: { src: string; alt: string; className?: string; fill?: boolean; width?: number; height?: number; priority?: boolean }) => {
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill={fill}
+      width={fill ? undefined : width}
+      height={fill ? undefined : height}
+      className={`${className} ${!isLoaded && !hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+      onLoad={() => setIsLoaded(true)}
+      onError={() => {
+        setHasError(true)
+      }}
+      priority={priority}
+    />
+  )
+}
 import { Star } from "lucide-react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useState, useEffect, useMemo } from "react"
@@ -95,7 +117,6 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
       router.push(`/?tab=${tabId}`)
     }
   }
-
   // Don't render anything until the initial load is complete
   if (!isLoaded) {
     return (
@@ -161,13 +182,41 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
           <Link key={game.id} href={`/game/${game.id}`}>
             <Card className="bg-gray-800 border-gray-700 hover:border-red-500 transition-all duration-300 group overflow-hidden p-0 rounded-lg">
               {/* Image container — must be first child so it sits flush at the top of the card */}
-              <div className="relative aspect-[3/3] w-full overflow-hidden bg-gray-800">
+              <div className="relative aspect-[3/3] w-full overflow-hidden bg-gray-700 animate-pulse">
                 <Image
                   src={game.image || "/placeholder.svg"}
                   alt={game.title}
                   fill
                   className="absolute inset-0 w-full h-full object-cover object-top block group-hover:scale-105 transition-transform duration-300"
                   sizes="(max-width: 640px) 40vw, (max-width: 768px) 33vw, 30vw"
+                  onLoad={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.className = parent.className.replace('bg-gray-700 animate-pulse', 'bg-gray-800');
+                    }
+                  }}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.className = parent.className.replace('bg-gray-700 animate-pulse', 'bg-gray-700');
+                      target.style.display = 'none';
+                      const errorDiv = document.createElement('div');
+                      errorDiv.className = 'w-full h-full flex items-center justify-center bg-gray-700 rounded-lg absolute inset-0';
+                      errorDiv.innerHTML = `
+                        <div class="text-center text-gray-400">
+                          <div class="w-8 h-8 mx-auto mb-2 opacity-50">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <p class="text-xs">Failed to load</p>
+                        </div>
+                      `;
+                      parent.appendChild(errorDiv);
+                    }
+                  }}
                 />
                 <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[13px] px-1 py-0 z-10">
                   {game.category}

@@ -174,15 +174,33 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
 }
 
 export async function deleteItem(id: number): Promise<boolean> {
-  const { error } = await supabase
-    .from('items')
-    .delete()
-    .eq('id', id)
+  try {
+    // First, delete all associated download pages
+    const { error: downloadPagesError } = await supabase
+      .from('download_pages')
+      .delete()
+      .eq('game_id', id)
 
-  if (error) {
-    console.error('Error deleting item:', error)
+    if (downloadPagesError) {
+      console.error('Error deleting associated download pages:', downloadPagesError)
+      // Continue with item deletion even if download pages fail to delete
+    }
+
+    // Then delete the item itself
+    const { error: itemError } = await supabase
+      .from('items')
+      .delete()
+      .eq('id', id)
+
+    if (itemError) {
+      console.error('Error deleting item:', itemError)
+      return false
+    }
+
+    console.log(`Successfully deleted item ${id} and all associated download pages`)
+    return true
+  } catch (error) {
+    console.error('Error in deleteItem:', error)
     return false
   }
-
-  return true
 }

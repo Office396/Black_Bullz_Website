@@ -75,7 +75,12 @@ export default function CategoriesPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-900 relative" style={{
+        backgroundImage: 'url("https://img.freepik.com/premium-photo/horror-game-background_670382-279176.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
       <Header />
       <div className="container mx-auto px-4 py-6">
         <div className="flex gap-6">

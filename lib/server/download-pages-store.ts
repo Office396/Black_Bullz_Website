@@ -15,7 +15,10 @@ export interface DownloadPage {
 export async function getDownloadPages(): Promise<DownloadPage[]> {
   const now = new Date().toISOString()
 
-  // Clean expired pages and get valid ones
+  // First, clean up any expired pages to ensure database stays clean
+  await cleanupExpiredPages()
+
+  // Get valid (non-expired) pages only
   const { data, error } = await supabase
     .from('download_pages')
     .select('*')
@@ -110,6 +113,9 @@ export async function createDownloadPage(gameId: number, cloudIndex?: number): P
 export async function getDownloadPage(gameId: number, cloudIndex?: number, token?: string): Promise<DownloadPage | null> {
   if (!token) return null
 
+  // First clean up any expired pages
+  await cleanupExpiredPages()
+
   const pageIdWithToken = cloudIndex !== undefined ? `${gameId}_c${cloudIndex}_${token}` : `${gameId}_${token}`
 
   // Try exact ID match first
@@ -159,17 +165,66 @@ export async function getDownloadPage(gameId: number, cloudIndex?: number, token
 }
 
 export async function cleanupExpiredPages(): Promise<void> {
-  // Supabase handles this automatically through the expires_at filter
-  // But we can clean up old records periodically if needed
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  try {
+    const now = new Date().toISOString()
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const { error } = await supabase
-    .from('download_pages')
-    .delete()
-    .lt('expires_at', thirtyDaysAgo.toISOString())
+    // Delete expired pages (pages that are past their expires_at time)
+    const { data: expiredPages, error: fetchError } = await supabase
+      .from('download_pages')
+      .select('id, created_at, expires_at')
+      .lt('expires_at', now)
 
-  if (error) {
-    console.error('Error cleaning up expired pages:', error)
+    if (fetchError) {
+      console.error('Error fetching expired pages:', fetchError)
+      return
+    }
+
+    if (expiredPages && expiredPages.length > 0) {
+      console.log(`Found ${expiredPages.length} expired download pages to clean up`)
+
+      // Delete expired pages
+      const { error: deleteError } = await supabase
+        .from('download_pages')
+        .delete()
+        .lt('expires_at', now)
+
+      if (deleteError) {
+        console.error('Error deleting expired pages:', deleteError)
+      } else {
+        console.log(`Successfully cleaned up ${expiredPages.length} expired download pages`)
+      }
+    } else {
+      console.log('No expired download pages found to clean up')
+    }
+
+    // Also clean up very old records (older than 30 days, regardless of expiration)
+    const { data: oldPages, error: oldFetchError } = await supabase
+      .from('download_pages')
+      .select('id, created_at')
+      .lt('created_at', thirtyDaysAgo.toISOString())
+
+    if (oldFetchError) {
+      console.error('Error fetching old pages:', oldFetchError)
+      return
+    }
+
+    if (oldPages && oldPages.length > 0) {
+      console.log(`Found ${oldPages.length} very old download pages (30+ days) to clean up`)
+
+      const { error: oldDeleteError } = await supabase
+        .from('download_pages')
+        .delete()
+        .lt('created_at', thirtyDaysAgo.toISOString())
+
+      if (oldDeleteError) {
+        console.error('Error deleting old pages:', oldDeleteError)
+      } else {
+        console.log(`Successfully cleaned up ${oldPages.length} very old download pages`)
+      }
+    }
+  } catch (error) {
+    console.error('Error in cleanupExpiredPages:', error)
   }
 }

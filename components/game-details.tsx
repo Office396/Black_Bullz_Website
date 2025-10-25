@@ -10,6 +10,100 @@ import Link from "next/link"
 import { Star, Download, Monitor, Smartphone, HardDrive, Cpu, MemoryStick, ArrowLeft, X } from "lucide-react"
 import { createSurveyLink, createDownloadPage } from "@/lib/link-shortener"
 
+// ImageSkeleton component
+const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, priority }: { src: string; alt: string; className?: string; fill?: boolean; width?: number; height?: number; priority?: boolean }) => {
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+
+  return (
+    <div className={`relative overflow-hidden ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse rounded-lg' : ''} ${className}`}>
+      {!hasError && (
+        <Image
+          src={src}
+          alt={alt}
+          fill={fill}
+          width={fill ? undefined : width}
+          height={fill ? undefined : height}
+          className="object-cover transition-all duration-300 rounded-lg"
+          onLoad={() => setIsLoaded(true)}
+          onError={() => {
+            setHasError(true)
+          }}
+          priority={priority}
+        />
+      )}
+      {hasError && (
+        <div className={`w-full h-full flex items-center justify-center bg-gray-700 rounded-lg ${fill ? 'absolute inset-0' : ''}`}>
+          <div className="text-center text-gray-400">
+            <div className="w-8 h-8 mx-auto mb-2 opacity-50">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-xs">Failed to load</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ScreenshotSkeleton component
+const ScreenshotSkeleton = ({ src, alt }: { src: string; alt: string }) => {
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <div className={`relative aspect-video cursor-pointer group overflow-hidden rounded-lg ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse' : ''}`}>
+          {!hasError && (
+            <Image
+              src={src}
+              alt={alt}
+              fill
+              className="object-cover transition-all duration-300 rounded-lg"
+              onLoad={() => setIsLoaded(true)}
+              onError={() => {
+                setHasError(true)
+              }}
+            />
+          )}
+          {hasError && (
+            <div className="w-full h-full flex items-center justify-center bg-gray-700 rounded-lg">
+              <div className="text-center text-gray-400">
+                <div className="w-8 h-8 mx-auto mb-2 opacity-50">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <p className="text-xs">Failed to load</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogTrigger>
+      {!hasError && (
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
+          <div className="relative">
+            <Image
+              src={src}
+              alt={`${alt} - Full Size`}
+              width={1920}
+              height={1080}
+              className="w-auto h-auto max-w-[90vw] max-h-[90vh] object-contain"
+              priority
+            />
+            <DialogClose className="absolute top-3 right-3 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
+              <X className="h-5 w-5" />
+            </DialogClose>
+          </div>
+        </DialogContent>
+      )}
+    </Dialog>
+  )
+}
+
 interface GameDetailsProps {
   game: {
     id: number
@@ -45,24 +139,14 @@ interface GameDetailsProps {
     cloudDownloads?: Array<{
       cloudName: string
       actualDownloadLinks: Array<{ name: string; url: string; size: string }>
+      version?: string
+      partsNumber?: number
     }>
     sharedPinCode?: string
     sharedRarPassword?: string
     trending?: boolean
     latest?: boolean
     tab?: string
-    // Update section
-    hasUpdates?: boolean
-    updateServiceProvider?: string
-    updateSharedPinCode?: string
-    updateSharedRarPassword?: string
-    updateLinks?: Array<{
-      updateName: string
-      updateUrl: string
-      updateSize: string
-      updateVersion: string
-      updateDate: string
-    }>
   }
 }
 
@@ -147,6 +231,7 @@ export function GameDetails({ game }: GameDetailsProps) {
     }
   }
 
+
   return (
     <div className="space-y-6">
       {/* Navigation */}
@@ -165,9 +250,10 @@ export function GameDetails({ game }: GameDetailsProps) {
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex-shrink-0">
-              <Image
-                src={game.image || "/placeholder.svg"}
-                alt={game.title}
+              <ImageSkeleton
+                src={game?.image || "/placeholder.svg"}
+                alt={game?.title || "Game"}
+                fill={true}
                 width={200}
                 height={300}
                 className="rounded-lg object-fill w-80 h-100 md:object-top"
@@ -176,20 +262,20 @@ export function GameDetails({ game }: GameDetailsProps) {
             <div className="flex-1 space-y-4">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-red-600 text-white">{game.category}</Badge>
+                  <Badge className="bg-red-600 text-white">{game?.category || "Game"}</Badge>
                 </div>
-                <h1 className="text-3xl font-bold text-red-500 mb-2">{game.title}</h1>
-                <p className="text-gray-400 text-lg">{game.description}</p>
+                <h1 className="text-3xl font-bold text-red-500 mb-2">{game?.title || "Game"}</h1>
+                <p className="text-gray-400 text-lg">{game?.description || "No description available"}</p>
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                {game.developer && (
+                {game?.developer && (
                   <div>
                     <span className="text-gray-400">Developer:</span>
                     <p className="text-white font-medium">{game.developer}</p>
                   </div>
                 )}
-                {game.releaseDate && (
+                {game?.releaseDate && (
                   <div>
                     <span className="text-gray-400">Release Date:</span>
                     <p className="text-white font-medium">{new Date(game.releaseDate).toLocaleDateString()}</p>
@@ -197,9 +283,9 @@ export function GameDetails({ game }: GameDetailsProps) {
                 )}
                 <div>
                   <span className="text-gray-400">Date Uploaded:</span>
-                  <p className="text-white font-medium">{game.uploadDate ? new Date(game.uploadDate).toLocaleDateString() : new Date().toLocaleDateString()}</p>
+                  <p className="text-white font-medium">{game?.uploadDate ? new Date(game.uploadDate).toLocaleDateString() : new Date().toLocaleDateString()}</p>
                 </div>
-                {game.rating && (
+                {game?.rating && (
                   <div>
                     <span className="text-gray-400">Rating:</span>
                     <div className="flex items-center gap-1">
@@ -209,7 +295,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                     </div>
                   </div>
                 )}
-                {game.size && (
+                {game?.size && (
                   <div>
                     <span className="text-gray-400">File Size:</span>
                     <p className="text-white font-medium">{game.size}</p>
@@ -222,10 +308,10 @@ export function GameDetails({ game }: GameDetailsProps) {
       </Card>
 
       {/* Description */}
-      {game.longDescription && (
+      {game?.longDescription && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-red-500">About {game.title}</CardTitle>
+            <CardTitle className="text-red-500">About {game?.title}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-gray-300 leading-relaxed">{game.longDescription}</p>
@@ -234,7 +320,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       )}
 
       {/* System Requirements (PC Games and Software only) */}
-      {game.systemRequirements?.recommended && Object.values(game.systemRequirements.recommended).some(value => value) && (
+      {game?.systemRequirements?.recommended && Object.values(game.systemRequirements.recommended).some(value => value) && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
             <CardTitle className="text-red-500 flex items-center gap-2">
@@ -295,7 +381,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       )}
 
       {/* Android Requirements (Android Games only) */}
-      {game.androidRequirements?.recommended && Object.values(game.androidRequirements.recommended).some(value => value) && (
+      {game?.androidRequirements?.recommended && Object.values(game.androidRequirements.recommended).some(value => value) && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
             <CardTitle className="text-red-500 flex items-center gap-2">
@@ -335,7 +421,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       )}
 
       {/* Key Features (Software only) */}
-      {game.keyFeatures && Array.isArray(game.keyFeatures) && game.keyFeatures.filter(feature => typeof feature === 'string' && feature.trim()).length > 0 && (
+      {game?.keyFeatures && Array.isArray(game.keyFeatures) && game.keyFeatures.filter(feature => typeof feature === 'string' && feature.trim()).length > 0 && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
             <CardTitle className="text-red-500">Key Features</CardTitle>
@@ -356,7 +442,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       )}
 
       {/* Screenshots */}
-      {game.screenshots && Array.isArray(game.screenshots) && game.screenshots.filter(url => typeof url === 'string' && url.trim()).length > 0 && (
+      {game?.screenshots && Array.isArray(game.screenshots) && game.screenshots.filter(url => typeof url === 'string' && url.trim()).length > 0 && (
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
             <CardTitle className="text-red-500">Screenshots</CardTitle>
@@ -366,39 +452,7 @@ export function GameDetails({ game }: GameDetailsProps) {
               {game.screenshots
                 .filter(url => typeof url === 'string' && url.trim())
                 .map((url, index) => (
-                  <Dialog key={index}>
-                    <DialogTrigger asChild>
-                      <div className="relative aspect-video cursor-pointer group overflow-hidden rounded-lg">
-                        <Image
-                          src={url}
-                          alt={`Screenshot ${index + 1}`}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        <div className="group-hover:opacity-100 transition-opacity duration-300 bg-opacity-20 rounded-full p-1">
-                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l6 6" />
-                            </svg>
-                          </div>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
-                      <div className="relative">
-                        <Image
-                          src={url}
-                          alt={`Screenshot ${index + 1} - Full Size`}
-                          width={1920}
-                          height={1080}
-                          className="w-auto h-auto max-w-[90vw] max-h-[90vh] object-contain"
-                          priority
-                        />
-                        <DialogClose className="absolute top-3 right-3 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
-                          <X className="h-5 w-5" />
-                        </DialogClose>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <ScreenshotSkeleton key={index} src={url} alt={`Screenshot ${index + 1}`} />
                 ))}
             </div>
           </CardContent>
@@ -417,7 +471,7 @@ export function GameDetails({ game }: GameDetailsProps) {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-white font-medium">Download Available</span>
-              <span className="text-gray-400 text-sm">{game.size}</span>
+              <span className="text-gray-400 text-sm">{game?.size}</span>
             </div>
             
             {/* Download Process and PIN section - side by side on desktop */}
@@ -464,7 +518,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-white font-medium">{cloudDownload.actualProvider || cloudDownload.customProvider || cloudDownload.cloudName || `Cloud ${originalIndex + 1}`}</h4>
                             <div className="bg-blue-900/20 border border-blue-600 px-2 py-1 rounded">
-                              <span className="text-blue-300 text-xs">Parts: {cloudDownload.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()).length || 0}</span>
+                              <span className="text-blue-300 text-xs">Parts: {cloudDownload.partsNumber || cloudDownload.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()).length || 0}</span>
                             </div>
                           </div>
                           <p className="text-gray-400 text-xs mb-3">
@@ -472,7 +526,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                           </p>
                           <Button
                             data-cloud-download={originalIndex}
-                            onClick={() => handleCloudDownload(game.id, originalIndex, cloudDownload.cloudName || `Cloud ${originalIndex + 1}`)}
+                            onClick={() => handleCloudDownload(game?.id, originalIndex, cloudDownload.cloudName || `Cloud ${originalIndex + 1}`)}
                             className="w-full bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
                           >
                             <Download className="h-4 w-4 mr-2" />
@@ -493,134 +547,103 @@ export function GameDetails({ game }: GameDetailsProps) {
         </CardContent>
       </Card>
 
-      {/* Updates Section - Shows below download section if hasUpdates is true or if Update cloud provider exists */}
-      {(game.hasUpdates && game.updateLinks && game.updateLinks.length > 0) || (gameData?.cloudDownloads && gameData.cloudDownloads.some((cd: any) => cd.cloudName === "Update")) ? (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-green-500 flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Updates Available
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="inline-block w-fit max-w-full bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
-              <p className="text-white text-sm mb-3 font-bold">🔄 Update Information:</p>
-              <ul className="text-blue-100 text-x space-y-1 list-disc pl-4 font-semibold">
-                <li>Updates are used to upadte the game (if you got any issue in installing the game use this update)</li>
-                <li>Click update download button to start survey</li>
-                <li>Complete Ad-survey to access download page</li>
-                <li>Enter the update PIN (same like download PIN before) to get download links</li>
-                <li>Update download pages expire in 12 hours</li>
-              </ul>
-            </div>
+      {/* Updates Section - Shows only if Update cloud provider exists */}
+      {gameData?.cloudDownloads && gameData.cloudDownloads.some((cd: any) => cd.cloudName === "Update") && (() => {
+        // Group updates by version
+        const updatesByVersion = gameData.cloudDownloads
+          .map((cloudDownload: any, index: number) => ({ cloudDownload, originalIndex: index }))
+          .filter((item: { cloudDownload: any; originalIndex: number }) => item.cloudDownload.cloudName === "Update")
+          .reduce((groups: any, item: { cloudDownload: any; originalIndex: number }) => {
+            const version = item.cloudDownload.version || 'general'
+            if (!groups[version]) {
+              groups[version] = []
+            }
+            groups[version].push(item)
+            return groups
+          }, {})
 
-            {/* Update PIN */}
-            {game.updateSharedPinCode && (
-              <div className="bg-green-900/20 border border-green-600 p-4 rounded-lg">
+        const typedUpdatesByVersion = updatesByVersion as Record<string, Array<{ cloudDownload: any; originalIndex: number }>>
+
+        return (
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-green-500 flex items-center gap-2">
+                <Download className="h-5 w-5" />
+                Updates Available
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="inline-block w-fit max-w-full bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
+                <p className="text-white text-sm mb-3 font-bold">🔄 Update Information:</p>
+                <ul className="text-blue-100 text-x space-y-1 list-disc pl-4 font-semibold">
+                  <li>Updates are used to update the game (if you got any issue in installing the game use this update)</li>
+                  <li>Click update download button to start survey</li>
+                  <li>Complete Ad-survey to access download page</li>
+                  <li>Enter the update PIN (same like download PIN before) to get download links</li>
+                  <li>Update download pages expire in 24 hours</li>
+                </ul>
+              </div>
+
+              {/* Update PIN */}
+              <div className="bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
                 <p className="text-white text-sm mb-2 font-semibold">🔑 Update PIN Code:</p>
-                <p className="bg-green-800/40 p-3 rounded text-center border border-green-500 max-w-xs mx-auto">
-                  <span className="text-white text-lg font-bold font-mono tracking-wider">{game.updateSharedPinCode}</span>
+                <p className="bg-grey-800/40 p-3 rounded text-left border border-grey-500 max-w-xs x-auto">
+                  <span className="text-white text-lg font-bold font-mono tracking-wider">{gameData.sharedPinCode}</span>
                 </p>
-                <p className="text-green-200 text-xs mt-2 text-center">
+                <p className="text-grey-200 text-xs mt-2 text-left font-bold">
                   Use this PIN to access update download pages
                 </p>
               </div>
-            )}
 
-            {/* Update Cloud Download */}
-            {gameData?.cloudDownloads && gameData.cloudDownloads.filter((cd: any) => cd.cloudName === "Update").length > 0 && (
-              <div className="space-y-4">
-                <h3 className="text-white font-semibold text-lg">Update Downloads:</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {gameData.cloudDownloads
-                    .map((cloudDownload: any, index: number) => ({ cloudDownload, originalIndex: index }))
-                    .filter((item: { cloudDownload: any; originalIndex: number }) => item.cloudDownload.cloudName === "Update")
-                    .map((item: { cloudDownload: any; originalIndex: number }) => {
-                      const { cloudDownload, originalIndex } = item
-                      return (
-                        <div key={originalIndex} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-white font-medium">Provider: { cloudDownload.customProvider || cloudDownload.actualProvider || 'Direct Link'}</h4>
-                            <div className="bg-blue-900/20 border border-blue-600 px-2 py-1 rounded">
-                              <span className="text-blue-300 text-xs">Parts: {cloudDownload.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()).length || 0}</span>
+              <div className="space-y-6">
+                {Object.entries(typedUpdatesByVersion).map(([version, updates]) => (
+                  <div key={version} className="space-y-4">
+                    <h3 className="text-white font-semibold text-lg">
+                      {version === 'general' ? 'Updates' : `Update ${version}`}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {updates.map((item) => {
+                        const { cloudDownload, originalIndex } = item
+                        return (
+                          <div key={originalIndex} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-white font-medium">Provider: { cloudDownload.customProvider || cloudDownload.actualProvider || 'Direct Link'}</h4>
+                              <div className="bg-blue-900/20 border border-blue-600 px-2 py-1 rounded">
+                                <span className="text-blue-300 text-xs">Parts: {cloudDownload.partsNumber || cloudDownload.actualDownloadLinks?.filter((link: any) => link.url && link.url.trim()).length || 0}</span>
+                              </div>
                             </div>
+
+                            <Button
+                              data-cloud-download={originalIndex}
+                              onClick={() => {
+                                // For update downloads, use the same PIN as regular downloads
+                                const updatePin = gameData.sharedPinCode
+                                // Update the game data temporarily for this download
+                                const updatedGameData = { ...gameData }
+                                if (updatedGameData.cloudDownloads && updatedGameData.cloudDownloads[originalIndex]) {
+                                  updatedGameData.sharedPinCode = updatePin
+                                }
+                                setGameData(updatedGameData)
+
+                                // Call the download handler
+                                handleCloudDownload(game?.id, originalIndex, cloudDownload.cloudName || `Update`)
+                              }}
+                              className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download Update
+                            </Button>
                           </div>
-
-                          <Button
-                            data-cloud-download={originalIndex}
-                            onClick={() => {
-                              // For update downloads, use update PIN instead of shared PIN
-                              const updatePin = game.updateSharedPinCode || game.sharedPinCode
-                              // Update the game data temporarily for this download
-                              const updatedGameData = { ...gameData }
-                              if (updatedGameData.cloudDownloads && updatedGameData.cloudDownloads[originalIndex]) {
-                                updatedGameData.sharedPinCode = updatePin
-                              }
-                              setGameData(updatedGameData)
-
-                              // Call the download handler
-                              handleCloudDownload(game.id, originalIndex, cloudDownload.cloudName || `Update`)
-                            }}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download Update
-                          </Button>
-                        </div>
-                      )
-                    })}
-                </div>
-              </div>
-            )}
-
-            {/* Traditional Update Links */}
-            {game.hasUpdates && game.updateLinks && game.updateLinks.length > 0 && (
-              <div className="space-y-4">
-                <h3 className="text-white font-semibold text-lg">Available Updates:</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {game.updateLinks.map((updateLink, index) => (
-                    <div key={index} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-white font-medium">{updateLink.updateName}</h4>
-                          <div className="bg-blue-900/20 border border-blue-600 px-2 py-1 rounded">
-                            <span className="text-blue-300 text-xs">v{updateLink.updateVersion}</span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <span className="text-gray-400">Size:</span>
-                            <p className="text-gray-300">{updateLink.updateSize}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-400">Date:</span>
-                            <p className="text-gray-300">
-                              {updateLink.updateDate ? new Date(updateLink.updateDate).toLocaleDateString() : 'N/A'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <Button
-                          onClick={() => {
-                            // Create update download page
-                            const updatePageUrl = `${window.location.origin}/update/${game.id}?update=${index}`
-                            window.open(updatePageUrl, '_blank')
-                          }}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download Update
-                        </Button>
-                      </div>
+                        )
+                      })}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : null}
+            </CardContent>
+          </Card>
+        )
+      })()}
     </div>
   )
 }

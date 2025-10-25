@@ -78,10 +78,12 @@ export function Sidebar() {
   }, [])
 
   const [displayTrending, setDisplayTrending] = useState<TrendingGame[]>([])
+  const [isTrendingLoaded, setIsTrendingLoaded] = useState(false)
 
   // Separate useEffect for trending items
   useEffect(() => {
     const fetchItems = async () => {
+      setIsTrendingLoaded(false)
       try {
         const response = await fetch("/api/items")
         const result = await response.json()
@@ -107,41 +109,89 @@ export function Sidebar() {
         }
       } catch (error) {
         console.error("Error fetching items:", error)
+      } finally {
+        setIsTrendingLoaded(true)
       }
     }
     fetchItems()
   }, [])
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 w-90">
       {/* Trending */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-white text-lg">Trending</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
-          {displayTrending.map((game) => (
-            <Link
-              key={game.id}
-              href={`/game/${game.id}`}
-              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700 transition-colors group"
-            >
-              <div className="w-12 h-12 flex-shrink-0 overflow-hidden rounded-lg">
-                <Image
-                  src={game.image || "/placeholder.svg"}
-                  alt={game.title}
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-white text-sm font-medium truncate group-hover:text-red-400">{game.title}</h4>
-                <p className="text-gray-400 text-xs">{game.category}</p>
-                <p className="text-gray-500 text-xs">{game.downloads}</p>
-              </div>
-            </Link>
-          ))}
+          {!isTrendingLoaded ? (
+            // Loading state with attractive skeleton animation
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center space-x-3 p-2 rounded-lg animate-pulse">
+                  <div className="w-12 h-12 bg-gray-700 rounded-lg flex-shrink-0"></div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="h-3 bg-gray-700 rounded w-3/4"></div>
+                    <div className="h-2 bg-gray-700 rounded w-1/2"></div>
+                    <div className="h-2 bg-gray-700 rounded w-1/3"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : displayTrending.length > 0 ? (
+            displayTrending.map((game) => (
+              <Link
+                key={game.id}
+                href={`/game/${game.id}`}
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700 transition-colors group"
+              >
+                <div className="w-12 h-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-700">
+                  <Image
+                    src={game.image || "/placeholder.svg"}
+                    alt={game.title}
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-cover transition-opacity duration-300"
+                    onLoad={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.className = parent.className.replace('bg-gray-700', 'bg-transparent');
+                      }
+                    }}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const parent = target.parentElement;
+                      if (parent) {
+                        target.style.display = 'none';
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'w-full h-full flex items-center justify-center bg-gray-700 rounded-lg';
+                        errorDiv.innerHTML = `
+                          <div class="text-center text-gray-400">
+                            <div class="w-4 h-4 mx-auto mb-1 opacity-50">
+                              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          </div>
+                        `;
+                        parent.appendChild(errorDiv);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-white text-sm font-medium truncate group-hover:text-red-400">{game.title}</h4>
+                  <p className="text-gray-400 text-xs">{game.category}</p>
+                  <p className="text-gray-500 text-xs">{game.downloads}</p>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-gray-400 text-sm">No trending items</p>
+            </div>
+          )}
         </CardContent>
       </Card>
             {/* How to downlaod games and softwares video */}

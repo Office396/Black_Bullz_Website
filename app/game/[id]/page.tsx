@@ -6,7 +6,6 @@ import { GameDetails } from "@/components/game-details"
 import { Comments } from "@/components/comments"
 import { PageLoader } from "@/components/page-loader"
 import { useEffect, useState } from "react"
-import { notFound } from "next/navigation"
 
 // Helper function to get game data
 async function getGameData(gameId: number) {
@@ -156,7 +155,6 @@ const staticGames = [
 interface GamePageProps {
   params: { id: string }
 }
-
 export default function GamePage({ params }: GamePageProps) {
   const [game, setGame] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -171,23 +169,35 @@ export default function GamePage({ params }: GamePageProps) {
     fetchGame()
   }, [gameId])
 
-  if (!game) {
-    return null // Let the layout PageLoader handle loading state
-  }
-
-  if (!game) {
-    notFound()
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative w-48 h-48 mx-auto mb-4">
+            <video autoPlay loop muted className="w-full h-full object-contain">
+              <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/700_F_669683156_9EPE8bLAvgoRhMnBfGOSQF6CGLKhsEEe_ST%20%28online-video-cutter.com%29-9p0CdowwI5OwXM4iOSRhEsn6F3lxo3.mp4" type="video/mp4" />
+            </video>
+          </div>
+          <p className="text-white text-lg font-semibold">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-900 relative" style={{
+        backgroundImage: 'url("https://wallpapers.com/images/hd/cool-dark-red-sky-es4t2jelpx91h04m.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
       <Header />
       <div className="container mx-auto px-4 py-6">
         <div className="flex gap-6">
           <main className="flex-1">
             <GameDetails game={game} />
             <div className="mt-8">
-              <Comments gameId={gameId} itemName={game.title} />
+              <Comments gameId={gameId} itemName={game?.title || "Game"} />
             </div>
           </main>
           <aside className="w-80 hidden lg:block">

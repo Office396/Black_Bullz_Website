@@ -50,19 +50,9 @@ interface FormData {
     cloudName: string
     actualProvider?: string
     customProvider?: string
+    partsNumber?: number
+    version?: string
     actualDownloadLinks: Array<{ name: string; url: string; size: string }>
-  }>
-  // Update section
-  hasUpdates: boolean
-  updateServiceProvider: string
-  updateSharedPinCode: string
-  updateSharedRarPassword?: string
-  updateLinks: Array<{
-    updateName: string
-    updateUrl: string
-    updateSize: string
-    updateVersion: string
-    updateDate: string
   }>
 }
 
@@ -89,19 +79,9 @@ const initialFormData: FormData = {
   sharedRarPassword: "",
   cloudDownloads: [{
     cloudName: "",
+    partsNumber: undefined,
+    version: undefined,
     actualDownloadLinks: [{ name: "", url: "", size: "" }],
-  }],
-  // Update section
-  hasUpdates: false,
-  updateServiceProvider: "",
-  updateSharedPinCode: Math.floor(1000 + Math.random() * 9000).toString(),
-  updateSharedRarPassword: "",
-  updateLinks: [{
-    updateName: "",
-    updateUrl: "",
-    updateSize: "",
-    updateVersion: "",
-    updateDate: "",
   }],
 }
 
@@ -116,19 +96,9 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
         sharedRarPassword: editItem.sharedRarPassword || "",
         cloudDownloads: editItem.cloudDownloads || [{
           cloudName: "",
+          partsNumber: undefined,
+          version: undefined,
           actualDownloadLinks: [{ name: "", url: "", size: "" }],
-        }],
-        // Update section
-        hasUpdates: editItem.hasUpdates || false,
-        updateServiceProvider: editItem.updateServiceProvider || "",
-        updateSharedPinCode: editItem.updateSharedPinCode || Math.floor(1000 + Math.random() * 9000).toString(),
-        updateSharedRarPassword: editItem.updateSharedRarPassword || "",
-        updateLinks: editItem.updateLinks || [{
-          updateName: "",
-          updateUrl: "",
-          updateSize: "",
-          updateVersion: "",
-          updateDate: "",
         }],
         systemRequirements: editItem.systemRequirements || {
           recommended: {
@@ -205,6 +175,8 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
       ...formData,
       cloudDownloads: [...formData.cloudDownloads, {
         cloudName: "",
+        partsNumber: undefined,
+        version: undefined,
         actualDownloadLinks: [{ name: "", url: "", size: "" }],
       }],
     })
@@ -223,12 +195,14 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
       ...cloudToDuplicate,
       actualDownloadLinks: cloudToDuplicate.actualDownloadLinks.map(link => ({ ...link }))
     }
+    duplicatedCloud.partsNumber = undefined // Reset parts number for duplicated entry
+    duplicatedCloud.version = undefined // Reset version for duplicated entry
     const updated = [...formData.cloudDownloads]
     updated.splice(cloudIndex + 1, 0, duplicatedCloud)
     setFormData({ ...formData, cloudDownloads: updated })
   }
 
-  const updateCloudDownload = (cloudIndex: number, field: string, value: string) => {
+  const updateCloudDownload = (cloudIndex: number, field: string, value: string | number | undefined) => {
     const updated = [...formData.cloudDownloads]
     updated[cloudIndex] = { ...updated[cloudIndex], [field]: value }
     setFormData({ ...formData, cloudDownloads: updated })
@@ -331,16 +305,6 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                     className="w-4 h-4 text-green-600 bg-gray-600 border-gray-500 rounded focus:ring-green-500"
                   />
                   <span>Latest</span>
-                </Label>
-                <Label htmlFor="hasUpdates" className="text-white flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    id="hasUpdates"
-                    checked={formData.hasUpdates}
-                    onChange={(e) => setFormData({ ...formData, hasUpdates: e.target.checked })}
-                    className="w-4 h-4 text-green-600 bg-gray-600 border-gray-500 rounded focus:ring-green-500"
-                  />
-                  <span>Has Updates</span>
                 </Label>
               </div>
               <div className="bg-blue-900/20 border border-blue-600 p-3 rounded-lg">
@@ -678,235 +642,6 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
         </Card>
       )}
 
-      {/* Cloud Downloads Configuration */}
-      <Card className="bg-gray-700 border-gray-600">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-white text-lg md:text-xl">Cloud Downloads Configuration</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 px-4 md:px-6">
-          <div className="bg-blue-900/20 border border-blue-600 p-3 md:p-4 rounded-lg mb-4">
-            <p className="text-blue-300 text-sm mb-2">📋 How it works:</p>
-            <ul className="text-blue-200 text-xs space-y-1 list-disc pl-4">
-              <li>Users click cloud download button → GP Links/V2Links survey opens automatically</li>
-              <li>After completing survey → PIN entry page appears</li>
-              <li>Users enter the shared PIN → Access to download page with direct links</li>
-              <li>All cloud providers use the same PIN and RAR password</li>
-              <li>Download pages expire after 12 hours for security</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Updates Configuration */}
-      {formData.hasUpdates && (
-        <Card className="bg-gray-700 border-gray-600">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-white text-lg md:text-xl">Updates Configuration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 px-4 md:px-6">
-            <div className="bg-green-900/20 border border-green-600 p-3 md:p-4 rounded-lg mb-4">
-              <p className="text-green-300 text-sm mb-2">🔄 How updates work:</p>
-              <ul className="text-green-200 text-xs space-y-1 list-disc pl-4">
-                <li>Updates appear below the main download section on game details page</li>
-                <li>Users can access updates without completing surveys</li>
-                <li>Each update has its own PIN and download page</li>
-                <li>Updates are shown separately from main downloads</li>
-                <li>Update pages expire after 12 hours for security</li>
-              </ul>
-            </div>
-
-            {/* Update Service Provider */}
-            <div>
-              <Label className="text-white mb-2 block text-sm md:text-base">Update Service Provider</Label>
-              <Select
-                value={formData.updateServiceProvider || ""}
-                onValueChange={(value) => setFormData({ ...formData, updateServiceProvider: value })}
-              >
-                <SelectTrigger className="bg-gray-600 border-gray-500 text-white text-sm">
-                  <SelectValue placeholder="Select update service provider" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-600 border-gray-500">
-                  <SelectItem value="Direct Link">Direct Link</SelectItem>
-                  <SelectItem value="Google Drive">Google Drive</SelectItem>
-                  <SelectItem value="MediaFire">MediaFire</SelectItem>
-                  <SelectItem value="Mega">Mega</SelectItem>
-                  <SelectItem value="OneDrive">OneDrive</SelectItem>
-                  <SelectItem value="Dropbox">Dropbox</SelectItem>
-                  <SelectItem value="pCloud">pCloud</SelectItem>
-                  <SelectItem value="4shared">4shared</SelectItem>
-                  <SelectItem value="Zippyshare">Zippyshare</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Update Shared PIN and RAR Password */}
-            <Card className="bg-gray-600 border-gray-500">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-white text-base md:text-lg">Update Shared Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 px-4 md:px-6">
-                {/* Update Shared PIN Configuration */}
-                <div className="bg-gray-700 p-3 md:p-4 rounded-lg">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
-                    <Label className="text-white text-sm md:text-base">Update Shared PIN Code</Label>
-                    <Button
-                      type="button"
-                      onClick={() => setFormData({
-                        ...formData,
-                        updateSharedPinCode: Math.floor(1000 + Math.random() * 9000).toString()
-                      })}
-                      variant="outline"
-                      size="sm"
-                      className="bg-gray-800 border-gray-700 text-white hover:bg-gray-600 text-xs md:text-sm w-full sm:w-auto"
-                    >
-                      Generate New PIN
-                    </Button>
-                  </div>
-                  <Input
-                    value={formData.updateSharedPinCode}
-                    onChange={(e) => setFormData({ ...formData, updateSharedPinCode: e.target.value })}
-                    className="bg-gray-800 border-gray-700 text-white text-center text-lg font-mono tracking-widest"
-                    maxLength={4}
-                    placeholder="1234"
-                  />
-                  <p className="text-gray-400 text-xs mt-1">Users will need this PIN to access update download pages</p>
-                </div>
-
-                {/* Update Shared RAR Password (Optional) */}
-                <div>
-                  <Label className="text-white mb-2 block text-sm md:text-base">Update RAR/Archive Password (Optional)</Label>
-                  <Input
-                    value={formData.updateSharedRarPassword || ""}
-                    onChange={(e) => setFormData({ ...formData, updateSharedRarPassword: e.target.value })}
-                    className="bg-gray-700 border-gray-600 text-white text-sm"
-                    placeholder="Enter password for update compressed files"
-                  />
-                  <p className="text-gray-400 text-xs mt-1">Will be shown to users on all update download pages</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Update Links */}
-            <div>
-              <Label className="text-white mb-2 block text-sm md:text-base">Update Links</Label>
-              <p className="text-gray-400 text-xs mb-3">These are the update download links users will see after entering the update PIN</p>
-
-              {formData.updateLinks.map((updateLink, updateIndex) => (
-                <div key={updateIndex} className="space-y-3 p-3 md:p-4 bg-gray-600 rounded-lg mb-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-white mb-1 block text-sm">Update Name *</Label>
-                      <Input
-                        placeholder="e.g., v1.2.0 Patch, Hotfix 1.1.5"
-                        value={updateLink.updateName}
-                        onChange={(e) => {
-                          const updated = [...formData.updateLinks]
-                          updated[updateIndex].updateName = e.target.value
-                          setFormData({ ...formData, updateLinks: updated })
-                        }}
-                        className="bg-gray-700 border-gray-600 text-white text-sm"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-white mb-1 block text-sm">Version *</Label>
-                      <Input
-                        placeholder="e.g., 1.2.0"
-                        value={updateLink.updateVersion}
-                        onChange={(e) => {
-                          const updated = [...formData.updateLinks]
-                          updated[updateIndex].updateVersion = e.target.value
-                          setFormData({ ...formData, updateLinks: updated })
-                        }}
-                        className="bg-gray-700 border-gray-600 text-white text-sm"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-white mb-1 block text-sm">File Size *</Label>
-                      <Input
-                        placeholder="e.g., 500 MB"
-                        value={updateLink.updateSize}
-                        onChange={(e) => {
-                          const updated = [...formData.updateLinks]
-                          updated[updateIndex].updateSize = e.target.value
-                          setFormData({ ...formData, updateLinks: updated })
-                        }}
-                        className="bg-gray-700 border-gray-600 text-white text-sm"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-white mb-1 block text-sm">Release Date</Label>
-                      <Input
-                        type="date"
-                        value={updateLink.updateDate}
-                        onChange={(e) => {
-                          const updated = [...formData.updateLinks]
-                          updated[updateIndex].updateDate = e.target.value
-                          setFormData({ ...formData, updateLinks: updated })
-                        }}
-                        className="bg-gray-700 border-gray-600 text-white text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-white mb-1 block text-sm">Update Download URL *</Label>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Input
-                        placeholder="https://drive.google.com/... or https://mega.nz/..."
-                        value={updateLink.updateUrl}
-                        onChange={(e) => {
-                          const updated = [...formData.updateLinks]
-                          updated[updateIndex].updateUrl = e.target.value
-                          setFormData({ ...formData, updateLinks: updated })
-                        }}
-                        className="bg-gray-700 border-gray-600 text-white flex-1 text-sm"
-                        required
-                      />
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          const updated = formData.updateLinks.filter((_, i) => i !== updateIndex)
-                          setFormData({ ...formData, updateLinks: updated })
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="bg-gray-700 border-gray-600 text-red-400 hover:bg-red-600 hover:text-white w-full sm:w-auto"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Remove</span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <Button
-                type="button"
-                onClick={() => setFormData({
-                  ...formData,
-                  updateLinks: [...formData.updateLinks, {
-                    updateName: "",
-                    updateUrl: "",
-                    updateSize: "",
-                    updateVersion: "",
-                    updateDate: "",
-                  }]
-                })}
-                variant="outline"
-                className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Update Link
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Cloud Downloads Configuration */}
       <Card className="bg-gray-700 border-gray-600">
@@ -1004,6 +739,39 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 px-4 md:px-6">
+                {/* Version (only for Update) */}
+                {cloudDownload.cloudName === "Update" && (
+                  <div>
+                    <Label className="text-white mb-2 block text-sm md:text-base">Version (Optional)</Label>
+                    <Input
+                      placeholder="e.g., v1.2.0, Hotfix 1.1.5 (leave empty for general updates)"
+                      value={cloudDownload.version || ""}
+                      onChange={(e) => {
+                        updateCloudDownload(cloudIndex, "version", e.target.value || undefined)
+                      }}
+                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                    />
+                    <p className="text-gray-400 text-xs mt-1">Version for this update. If empty, will be grouped with other general updates.</p>
+                  </div>
+                )}
+
+                {/* Parts Number */}
+                <div>
+                  <Label className="text-white mb-2 block text-sm md:text-base">Parts Number (Optional)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    placeholder="e.g., 5 (leave empty to auto-count links)"
+                    value={cloudDownload.partsNumber || ""}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseInt(e.target.value) : undefined
+                      updateCloudDownload(cloudIndex, "partsNumber", value)
+                    }}
+                    className="bg-gray-700 border-gray-600 text-white text-sm"
+                  />
+                  <p className="text-gray-400 text-xs mt-1">Custom parts number to display. If empty, will show actual number of download links.</p>
+                </div>
+
                 {/* Cloud Name */}
                 <div>
                   <Label className="text-white mb-2 block text-sm md:text-base">Cloud Provider Name *</Label>
