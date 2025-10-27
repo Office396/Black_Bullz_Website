@@ -318,88 +318,7 @@ export function GameDetails({ game }: GameDetailsProps) {
           </CardContent>
         </Card>
       )}
-
-      {/* Installation Notes (PC Games, Software, and Android Games) */}
-      {(game?.category === "PC Games" || game?.category === "Software" || game?.category === "Android Games") && (
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-red-500 flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Installation Notes & Tips
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {game.category === "Android Games" ? (
-                <>
-                  <div className="text-sm space-y-2">
-                    <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
-                    <ul className="space-y-1 text-gray-300 ml-4">
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        If download fails, try another cloud provider
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Links may not work in all countries - disable VPN/proxy/adblock
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Download APK file and enable "Unknown Sources" in settings
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Install APK and grant necessary permissions when prompted
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Clear app cache if game won't launch or crashes
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        For questions, visit contact page or comment - our team replies urgently
-                      </li>
-                    </ul>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="text-sm space-y-2">
-                    <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
-                    <ul className="space-y-1 text-gray-300 ml-4">
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        If download fails, try another cloud provider
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Links may not work in all countries - disable VPN/proxy/adblock
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Use 7-Zip to extract ZIP files by right-clicking and "Extract to folder"
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Run as administrator and check Redist folder for missing DLLs
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Update GPU drivers and temporarily disable antivirus if needed
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        For questions, visit contact page or comment - our team replies urgently
-                      </li>
-                    </ul>
-                  </div>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
+      
       {/* System Requirements (PC Games and Software only) */}
       {game?.systemRequirements?.recommended && Object.values(game.systemRequirements.recommended).some(value => value) && (
         <Card className="bg-gray-800 border-gray-700">
@@ -714,6 +633,86 @@ export function GameDetails({ game }: GameDetailsProps) {
                               <Download className="h-4 w-4 mr-2" />
                               Download Update
                             </Button>
+                            {/* Installation Notes (PC Games, Software, and Android Games) */}
+                            {(game?.category === "PC Games" || game?.category === "Software" || game?.category === "Android Games") && (
+                              <Card className="bg-gray-800 border-gray-700">
+                                <CardHeader>
+                                  <CardTitle className="text-red-500 flex items-center gap-2">
+                                    <Download className="h-5 w-5" />
+                                    Installation Notes & Tips
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="space-y-3">
+                                    {game.category === "Android Games" ? (
+                                      <>
+                                        <div className="text-sm space-y-2">
+                                          <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
+                                          <ul className="space-y-1 text-gray-300 ml-4">
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              If download fails, try another cloud provider
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              Links may not work in all countries - disable VPN/proxy/adblock
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              Download APK file and enable "Unknown Sources" in settings
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              Install APK and grant necessary permissions when prompted
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              Clear app cache if game won't launch or crashes
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              For questions, visit contact page or comment - our team replies urgently
+                                            </li>
+                                          </ul>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="text-sm space-y-2">
+                                          <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
+                                          <ul className="space-y-1 text-gray-300 ml-4">
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              If download fails, try another cloud provider
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              Links may not work in all countries - disable VPN/proxy/adblock
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              Use 7-Zip to extract ZIP files by right-clicking and "Extract to folder"
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              Run as administrator and check Redist folder for missing DLLs
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              Update GPU drivers and temporarily disable antivirus if needed
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                              <span className="text-red-400">•</span>
+                                              For questions, visit contact page or comment - our team replies urgently
+                                            </li>
+                                          </ul>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            )}
                           </div>
                         )
                       })}
