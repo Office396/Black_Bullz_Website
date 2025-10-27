@@ -14,28 +14,9 @@ import { createSurveyLink, createDownloadPage } from "@/lib/link-shortener"
 const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, priority }: { src: string; alt: string; className?: string; fill?: boolean; width?: number; height?: number; priority?: boolean }) => {
    const [isLoaded, setIsLoaded] = useState(false)
    const [hasError, setHasError] = useState(false)
-   const [isLoading, setIsLoading] = useState(true)
-
-   useEffect(() => {
-     if (src) {
-       setIsLoading(true)
-       setHasError(false)
-       setIsLoaded(false)
-
-       // Set a timeout to show error after 8 seconds of loading
-       const timeoutId = setTimeout(() => {
-         if (!isLoaded) {
-           setHasError(true)
-           setIsLoading(false)
-         }
-       }, 8000) // 8 seconds timeout
-
-       return () => clearTimeout(timeoutId)
-     }
-   }, [src, isLoaded])
 
    return (
-     <div className={`relative overflow-hidden ${isLoading && !hasError ? 'bg-gray-700 animate-pulse rounded-lg' : ''} ${className}`}>
+     <div className={`relative overflow-hidden ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse rounded-lg' : ''} ${className}`}>
        {!hasError && (
          <Image
            src={src}
@@ -44,13 +25,12 @@ const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, p
            width={fill ? undefined : width}
            height={fill ? undefined : height}
            className="object-cover transition-all duration-300 rounded-lg"
-           onLoad={() => {
-             setIsLoaded(true)
-             setIsLoading(false)
-           }}
+           onLoad={() => setIsLoaded(true)}
            onError={() => {
-             // Don't immediately set error, let the timeout handle it
-             setIsLoading(false)
+             // Add timeout before showing error
+             setTimeout(() => {
+               setHasError(true)
+             }, 5000) // 5 seconds timeout
            }}
            priority={priority}
          />
@@ -75,43 +55,23 @@ const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, p
 const ScreenshotSkeleton = ({ src, alt }: { src: string; alt: string }) => {
    const [isLoaded, setIsLoaded] = useState(false)
    const [hasError, setHasError] = useState(false)
-   const [isLoading, setIsLoading] = useState(true)
-
-   useEffect(() => {
-     if (src) {
-       setIsLoading(true)
-       setHasError(false)
-       setIsLoaded(false)
-
-       // Set a timeout to show error after 8 seconds of loading
-       const timeoutId = setTimeout(() => {
-         if (!isLoaded) {
-           setHasError(true)
-           setIsLoading(false)
-         }
-       }, 8000) // 8 seconds timeout
-
-       return () => clearTimeout(timeoutId)
-     }
-   }, [src, isLoaded])
 
    return (
      <Dialog>
        <DialogTrigger asChild>
-         <div className={`relative aspect-video cursor-pointer group overflow-hidden rounded-lg ${isLoading && !hasError ? 'bg-gray-700 animate-pulse' : ''}`}>
+         <div className={`relative aspect-video cursor-pointer group overflow-hidden rounded-lg ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse' : ''}`}>
            {!hasError && (
              <Image
                src={src}
                alt={alt}
                fill
                className="object-cover transition-all duration-300 rounded-lg"
-               onLoad={() => {
-                 setIsLoaded(true)
-                 setIsLoading(false)
-               }}
+               onLoad={() => setIsLoaded(true)}
                onError={() => {
-                 // Don't immediately set error, let the timeout handle it
-                 setIsLoading(false)
+                 // Add timeout before showing error
+                 setTimeout(() => {
+                   setHasError(true)
+                 }, 5000) // 5 seconds timeout
                }}
              />
            )}
