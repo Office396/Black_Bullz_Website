@@ -528,7 +528,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                             </div>
                           </div>
                           <p className="text-gray-400 text-xs mb-3">
-                            Provider: {cloudDownload.customProvider || cloudDownload.actualProvider || cloudDownload.cloudName || `Cloud ${originalIndex + 1}`}
+                            Provider: {cloudDownload.customProvider || (cloudDownload.actualProvider && cloudDownload.actualProvider !== cloudDownload.cloudName ? cloudDownload.actualProvider : cloudDownload.cloudName) || `Cloud ${originalIndex + 1}`}
                           </p>
                           <Button
                             data-cloud-download={originalIndex}
