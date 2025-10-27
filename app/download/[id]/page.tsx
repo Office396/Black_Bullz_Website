@@ -253,10 +253,10 @@ export default function DownloadPage() {
               {cloudData?.cloudName && (
                 <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
                   <p className="text-blue-300 text-sm">
-                    <strong>Cloud Provider:</strong> {cloudData.cloudName}
+                    <strong>Cloud Provider:</strong> {cloudData.customProvider || cloudData.actualProvider || cloudData.cloudName}
                   </p>
                   <p className="text-blue-200 text-xs mt-1">
-                    These links are hosted on {cloudData.cloudName}. Please follow their terms of service.
+                    These links are hosted on {cloudData.customProvider || cloudData.actualProvider || cloudData.cloudName}. Please follow their terms of service.
                   </p>
                 </div>
               )}
