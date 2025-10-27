@@ -12,97 +12,143 @@ import { createSurveyLink, createDownloadPage } from "@/lib/link-shortener"
 
 // ImageSkeleton component
 const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, priority }: { src: string; alt: string; className?: string; fill?: boolean; width?: number; height?: number; priority?: boolean }) => {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [hasError, setHasError] = useState(false)
+   const [isLoaded, setIsLoaded] = useState(false)
+   const [hasError, setHasError] = useState(false)
+   const [isLoading, setIsLoading] = useState(true)
 
-  return (
-    <div className={`relative overflow-hidden ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse rounded-lg' : ''} ${className}`}>
-      {!hasError && (
-        <Image
-          src={src}
-          alt={alt}
-          fill={fill}
-          width={fill ? undefined : width}
-          height={fill ? undefined : height}
-          className="object-cover transition-all duration-300 rounded-lg"
-          onLoad={() => setIsLoaded(true)}
-          onError={() => {
-            setHasError(true)
-          }}
-          priority={priority}
-        />
-      )}
-      {hasError && (
-        <div className={`w-full h-full flex items-center justify-center bg-gray-700 rounded-lg ${fill ? 'absolute inset-0' : ''}`}>
-          <div className="text-center text-gray-400">
-            <div className="w-8 h-8 mx-auto mb-2 opacity-50">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <p className="text-xs">Failed to load</p>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+   useEffect(() => {
+     if (src) {
+       setIsLoading(true)
+       setHasError(false)
+       setIsLoaded(false)
+
+       // Set a timeout to show error after 8 seconds of loading
+       const timeoutId = setTimeout(() => {
+         if (!isLoaded) {
+           setHasError(true)
+           setIsLoading(false)
+         }
+       }, 8000) // 8 seconds timeout
+
+       return () => clearTimeout(timeoutId)
+     }
+   }, [src, isLoaded])
+
+   return (
+     <div className={`relative overflow-hidden ${isLoading && !hasError ? 'bg-gray-700 animate-pulse rounded-lg' : ''} ${className}`}>
+       {!hasError && (
+         <Image
+           src={src}
+           alt={alt}
+           fill={fill}
+           width={fill ? undefined : width}
+           height={fill ? undefined : height}
+           className="object-cover transition-all duration-300 rounded-lg"
+           onLoad={() => {
+             setIsLoaded(true)
+             setIsLoading(false)
+           }}
+           onError={() => {
+             // Don't immediately set error, let the timeout handle it
+             setIsLoading(false)
+           }}
+           priority={priority}
+         />
+       )}
+       {hasError && (
+         <div className={`w-full h-full flex items-center justify-center bg-gray-700 rounded-lg ${fill ? 'absolute inset-0' : ''}`}>
+           <div className="text-center text-gray-400">
+             <div className="w-8 h-8 mx-auto mb-2 opacity-50">
+               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+               </svg>
+             </div>
+             <p className="text-xs">Failed to load</p>
+           </div>
+         </div>
+       )}
+     </div>
+   )
+ }
 
 // ScreenshotSkeleton component
 const ScreenshotSkeleton = ({ src, alt }: { src: string; alt: string }) => {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [hasError, setHasError] = useState(false)
+   const [isLoaded, setIsLoaded] = useState(false)
+   const [hasError, setHasError] = useState(false)
+   const [isLoading, setIsLoading] = useState(true)
 
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <div className={`relative aspect-video cursor-pointer group overflow-hidden rounded-lg ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse' : ''}`}>
-          {!hasError && (
-            <Image
-              src={src}
-              alt={alt}
-              fill
-              className="object-cover transition-all duration-300 rounded-lg"
-              onLoad={() => setIsLoaded(true)}
-              onError={() => {
-                setHasError(true)
-              }}
-            />
-          )}
-          {hasError && (
-            <div className="w-full h-full flex items-center justify-center bg-gray-700 rounded-lg">
-              <div className="text-center text-gray-400">
-                <div className="w-8 h-8 mx-auto mb-2 opacity-50">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <p className="text-xs">Failed to load</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </DialogTrigger>
-      {!hasError && (
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
-          <div className="relative">
-            <Image
-              src={src}
-              alt={`${alt} - Full Size`}
-              width={1920}
-              height={1080}
-              className="w-auto h-auto max-w-[90vw] max-h-[90vh] object-contain"
-              priority
-            />
-            <DialogClose className="absolute top-3 right-3 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
-              <X className="h-5 w-5" />
-            </DialogClose>
-          </div>
-        </DialogContent>
-      )}
-    </Dialog>
-  )
-}
+   useEffect(() => {
+     if (src) {
+       setIsLoading(true)
+       setHasError(false)
+       setIsLoaded(false)
+
+       // Set a timeout to show error after 8 seconds of loading
+       const timeoutId = setTimeout(() => {
+         if (!isLoaded) {
+           setHasError(true)
+           setIsLoading(false)
+         }
+       }, 8000) // 8 seconds timeout
+
+       return () => clearTimeout(timeoutId)
+     }
+   }, [src, isLoaded])
+
+   return (
+     <Dialog>
+       <DialogTrigger asChild>
+         <div className={`relative aspect-video cursor-pointer group overflow-hidden rounded-lg ${isLoading && !hasError ? 'bg-gray-700 animate-pulse' : ''}`}>
+           {!hasError && (
+             <Image
+               src={src}
+               alt={alt}
+               fill
+               className="object-cover transition-all duration-300 rounded-lg"
+               onLoad={() => {
+                 setIsLoaded(true)
+                 setIsLoading(false)
+               }}
+               onError={() => {
+                 // Don't immediately set error, let the timeout handle it
+                 setIsLoading(false)
+               }}
+             />
+           )}
+           {hasError && (
+             <div className="w-full h-full flex items-center justify-center bg-gray-700 rounded-lg">
+               <div className="text-center text-gray-400">
+                 <div className="w-8 h-8 mx-auto mb-2 opacity-50">
+                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                   </svg>
+                 </div>
+                 <p className="text-xs">Failed to load</p>
+               </div>
+             </div>
+           )}
+         </div>
+       </DialogTrigger>
+       {!hasError && (
+         <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
+           <div className="relative">
+             <Image
+               src={src}
+               alt={`${alt} - Full Size`}
+               width={1920}
+               height={1080}
+               className="w-auto h-auto max-w-[90vw] max-h-[90vh] object-contain"
+               priority
+             />
+             <DialogClose className="absolute top-3 right-3 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
+               <X className="h-5 w-5" />
+             </DialogClose>
+           </div>
+         </DialogContent>
+       )}
+     </Dialog>
+   )
+ }
 
 interface GameDetailsProps {
   game: {
@@ -318,7 +364,7 @@ export function GameDetails({ game }: GameDetailsProps) {
           </CardContent>
         </Card>
       )}
-      
+
       {/* System Requirements (PC Games and Software only) */}
       {game?.systemRequirements?.recommended && Object.values(game.systemRequirements.recommended).some(value => value) && (
         <Card className="bg-gray-800 border-gray-700">
@@ -633,86 +679,6 @@ export function GameDetails({ game }: GameDetailsProps) {
                               <Download className="h-4 w-4 mr-2" />
                               Download Update
                             </Button>
-                            {/* Installation Notes (PC Games, Software, and Android Games) */}
-                            {(game?.category === "PC Games" || game?.category === "Software" || game?.category === "Android Games") && (
-                              <Card className="bg-gray-800 border-gray-700">
-                                <CardHeader>
-                                  <CardTitle className="text-red-500 flex items-center gap-2">
-                                    <Download className="h-5 w-5" />
-                                    Installation Notes & Tips
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-3">
-                                    {game.category === "Android Games" ? (
-                                      <>
-                                        <div className="text-sm space-y-2">
-                                          <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
-                                          <ul className="space-y-1 text-gray-300 ml-4">
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              If download fails, try another cloud provider
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              Links may not work in all countries - disable VPN/proxy/adblock
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              Download APK file and enable "Unknown Sources" in settings
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              Install APK and grant necessary permissions when prompted
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              Clear app cache if game won't launch or crashes
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              For questions, visit contact page or comment - our team replies urgently
-                                            </li>
-                                          </ul>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <div className="text-sm space-y-2">
-                                          <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
-                                          <ul className="space-y-1 text-gray-300 ml-4">
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              If download fails, try another cloud provider
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              Links may not work in all countries - disable VPN/proxy/adblock
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              Use 7-Zip to extract ZIP files by right-clicking and "Extract to folder"
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              Run as administrator and check Redist folder for missing DLLs
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              Update GPU drivers and temporarily disable antivirus if needed
-                                            </li>
-                                            <li className="flex items-start gap-2">
-                                              <span className="text-red-400">•</span>
-                                              For questions, visit contact page or comment - our team replies urgently
-                                            </li>
-                                          </ul>
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            )}
                           </div>
                         )
                       })}
@@ -724,6 +690,87 @@ export function GameDetails({ game }: GameDetailsProps) {
           </Card>
         )
       })()}
+
+      {/* Installation Notes (PC Games, Software, and Android Games) */}
+      {(game?.category === "PC Games" || game?.category === "Software" || game?.category === "Android Games") && (
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-red-500 flex items-center gap-2">
+              <Download className="h-5 w-5" />
+              Installation Notes & Tips
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {game.category === "Android Games" ? (
+                <>
+                  <div className="text-sm space-y-2">
+                    <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
+                    <ul className="space-y-1 text-gray-300 ml-4">
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        If download fails, try another cloud provider
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        Links may not work in all countries - disable VPN/proxy/adblock
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        Download APK file and enable "Unknown Sources" in settings
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        Install APK and grant necessary permissions when prompted
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        Clear app cache if game won't launch or crashes
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        For questions, visit contact page or comment - our team replies urgently
+                      </li>
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-sm space-y-2">
+                    <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
+                    <ul className="space-y-1 text-gray-300 ml-4">
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        If download fails, try another cloud provider
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        Links may not work in all countries - disable VPN/proxy/adblock
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        Use 7-Zip to extract ZIP files by right-clicking and "Extract to folder"
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        Run as administrator and check Redist folder for missing DLLs
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        Update GPU drivers and temporarily disable antivirus if needed
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400">•</span>
+                        For questions, visit contact page or comment - our team replies urgently
+                      </li>
+                    </ul>
+                  </div>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
