@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -66,14 +66,14 @@ const initialFormData: FormData = {
   releaseDate: "",
   image: "",
   rating: "4.0",
-  latest: false,
+  latest: true,
   keyFeatures: [""],
   screenshots: [], // Added empty screenshots array
   systemRequirements: {
     recommended: { os: "", processor: "", memory: "", graphics: "", storage: "" }, // Only recommended
   },
   androidRequirements: {
-    recommended: { os: "", ram: "", storage: "", processor: "" }, // Only recommended
+    recommended: { os: "Android 12", ram: "8 GB", storage: "350 MB", processor: "Snapdragon / MediaTek (Average Processors)" }, // Only recommended
   },
   sharedPinCode: Math.floor(1000 + Math.random() * 9000).toString(), // Generate random 4-digit PIN
   sharedRarPassword: "",
@@ -111,10 +111,10 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
         },
         androidRequirements: editItem.androidRequirements || {
           recommended: {
-            os: "",
-            ram: "",
-            storage: "",
-            processor: "",
+            os: "Android 12",
+            ram: "8 GB",
+            storage: "350 MB",
+            processor: "Snapdragon / MediaTek (Average Processors)",
           },
         },
       }
@@ -220,6 +220,14 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
     setFormData({ ...formData, cloudDownloads: updated })
   }
 
+  const duplicateDownloadLink = (cloudIndex: number, linkIndex: number) => {
+    const updated = [...formData.cloudDownloads]
+    const link = updated[cloudIndex].actualDownloadLinks[linkIndex]
+    if (!link) return
+    updated[cloudIndex].actualDownloadLinks.splice(linkIndex + 1, 0, { ...link })
+    setFormData({ ...formData, cloudDownloads: updated })
+  }
+
   const updateDownloadLink = (cloudIndex: number, linkIndex: number, field: string, value: string) => {
     const updated = [...formData.cloudDownloads]
     updated[cloudIndex].actualDownloadLinks[linkIndex] = { 
@@ -239,6 +247,102 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
   const showSystemRequirements = formData.category === "PC Games" || formData.category === "Software"
   const showAndroidRequirements = formData.category === "Android Games"
   const showKeyFeatures = formData.category === "Software"
+
+  // State for multi-link text input mode per cloud
+  const [multiLinkMode, setMultiLinkMode] = useState<Record<number, boolean>>({})
+  const [multiLinkText, setMultiLinkText] = useState<Record<number, string>>({})
+  const [multiLinkName, setMultiLinkName] = useState<Record<number, string>>({})
+  const [multiLinkSize, setMultiLinkSize] = useState<Record<number, string>>({})
+
+  // State for system requirements text input
+  const [sysReqTextMode, setSysReqTextMode] = useState(false)
+  const [sysReqTextInput, setSysReqTextInput] = useState("")
+
+  // Parse system requirements from text
+  const parseSystemRequirements = useCallback((text: string) => {
+    const lines = text.split("\n").map((line) => line.trim()).filter((line) => line.length > 0)
+    
+    const requirements = {
+      os: "",
+      processor: "",
+      memory: "",
+      graphics: "",
+      storage: "",
+    }
+
+    lines.forEach((line) => {
+      const lowerLine = line.toLowerCase()
+      
+      // OS detection
+      if (lowerLine.includes("os:") || lowerLine.includes("operating system")) {
+        requirements.os = line.replace(/^(os:|operating system:?)/i, "").trim()
+      }
+      // Processor detection
+      else if (lowerLine.includes("processor:") || lowerLine.includes("cpu:")) {
+        requirements.processor = line.replace(/^(processor:|cpu:?)/i, "").trim()
+      }
+      // Memory detection
+      else if (lowerLine.includes("memory:") || lowerLine.includes("ram:")) {
+        requirements.memory = line.replace(/^(memory:|ram:?)/i, "").trim()
+      }
+      // Graphics detection
+      else if (lowerLine.includes("graphics:") || lowerLine.includes("gpu:") || lowerLine.includes("video card:")) {
+        requirements.graphics = line.replace(/^(graphics:|gpu:|video card:?)/i, "").trim()
+      }
+      // Storage detection
+      else if (lowerLine.includes("storage:") || lowerLine.includes("disk space:") || lowerLine.includes("hard drive:")) {
+        requirements.storage = line.replace(/^(storage:|disk space:|hard drive:?)/i, "").trim()
+      }
+    })
+
+    return requirements
+  }, [])
+
+  // Apply parsed system requirements
+  const handleApplySystemRequirements = useCallback(() => {
+    const parsed = parseSystemRequirements(sysReqTextInput)
+    
+    setFormData({
+      ...formData,
+      systemRequirements: {
+        ...formData.systemRequirements,
+        recommended: {
+          ...formData.systemRequirements.recommended,
+          os: parsed.os || formData.systemRequirements.recommended.os,
+          processor: parsed.processor || formData.systemRequirements.recommended.processor,
+          memory: parsed.memory || formData.systemRequirements.recommended.memory,
+          graphics: parsed.graphics || formData.systemRequirements.recommended.graphics,
+          storage: parsed.storage || formData.systemRequirements.recommended.storage,
+        },
+      },
+    })
+    
+    setSysReqTextInput("")
+    setSysReqTextMode(false)
+  }, [formData, sysReqTextInput, parseSystemRequirements])
+
+  // Parse and apply multiple links from textarea
+  const handleApplyMultipleLinks = useCallback((cloudIndex: number) => {
+    const text = multiLinkText[cloudIndex] || ""
+    const lines = text.split("\n")
+
+    if (lines.length === 0) return
+
+    const linkName = multiLinkName[cloudIndex] || ""
+    const linkSize = multiLinkSize[cloudIndex] || ""
+
+    const updated = [...formData.cloudDownloads]
+    updated[cloudIndex] = {
+      ...updated[cloudIndex],
+      actualDownloadLinks: lines.map((line, idx) => ({
+        name: linkName ? `${linkName} - Part ${idx + 1}` : `Part ${idx + 1}`,
+        url: line.trim(),
+        size: linkSize,
+      })),
+    }
+    setFormData({ ...formData, cloudDownloads: updated })
+    setMultiLinkText({ ...multiLinkText, [cloudIndex]: "" })
+  }, [formData, multiLinkText, multiLinkName, multiLinkSize])
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
@@ -267,7 +371,19 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
               </Label>
               <Select
                 value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
+                onValueChange={(value) => {
+                  const updatedFormData = { ...formData, category: value }
+                  
+                  // Auto-set MediaFire for Android Games
+                  if (value === "Android Games" && formData.cloudDownloads[0]?.cloudName === "") {
+                    updatedFormData.cloudDownloads = [{
+                      ...formData.cloudDownloads[0],
+                      cloudName: "MediaFire",
+                    }]
+                  }
+                  
+                  setFormData(updatedFormData)
+                }}
               >
                 <SelectTrigger className="bg-gray-600 border-gray-500 text-white text-sm">
                   <SelectValue placeholder="Select category" />
@@ -479,88 +595,141 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
             <CardTitle className="text-white text-lg md:text-xl">Recommended System Requirements</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 px-4 md:px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-white text-sm md:text-base">Operating System</Label>
-                <Input
-                  value={formData.systemRequirements.recommended.os}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      systemRequirements: {
-                        ...formData.systemRequirements,
-                        recommended: { ...formData.systemRequirements.recommended, os: e.target.value },
-                      },
-                    })
-                  }
-                  className="bg-gray-600 border-gray-500 text-white text-sm"
-                />
-              </div>
-              <div>
-                <Label className="text-white text-sm md:text-base">Processor</Label>
-                <Input
-                  value={formData.systemRequirements.recommended.processor}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      systemRequirements: {
-                        ...formData.systemRequirements,
-                        recommended: { ...formData.systemRequirements.recommended, processor: e.target.value },
-                      },
-                    })
-                  }
-                  className="bg-gray-600 border-gray-500 text-white text-sm"
-                />
-              </div>
-              <div>
-                <Label className="text-white text-sm md:text-base">Memory</Label>
-                <Input
-                  value={formData.systemRequirements.recommended.memory}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      systemRequirements: {
-                        ...formData.systemRequirements,
-                        recommended: { ...formData.systemRequirements.recommended, memory: e.target.value },
-                      },
-                    })
-                  }
-                  className="bg-gray-600 border-gray-500 text-white text-sm"
-                />
-              </div>
-              <div>
-                <Label className="text-white text-sm md:text-base">Graphics</Label>
-                <Input
-                  value={formData.systemRequirements.recommended.graphics}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      systemRequirements: {
-                        ...formData.systemRequirements,
-                        recommended: { ...formData.systemRequirements.recommended, graphics: e.target.value },
-                      },
-                    })
-                  }
-                  className="bg-gray-600 border-gray-500 text-white text-sm"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <Label className="text-white text-sm md:text-base">Storage</Label>
-                <Input
-                  value={formData.systemRequirements.recommended.storage}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      systemRequirements: {
-                        ...formData.systemRequirements,
-                        recommended: { ...formData.systemRequirements.recommended, storage: e.target.value },
-                      },
-                    })
-                  }
-                  className="bg-gray-600 border-gray-500 text-white text-sm"
-                />
-              </div>
+            {/* Toggle for intelligent text input */}
+            <div className="mb-4 flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="sysreq-text-toggle"
+                checked={sysReqTextMode}
+                onChange={(e) => setSysReqTextMode(e.target.checked)}
+                className="w-4 h-4 text-green-600 bg-gray-600 border-gray-500 rounded cursor-pointer"
+              />
+              <Label htmlFor="sysreq-text-toggle" className="text-white text-sm cursor-pointer">
+                Paste system requirements text
+              </Label>
             </div>
+
+            {/* Intelligent text input mode */}
+            {sysReqTextMode && (
+              <div className="mb-4 p-4 bg-gray-600 rounded-lg border border-gray-500 space-y-3">
+                <Label className="text-white mb-2 block text-sm">Paste system requirements (one per line)</Label>
+                <Textarea
+                  value={sysReqTextInput}
+                  onChange={(e) => setSysReqTextInput(e.target.value)}
+                  placeholder="OS: Windows 10&#10;Processor: Intel i7 gen 2 or AMD Ryzen&#10;Memory: 12 GB RAM&#10;Graphics: Nvidia GTX 2080 6GB&#10;Storage: 8 GB available space"
+                  className="bg-gray-700 border-gray-500 text-white text-sm min-h-[150px]"
+                />
+                <p className="text-gray-300 text-xs">Supported keywords: OS, Operating System, Processor, CPU, Memory, RAM, Graphics, GPU, Video Card, Storage, Disk Space, Hard Drive</p>
+                
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleApplySystemRequirements}
+                    className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                  >
+                    Apply Requirements
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setSysReqTextMode(false)
+                      setSysReqTextInput("")
+                    }}
+                    variant="outline"
+                    className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 text-sm"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+                <p className="text-gray-400 text-xs">Missing fields will be ignored. Existing values will be updated only if found in the text.</p>
+              </div>
+            )}
+
+            {/* Individual input fields */}
+            {!sysReqTextMode && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-white text-sm md:text-base">Operating System</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.os}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, os: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white text-sm md:text-base">Processor</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.processor}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, processor: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white text-sm md:text-base">Memory</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.memory}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, memory: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white text-sm md:text-base">Graphics</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.graphics}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, graphics: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label className="text-white text-sm md:text-base">Storage</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.storage}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, storage: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -849,7 +1018,84 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                   <Label className="text-white mb-2 block text-sm md:text-base">Download Links for {cloudDownload.cloudName || 'this cloud'}</Label>
                   <p className="text-gray-400 text-xs mb-3">These are the actual download links users will see after entering the shared PIN</p>
 
-                  {cloudDownload.actualDownloadLinks.map((link, linkIndex) => (
+                  {/* Toggle for multi-link text input */}
+                  <div className="mb-4 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`multilink-toggle-${cloudIndex}`}
+                      checked={multiLinkMode[cloudIndex] || false}
+                      onChange={(e) => setMultiLinkMode({ ...multiLinkMode, [cloudIndex]: e.target.checked })}
+                      className="w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded cursor-pointer"
+                    />
+                    <Label htmlFor={`multilink-toggle-${cloudIndex}`} className="text-white text-sm cursor-pointer">
+                      Add multiple links at once
+                    </Label>
+                  </div>
+
+                  {/* Multi-link text input mode */}
+                  {multiLinkMode[cloudIndex] && (
+                    <div className="mb-4 p-4 bg-gray-700 rounded-lg border border-gray-600 space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-white mb-1 block text-sm">Link Name (Optional)</Label>
+                          <Input
+                            placeholder="e.g., Main File, Setup"
+                            value={multiLinkName[cloudIndex] || ""}
+                            onChange={(e) => setMultiLinkName({ ...multiLinkName, [cloudIndex]: e.target.value })}
+                            className="bg-gray-800 border-gray-600 text-white text-sm"
+                          />
+                          <p className="text-gray-400 text-xs mt-1">Will be combined with Part number (e.g., "Main File - Part 1")</p>
+                        </div>
+                        <div>
+                          <Label className="text-white mb-1 block text-sm">File Size (Optional)</Label>
+                          <Input
+                            placeholder="e.g., 2.5 GB"
+                            value={multiLinkSize[cloudIndex] || ""}
+                            onChange={(e) => setMultiLinkSize({ ...multiLinkSize, [cloudIndex]: e.target.value })}
+                            className="bg-gray-800 border-gray-600 text-white text-sm"
+                          />
+                          <p className="text-gray-400 text-xs mt-1">Same size for all links</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-white mb-2 block text-sm">Paste multiple download URLs (one per line)</Label>
+                        <Textarea
+                          value={multiLinkText[cloudIndex] || ""}
+                          onChange={(e) => setMultiLinkText({ ...multiLinkText, [cloudIndex]: e.target.value })}
+                          placeholder="https://drive.google.com/file/d/...\nhttps://mega.nz/file/..."
+                          className="bg-gray-800 border-gray-600 text-white text-sm min-h-[120px]"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          onClick={() => handleApplyMultipleLinks(cloudIndex)}
+                          className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                        >
+                          Apply Links
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setMultiLinkMode({ ...multiLinkMode, [cloudIndex]: false })
+                            setMultiLinkText({ ...multiLinkText, [cloudIndex]: "" })
+                            setMultiLinkName({ ...multiLinkName, [cloudIndex]: "" })
+                            setMultiLinkSize({ ...multiLinkSize, [cloudIndex]: "" })
+                          }}
+                          variant="outline"
+                          className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 text-sm"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                      <p className="text-gray-400 text-xs">This will replace all existing links for this cloud provider.</p>
+                    </div>
+                  )}
+
+                  {/* Single link editing mode */}
+                  {!multiLinkMode[cloudIndex] && cloudDownload.actualDownloadLinks.map((link, linkIndex) => (
                     <div key={linkIndex} className="space-y-3 p-3 md:p-4 bg-gray-700 rounded-lg mb-3">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -885,6 +1131,16 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                           />
                           <Button
                             type="button"
+                            onClick={() => duplicateDownloadLink(cloudIndex, linkIndex)}
+                            variant="outline"
+                            size="sm"
+                            className="bg-gray-800 border-gray-700 text-white hover:bg-gray-600 w-full sm:w-auto"
+                          >
+                            <Copy className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Duplicate</span>
+                          </Button>
+                          <Button
+                            type="button"
                             onClick={() => removeDownloadLink(cloudIndex, linkIndex)}
                             variant="outline"
                             size="sm"
@@ -898,15 +1154,17 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                     </div>
                   ))}
 
-                  <Button
-                    type="button"
-                    onClick={() => addDownloadLink(cloudIndex)}
-                    variant="outline"
-                    className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Download Link
-                  </Button>
+                  {!multiLinkMode[cloudIndex] && (
+                    <Button
+                      type="button"
+                      onClick={() => addDownloadLink(cloudIndex)}
+                      variant="outline"
+                      className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Download Link
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
