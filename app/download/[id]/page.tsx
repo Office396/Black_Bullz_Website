@@ -35,7 +35,17 @@ export default function DownloadPage() {
       const gameId = Number.parseInt(params.id as string)
       const cloudIndex = searchParams.get('cloud') ? Number.parseInt(searchParams.get('cloud') as string) : 0
       const token = searchParams.get('token') || undefined
-      const page = await getDownloadPage(gameId, cloudIndex, token)
+
+      // Try to get existing page first
+      let page = await getDownloadPage(gameId, cloudIndex, token)
+
+      // If no page exists and we have a token, the page might still be creating
+      // Wait a bit and try again
+      if (!page && token) {
+        console.log('Download page not found initially, waiting and retrying...')
+        await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds
+        page = await getDownloadPage(gameId, cloudIndex, token)
+      }
 
       if (page) {
         setDownloadPage(page)
@@ -122,12 +132,17 @@ export default function DownloadPage() {
   }
 
   if (!downloadPage) {
+    // Show loading state while trying to create the download page
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <Card className="bg-gray-800 border-gray-700 max-w-md w-full mx-4">
           <CardContent className="p-6 text-center">
-            <h1 className="text-white text-xl font-bold mb-4">Download Page Not Found</h1>
-            <p className="text-gray-400 mb-4">The requested download page does not exist.</p>
+            <div className="relative w-48 h-48 mx-auto mb-4">
+              <video autoPlay loop muted className="w-full h-full object-contain">
+                <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/700_F_669683156_9EPE8bLAvgoRhMnBfGOSQF6CGLKhsEEe_ST%20%28online-video-cutter.com%29-9p0CdowwI5OwXM4iOSRhEsn6F3lxo3.mp4" type="video/mp4" />
+              </video>
+            </div>
+            <p className="text-gray-400 mb-4">Creating download page...</p>
             <Button onClick={() => router.push("/")} className="bg-red-600 hover:bg-red-700">
               Go to Home
             </Button>

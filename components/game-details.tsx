@@ -664,7 +664,7 @@ export function GameDetails({ game }: GameDetailsProps) {
             <div className="space-y-3">
               {game.category === "Android Games" ? (
                 <>
-                  <div className="text-sm space-y-2">
+                  <div className="text-sm space-y-3">
                     <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
                     <ul className="space-y-1 text-gray-300 ml-4">
                       <li className="flex items-start gap-2">

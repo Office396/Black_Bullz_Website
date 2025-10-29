@@ -250,9 +250,15 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
 
   // State for multi-link text input mode per cloud
   const [multiLinkMode, setMultiLinkMode] = useState<Record<number, boolean>>({})
-  const [multiLinkText, setMultiLinkText] = useState<Record<number, string>>({})
-  const [multiLinkName, setMultiLinkName] = useState<Record<number, string>>({})
-  const [multiLinkSize, setMultiLinkSize] = useState<Record<number, string>>({})
+  const [multiLinkSections, setMultiLinkSections] = useState<Record<number, Array<{name: string, size: string, text: string}>>>({})
+
+  // Initialize with one empty section when toggling on
+  const handleToggleMultiLink = (cloudIndex: number, checked: boolean) => {
+    if (checked) {
+      setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: [{ name: "", size: "", text: "" }] })
+    }
+    setMultiLinkMode({ ...multiLinkMode, [cloudIndex]: checked })
+  }
 
   // State for system requirements text input
   const [sysReqTextMode, setSysReqTextMode] = useState(false)
@@ -323,26 +329,36 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
 
   // Parse and apply multiple links from textarea
   const handleApplyMultipleLinks = useCallback((cloudIndex: number) => {
-    const text = multiLinkText[cloudIndex] || ""
-    const lines = text.split("\n")
+    const sections = multiLinkSections[cloudIndex] || []
+    const allNewLinks: Array<{ name: string; url: string; size: string }> = []
 
-    if (lines.length === 0) return
+    sections.forEach(section => {
+      const lines = section.text.split("\n").filter(line => line.trim().length > 0)
 
-    const linkName = multiLinkName[cloudIndex] || ""
-    const linkSize = multiLinkSize[cloudIndex] || ""
+      if (lines.length === 0) return
+
+      const linkName = section.name || ""
+      const linkSize = section.size || ""
+
+      lines.forEach((line: string, idx: number) => {
+        allNewLinks.push({
+          name: linkName ? `${linkName} - Part ${idx + 1}` : `Part ${idx + 1}`,
+          url: line.trim(),
+          size: linkSize,
+        })
+      })
+    })
 
     const updated = [...formData.cloudDownloads]
     updated[cloudIndex] = {
       ...updated[cloudIndex],
-      actualDownloadLinks: lines.map((line, idx) => ({
-        name: linkName ? `${linkName} - Part ${idx + 1}` : `Part ${idx + 1}`,
-        url: line.trim(),
-        size: linkSize,
-      })),
+      actualDownloadLinks: allNewLinks, // Replace all existing links
     }
     setFormData({ ...formData, cloudDownloads: updated })
-    setMultiLinkText({ ...multiLinkText, [cloudIndex]: "" })
-  }, [formData, multiLinkText, multiLinkName, multiLinkSize])
+
+    // Clear sections after applying
+    setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: [] })
+  }, [formData, multiLinkSections])
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
@@ -1024,7 +1040,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                       type="checkbox"
                       id={`multilink-toggle-${cloudIndex}`}
                       checked={multiLinkMode[cloudIndex] || false}
-                      onChange={(e) => setMultiLinkMode({ ...multiLinkMode, [cloudIndex]: e.target.checked })}
+                      onChange={(e) => handleToggleMultiLink(cloudIndex, e.target.checked)}
                       className="w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded cursor-pointer"
                     />
                     <Label htmlFor={`multilink-toggle-${cloudIndex}`} className="text-white text-sm cursor-pointer">
@@ -1035,62 +1051,108 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                   {/* Multi-link text input mode */}
                   {multiLinkMode[cloudIndex] && (
                     <div className="mb-4 p-4 bg-gray-700 rounded-lg border border-gray-600 space-y-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-white mb-1 block text-sm">Link Name (Optional)</Label>
-                          <Input
-                            placeholder="e.g., Main File, Setup"
-                            value={multiLinkName[cloudIndex] || ""}
-                            onChange={(e) => setMultiLinkName({ ...multiLinkName, [cloudIndex]: e.target.value })}
-                            className="bg-gray-800 border-gray-600 text-white text-sm"
-                          />
-                          <p className="text-gray-400 text-xs mt-1">Will be combined with Part number (e.g., "Main File - Part 1")</p>
-                        </div>
-                        <div>
-                          <Label className="text-white mb-1 block text-sm">File Size (Optional)</Label>
-                          <Input
-                            placeholder="e.g., 2.5 GB"
-                            value={multiLinkSize[cloudIndex] || ""}
-                            onChange={(e) => setMultiLinkSize({ ...multiLinkSize, [cloudIndex]: e.target.value })}
-                            className="bg-gray-800 border-gray-600 text-white text-sm"
-                          />
-                          <p className="text-gray-400 text-xs mt-1">Same size for all links</p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label className="text-white mb-2 block text-sm">Paste multiple download URLs (one per line)</Label>
-                        <Textarea
-                          value={multiLinkText[cloudIndex] || ""}
-                          onChange={(e) => setMultiLinkText({ ...multiLinkText, [cloudIndex]: e.target.value })}
-                          placeholder="https://drive.google.com/file/d/...\nhttps://mega.nz/file/..."
-                          className="bg-gray-800 border-gray-600 text-white text-sm min-h-[120px]"
-                        />
-                      </div>
-
-                      <div className="flex gap-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-white text-sm font-medium">Multi-Link Input</Label>
                         <Button
                           type="button"
-                          onClick={() => handleApplyMultipleLinks(cloudIndex)}
-                          className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                          onClick={() => setMultiLinkMode({ ...multiLinkMode, [cloudIndex]: false })}
+                          variant="outline"
+                          size="sm"
+                          className="bg-red-700 border-red-600 text-white hover:bg-red-600"
                         >
-                          Apply Links
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Remove
                         </Button>
+                      </div>
+
+                      {(multiLinkSections[cloudIndex] || []).map((section, sectionIdx) => (
+                        <div key={sectionIdx} className="mb-4 p-3 bg-gray-600 rounded-lg border border-gray-500 space-y-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label className="text-white text-sm font-medium">Section {sectionIdx + 1}</Label>
+                            <Button
+                              type="button"
+                              onClick={() => {
+                                const updatedSections = [...(multiLinkSections[cloudIndex] || [])]
+                                updatedSections.splice(sectionIdx, 1)
+                                setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: updatedSections })
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="bg-red-700 border-red-600 text-white hover:bg-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Remove
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-white mb-1 block text-sm">Link Name (Optional)</Label>
+                              <Input
+                                placeholder="e.g., Main File, Setup"
+                                value={section.name}
+                                onChange={(e) => {
+                                  const updatedSections = [...(multiLinkSections[cloudIndex] || [])]
+                                  updatedSections[sectionIdx] = { ...section, name: e.target.value }
+                                  setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: updatedSections })
+                                }}
+                                className="bg-gray-800 border-gray-600 text-white text-sm"
+                              />
+                              <p className="text-gray-400 text-xs mt-1">Will be combined with Part number (e.g., "Main File - Part 1")</p>
+                            </div>
+                            <div>
+                              <Label className="text-white mb-1 block text-sm">File Size (Optional)</Label>
+                              <Input
+                                placeholder="e.g., 2.5 GB"
+                                value={section.size}
+                                onChange={(e) => {
+                                  const updatedSections = [...(multiLinkSections[cloudIndex] || [])]
+                                  updatedSections[sectionIdx] = { ...section, size: e.target.value }
+                                  setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: updatedSections })
+                                }}
+                                className="bg-gray-800 border-gray-600 text-white text-sm"
+                              />
+                              <p className="text-gray-400 text-xs mt-1">Same size for all links</p>
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label className="text-white mb-2 block text-sm">Paste multiple download URLs (one per line)</Label>
+                            <Textarea
+                              value={section.text}
+                              onChange={(e) => {
+                                const updatedSections = [...(multiLinkSections[cloudIndex] || [])]
+                                updatedSections[sectionIdx] = { ...section, text: e.target.value }
+                                setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: updatedSections })
+                              }}
+                              placeholder="https://drive.google.com/file/d/...\nhttps://mega.nz/file/..."
+                              className="bg-gray-800 border-gray-600 text-white text-sm min-h-[120px]"
+                            />
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <Button
                           type="button"
                           onClick={() => {
-                            setMultiLinkMode({ ...multiLinkMode, [cloudIndex]: false })
-                            setMultiLinkText({ ...multiLinkText, [cloudIndex]: "" })
-                            setMultiLinkName({ ...multiLinkName, [cloudIndex]: "" })
-                            setMultiLinkSize({ ...multiLinkSize, [cloudIndex]: "" })
+                            const updatedSections = [...(multiLinkSections[cloudIndex] || []), { name: "", size: "", text: "" }]
+                            setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: updatedSections })
                           }}
                           variant="outline"
-                          className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 text-sm"
+                          className="bg-blue-700 border-blue-600 text-white hover:bg-blue-600"
                         >
-                          Cancel
+                          <Copy className="h-4 w-4 mr-2" />
+                          Duplicate Section
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => handleApplyMultipleLinks(cloudIndex)}
+                          className="bg-green-600 hover:bg-green-700 text-white text-sm flex-1"
+                        >
+                          Apply Links
                         </Button>
                       </div>
-                      <p className="text-gray-400 text-xs">This will replace all existing links for this cloud provider.</p>
+                      <p className="text-gray-400 text-xs">This will add all links from all sections to the download links below.</p>
                     </div>
                   )}
 
