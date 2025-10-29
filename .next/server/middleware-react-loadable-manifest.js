@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST='{"components\\\\admin-feedback.tsx -> @emailjs/browser":{"id":6926,"files":["static/chunks/595.2c98734d569d656f.js"]}}';
+self.__REACT_LOADABLE_MANIFEST="{}"

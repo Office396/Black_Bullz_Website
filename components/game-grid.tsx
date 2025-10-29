@@ -8,25 +8,64 @@ import Image from "next/image"
 
 // ImageSkeleton component
 const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, priority }: { src: string; alt: string; className?: string; fill?: boolean; width?: number; height?: number; priority?: boolean }) => {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [hasError, setHasError] = useState(false)
+   const [isLoaded, setIsLoaded] = useState(false)
+   const [hasError, setHasError] = useState(false)
+   const [isLoading, setIsLoading] = useState(true)
 
-  return (
-    <Image
-      src={src}
-      alt={alt}
-      fill={fill}
-      width={fill ? undefined : width}
-      height={fill ? undefined : height}
-      className={`${className} ${!isLoaded && !hasError ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-      onLoad={() => setIsLoaded(true)}
-      onError={() => {
-        setHasError(true)
-      }}
-      priority={priority}
-    />
-  )
-}
+   useEffect(() => {
+     if (src) {
+       setIsLoading(true)
+       setHasError(false)
+       setIsLoaded(false)
+
+       // Set a timeout to show error after 8 seconds of loading
+       const timeoutId = setTimeout(() => {
+         if (!isLoaded) {
+           setHasError(true)
+           setIsLoading(false)
+         }
+       }, 8000) // 8 seconds timeout
+
+       return () => clearTimeout(timeoutId)
+     }
+   }, [src, isLoaded])
+
+   return (
+     <div className={`relative overflow-hidden ${isLoading && !hasError ? 'bg-gray-700 animate-pulse rounded-lg' : ''} ${className}`}>
+       {!hasError && (
+         <Image
+           src={src}
+           alt={alt}
+           fill={fill}
+           width={fill ? undefined : width}
+           height={fill ? undefined : height}
+           className="object-cover transition-all duration-300 rounded-lg"
+           onLoad={() => {
+             setIsLoaded(true)
+             setIsLoading(false)
+           }}
+           onError={() => {
+             // Don't immediately set error, let the timeout handle it
+             setIsLoading(false)
+           }}
+           priority={priority}
+         />
+       )}
+       {hasError && (
+         <div className={`w-full h-full flex items-center justify-center bg-gray-700 rounded-lg ${fill ? 'absolute inset-0' : ''}`}>
+           <div className="text-center text-gray-400">
+             <div className="w-8 h-8 mx-auto mb-2 opacity-50">
+               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+               </svg>
+             </div>
+             <p className="text-xs">Failed to load</p>
+           </div>
+         </div>
+       )}
+     </div>
+   )
+ }
 import { Star } from "lucide-react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useState, useEffect, useMemo } from "react"
@@ -276,5 +315,3 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
     </div>
   )
 }
-
-
