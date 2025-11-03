@@ -139,6 +139,12 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
 
     if (filterLatest) {
       games = games.filter((game) => game.latest)
+      // Sort latest items by upload date (newest first)
+      games.sort((a, b) => {
+        const dateA = new Date(a.uploadDate || a.releaseDate || 0).getTime()
+        const dateB = new Date(b.uploadDate || b.releaseDate || 0).getTime()
+        return dateB - dateA
+      })
     }
 
     return games
