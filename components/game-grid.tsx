@@ -104,7 +104,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
   const [adminItems, setAdminItems] = useState<GameItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
 
-  const itemsPerPage = 12 // Show 12 items per page on home page
+  const itemsPerPage = activeTab === "android-games" ? 20 : 12 // Show 20 items per page for Android games, 12 for others
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -284,6 +284,14 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
       {totalPages > 1 && paginatedGames.length > 0 && (
         <div className="flex justify-center mt-8">
           <div className="flex items-center space-x-2">
+            {/* First page button */}
+            <Button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+            >
+              First
+            </Button>
             <Button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
@@ -291,23 +299,82 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
             >
               Previous
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-2 rounded-lg transition-colors ${
-                  currentPage === page ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
-                }`}
-              >
-                {page}
-              </Button>
-            ))}
+
+            {/* Page numbers */}
+            {(() => {
+              const pages: (number | string)[] = []
+
+              if (totalPages <= 7) {
+                // Show all pages if 7 or fewer
+                for (let i = 1; i <= totalPages; i++) {
+                  pages.push(i)
+                }
+              } else {
+                // Always show first 4 pages
+                for (let i = 1; i <= Math.min(4, totalPages); i++) {
+                  pages.push(i)
+                }
+
+                // Determine if we need ellipsis and where
+                const startRange = currentPage - 1
+                const endRange = currentPage + 1
+
+                // Add ellipsis before middle section if needed
+                if (startRange > 5) {
+                  pages.push('...')
+                }
+
+                // Add middle section around current page (if not already included)
+                for (let i = Math.max(5, startRange); i <= Math.min(endRange, totalPages - 2); i++) {
+                  if (!pages.includes(i)) {
+                    pages.push(i)
+                  }
+                }
+
+                // Add ellipsis before last pages if needed
+                if (endRange < totalPages - 2) {
+                  pages.push('...')
+                }
+
+                // Always show last 2 pages (if not already included)
+                for (let i = Math.max(totalPages - 1, 5); i <= totalPages; i++) {
+                  if (!pages.includes(i)) {
+                    pages.push(i)
+                  }
+                }
+              }
+
+              return pages.map((page, index) => (
+                typeof page === 'number' ? (
+                  <Button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-2 rounded-lg transition-colors ${
+                      currentPage === page ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
+                    }`}
+                  >
+                    {page}
+                  </Button>
+                ) : (
+                  <span key={`ellipsis-${index}`} className="px-2 text-gray-400">...</span>
+                )
+              ))
+            })()}
+
             <Button
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
             >
               Next
+            </Button>
+            {/* Last page button */}
+            <Button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+            >
+              Last
             </Button>
           </div>
         </div>
