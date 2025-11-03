@@ -289,21 +289,23 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
 
       {totalPages > 1 && paginatedGames.length > 0 && (
         <div className="flex justify-center mt-8">
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2 max-w-full overflow-x-auto px-2">
             {/* First page button */}
             <Button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+              className="px-2 md:px-3 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 min-w-[60px] md:min-w-auto"
             >
-              First
+              <span className="hidden md:inline">First</span>
+              <span className="md:hidden">««</span>
             </Button>
             <Button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+              className="px-2 md:px-3 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 min-w-[60px] md:min-w-auto"
             >
-              Previous
+              <span className="hidden md:inline">Previous</span>
+              <span className="md:hidden">«</span>
             </Button>
 
             {/* Page numbers */}
@@ -317,37 +319,16 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
                 }
               } else {
                 // Always show first 4 pages
-                for (let i = 1; i <= Math.min(4, totalPages); i++) {
+                for (let i = 1; i <= 4; i++) {
                   pages.push(i)
                 }
 
-                // Determine if we need ellipsis and where
-                const startRange = currentPage - 1
-                const endRange = currentPage + 1
+                // Add ellipsis
+                pages.push('...')
 
-                // Add ellipsis before middle section if needed
-                if (startRange > 5) {
-                  pages.push('...')
-                }
-
-                // Add middle section around current page (if not already included)
-                for (let i = Math.max(5, startRange); i <= Math.min(endRange, totalPages - 2); i++) {
-                  if (!pages.includes(i)) {
-                    pages.push(i)
-                  }
-                }
-
-                // Add ellipsis before last pages if needed
-                if (endRange < totalPages - 2) {
-                  pages.push('...')
-                }
-
-                // Always show last 2 pages (if not already included)
-                for (let i = Math.max(totalPages - 1, 5); i <= totalPages; i++) {
-                  if (!pages.includes(i)) {
-                    pages.push(i)
-                  }
-                }
+                // Always show last 2 pages
+                pages.push(totalPages - 1)
+                pages.push(totalPages)
               }
 
               return pages.map((page, index) => (
@@ -355,14 +336,14 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
                   <Button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-2 rounded-lg transition-colors ${
+                    className={`px-2 md:px-3 py-2 text-sm rounded-lg transition-colors min-w-[40px] md:min-w-auto ${
                       currentPage === page ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
                     }`}
                   >
                     {page}
                   </Button>
                 ) : (
-                  <span key={`ellipsis-${index}`} className="px-2 text-gray-400">...</span>
+                  <span key={`ellipsis-${index}`} className="px-1 md:px-2 text-gray-400">...</span>
                 )
               ))
             })()}
@@ -370,9 +351,10 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
             <Button
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+              className="px-2 md:px-3 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 min-w-[60px] md:min-w-auto"
             >
-              Next
+              <span className="hidden md:inline">Next</span>
+              <span className="md:hidden">»</span>
             </Button>
             {/* Last page button */}
             <Button
@@ -380,7 +362,8 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
               disabled={currentPage === totalPages}
               className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
             >
-              Last
+              <span className="hidden md:inline">Last</span>
+              <span className="md:hidden">»»</span>
             </Button>
           </div>
         </div>

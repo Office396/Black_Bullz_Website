@@ -21,6 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+      </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-gray-900`}>
         {/* PageLoader handles client-side route changes with a controlled delay */}
         <PageLoader />
