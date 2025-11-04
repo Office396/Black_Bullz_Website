@@ -25,6 +25,7 @@ interface FormData {
   latest: boolean
   keyFeatures: string[]
   screenshots: string[] // Added screenshots array
+  note?: string
   systemRequirements: {
     recommended: {
       // Removed minimum, kept only recommended
@@ -69,6 +70,7 @@ const initialFormData: FormData = {
   latest: true,
   keyFeatures: [""],
   screenshots: [], // Added empty screenshots array
+  note: "",
   systemRequirements: {
     recommended: { os: "", processor: "", memory: "", graphics: "", storage: "" }, // Only recommended
   },
@@ -92,6 +94,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
       return {
         ...editItem,
         screenshots: editItem.screenshots || [],
+        note: editItem.note || "",
         sharedPinCode: editItem.sharedPinCode || Math.floor(1000 + Math.random() * 9000).toString(),
         sharedRarPassword: editItem.sharedRarPassword || "",
         cloudDownloads: editItem.cloudDownloads || [{
@@ -438,6 +441,16 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                   />
                   <span>Latest</span>
                 </Label>
+                <Label htmlFor="hasNote" className="text-white flex items-center space-x-2 text-sm">
+                  <input
+                    type="checkbox"
+                    id="hasNote"
+                    checked={!!formData.note}
+                    onChange={(e) => setFormData({ ...formData, note: e.target.checked ? "" : undefined })}
+                    className="w-4 h-4 text-green-600 bg-gray-600 border-gray-500 rounded focus:ring-green-500"
+                  />
+                  <span>Note</span>
+                </Label>
               </div>
               <div className="bg-blue-900/20 border border-blue-600 p-3 rounded-lg">
                 <p className="text-blue-300 text-sm">
@@ -516,6 +529,23 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
               options={{ minimap: { enabled: false }, fontSize: 12, wordWrap: "on" }}
             />
           </div>
+
+          {/* Note Input (when enabled) */}
+          {formData.note !== undefined && (
+            <div>
+              <Label htmlFor="note" className="text-white text-sm md:text-base">
+                Note (Optional)
+              </Label>
+              <Textarea
+                id="note"
+                value={formData.note}
+                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                className="bg-gray-600 border-gray-500 text-white text-sm min-h-[80px]"
+                placeholder="Enter a note that will be displayed to users on the download page..."
+              />
+              <p className="text-gray-400 text-xs mt-1">This note will be shown to users after they enter the PIN and access the download page.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

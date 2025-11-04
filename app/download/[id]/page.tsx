@@ -236,6 +236,21 @@ export default function DownloadPage() {
           </CardContent>
         </Card>
 
+        {/* Note (if exists) */}
+        {gameData?.note && (
+          <Card className="bg-yellow-900/20 border-yellow-600 mb-6">
+            <CardHeader>
+              <CardTitle className="text-yellow-300 flex items-center">
+                <Shield className="h-5 w-5 mr-2" />
+                Important Note
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-yellow-100 whitespace-pre-wrap">{gameData.note}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Download Info */}
         {(downloadPage.rarPassword || cloudData?.cloudName || (gameData?.category === "PC Games" || gameData?.category === "Software")) && (
           <Card className="bg-gray-800 border-gray-700">
