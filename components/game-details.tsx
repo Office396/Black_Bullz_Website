@@ -514,10 +514,34 @@ export function GameDetails({ game }: GameDetailsProps) {
               <div className="space-y-4">
                 <h3 className="text-white font-semibold text-lg">Choose Download Options:</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {gameData.cloudDownloads
-                    .map((cloudDownload: any, index: number) => ({ cloudDownload, originalIndex: index }))
-                    .filter((item: { cloudDownload: any; originalIndex: number }) => item.cloudDownload.cloudName !== "Update")
-                    .map((item: { cloudDownload: any; originalIndex: number }) => {
+                  {(() => {
+                    // Define the priority order
+                    const priorityOrder = ['Direct Link', 'Google Drive', 'GoFile', 'MediaFire']
+
+                    // Sort cloud downloads according to priority
+                    const sortedCloudDownloads = gameData.cloudDownloads
+                      .map((cloudDownload: any, index: number) => ({ cloudDownload, originalIndex: index }))
+                      .filter((item: { cloudDownload: any; originalIndex: number }) => item.cloudDownload.cloudName !== "Update")
+                      .sort((a: { cloudDownload: any; originalIndex: number }, b: { cloudDownload: any; originalIndex: number }) => {
+                        const aName = a.cloudDownload.cloudName || ''
+                        const bName = b.cloudDownload.cloudName || ''
+
+                        // Get priority index, default to high number for unknown providers
+                        const aPriority = priorityOrder.indexOf(aName)
+                        const bPriority = priorityOrder.indexOf(bName)
+
+                        // If both are in priority list, sort by priority
+                        if (aPriority !== -1 && bPriority !== -1) {
+                          return aPriority - bPriority
+                        }
+                        // If only one is in priority list, prioritize it
+                        if (aPriority !== -1) return -1
+                        if (bPriority !== -1) return 1
+                        // If neither is in priority list, sort alphabetically
+                        return aName.localeCompare(bName)
+                      })
+
+                    return sortedCloudDownloads.map((item: { cloudDownload: any; originalIndex: number }) => {
                       const { cloudDownload, originalIndex } = item
                       return (
                         <div key={originalIndex} className="bg-gray-700 border border-gray-600 rounded-lg p-4">
@@ -540,7 +564,8 @@ export function GameDetails({ game }: GameDetailsProps) {
                           </Button>
                         </div>
                       )
-                    })}
+                    })
+                  })()}
                 </div>
               </div>
             ) : (

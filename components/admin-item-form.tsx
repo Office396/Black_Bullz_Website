@@ -1011,6 +1011,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                       <SelectItem value="DDownload">DDownload</SelectItem>
                       <SelectItem value="RANOZ">RANOZ</SelectItem>
                       <SelectItem value="MEGA">MEGA</SelectItem>
+                      <SelectItem value="Upload-Haven">Upload-Haven</SelectItem>
                       <SelectItem value="Multi-up">Multi-up</SelectItem>
                       <SelectItem value="Data Nodes">Data Nodes</SelectItem>
                       <SelectItem value="Pixel Drain">Pixel Drain</SelectItem>
@@ -1045,6 +1046,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                             <SelectItem value="DDownload">DDownload</SelectItem>
                             <SelectItem value="RANOZ">RANOZ</SelectItem>
                             <SelectItem value="MEGA">MEGA</SelectItem>
+                            <SelectItem value="Upload-Haven">Upload-Haven</SelectItem>
                             <SelectItem value="Multi-up">Multi-up</SelectItem>
                             <SelectItem value="RapidGator">RapidGator</SelectItem>
                             <SelectItem value="Data Nodes">Data Nodes</SelectItem>
