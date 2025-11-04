@@ -293,64 +293,64 @@ export default function DownloadPage() {
               {/* Installation Notes for PC Games and Software */}
               {(gameData?.category === "PC Games" || gameData?.category === "Software") && (
                 <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
-                  <h3 className="text-blue-300 font-semibold mb-3">Installation Notes & Tips</h3>
-                  <div className="text-sm space-y-2">
-                    <ul className="space-y-1 text-blue-100">
+                  <h3 className="text-blue-300 font-semibold mb-3 text-xl">Installation Notes & Tips</h3>
+                  <div className="text-lg space-y-3">
+                    <ul className="space-y-2 text-blue-100">
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Links are interchangeable - if one fails, try another cloud provider</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Links are interchangeable - if one fails, try another cloud provider</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Rar password: {downloadPage.rarPassword || "www.ovagames.com"}</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Rar password: {downloadPage.rarPassword || "www.ovagames.com"}</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Content may not work in all countries - disable VPN/proxy/adblock if needed</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Content may not work in all countries - disable VPN/proxy/adblock if needed</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>For questions, visit contact page or comment - our team replies urgently</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">For questions, visit contact page or comment - our team replies urgently</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Locate .zip file and right-click → Choose "Extract to (file name)" (7-Zip required)</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Locate .zip file and right-click → Choose "Extract to (file name)" (7-Zip required)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Open extracted folder and run game as administrator</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Open extracted folder and run game as administrator</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Check Redist folder and install DirectX, Vcredist, and dependencies</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Check Redist folder and install DirectX, Vcredist, and dependencies</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>If corrupted, re-download and extract again</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">If corrupted, re-download and extract again</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Run as administrator to avoid save issues</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Run as administrator to avoid save issues</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Temporarily disable antivirus during extraction</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Temporarily disable antivirus during extraction</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Update GPU drivers for better performance</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Update GPU drivers for better performance</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Try compatibility mode or install DirectX if game won't launch</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Try compatibility mode or install DirectX if game won't launch</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>Install Visual C++ Redistributables if getting errors</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Install Visual C++ Redistributables if getting errors</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-400">•</span>
-                        <span>If missing DLL errors → open Redist folder and install required programs</span>
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">If missing DLL errors → open Redist folder and install required programs</span>
                       </li>
                     </ul>
                   </div>

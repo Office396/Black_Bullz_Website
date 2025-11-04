@@ -1007,8 +1007,14 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                       <SelectItem value="MEGA UP">MEGA UP</SelectItem>
                       <SelectItem value="Dropbox">Dropbox</SelectItem>
                       <SelectItem value="pCloud">pCloud</SelectItem>
+                      <SelectItem value="Black bullz">Black bullz</SelectItem>
+                      <SelectItem value="DDownload">DDownload</SelectItem>
+                      <SelectItem value="RANOZ">RANOZ</SelectItem>
+                      <SelectItem value="MEGA">MEGA</SelectItem>
+                      <SelectItem value="Multi-up">Multi-up</SelectItem>
                       <SelectItem value="Data Nodes">Data Nodes</SelectItem>
                       <SelectItem value="Pixel Drain">Pixel Drain</SelectItem>
+                      <SelectItem value="RapidGator">RapidGator</SelectItem>
                       <SelectItem value="Viking File">Viking File</SelectItem>
                       <SelectItem value="Fucking Fast">Fucking Fast</SelectItem>
                       <SelectItem value="GoFile">GoFile</SelectItem>
@@ -1035,6 +1041,12 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                             <SelectItem value="MEGA UP">MEGA UP</SelectItem>
                             <SelectItem value="Dropbox">Dropbox</SelectItem>
                             <SelectItem value="pCloud">pCloud</SelectItem>
+                            <SelectItem value="Black bullz">Black bullz</SelectItem>
+                            <SelectItem value="DDownload">DDownload</SelectItem>
+                            <SelectItem value="RANOZ">RANOZ</SelectItem>
+                            <SelectItem value="MEGA">MEGA</SelectItem>
+                            <SelectItem value="Multi-up">Multi-up</SelectItem>
+                            <SelectItem value="RapidGator">RapidGator</SelectItem>
                             <SelectItem value="Data Nodes">Data Nodes</SelectItem>
                             <SelectItem value="Pixel Drain">Pixel Drain</SelectItem>
                             <SelectItem value="Viking File">Viking File</SelectItem>

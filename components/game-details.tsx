@@ -664,64 +664,64 @@ export function GameDetails({ game }: GameDetailsProps) {
             <div className="space-y-3">
               {game.category === "Android Games" ? (
                 <>
-                  <div className="text-sm space-y-3">
-                    <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
-                    <ul className="space-y-1 text-gray-300 ml-4">
+                  <div className="text-lg space-y-3">
+                    <p className="text-gray-300 font-medium text-xl">Quick Installation Guide:</p>
+                    <ul className="space-y-2 text-gray-300 ml-4">
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        If download fails, try another cloud provider
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">If download fails, try another cloud provider</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Links may not work in all countries - disable VPN/proxy/adblock
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">Links may not work in all countries - disable VPN/proxy/adblock</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Download APK file and enable "Unknown Sources" in settings
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">Download APK file and enable "Unknown Sources" in settings</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Install APK and grant necessary permissions when prompted
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">Install APK and grant necessary permissions when prompted</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Clear app cache if game won't launch or crashes
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">Clear app cache if game won't launch or crashes</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        For questions, visit contact page or comment - our team replies urgently
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">For questions, visit contact page or comment - our team replies urgently</span>
                       </li>
                     </ul>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="text-sm space-y-2">
-                    <p className="text-gray-300 font-medium">Quick Installation Guide:</p>
-                    <ul className="space-y-1 text-gray-300 ml-4">
+                  <div className="text-lg space-y-3">
+                    <p className="text-gray-300 font-medium text-xl">Quick Installation Guide:</p>
+                    <ul className="space-y-2 text-gray-300 ml-4">
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        If download fails, try another cloud provider
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">If download fails, try another cloud provider</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Links may not work in all countries - disable VPN/proxy/adblock
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">Links may not work in all countries - disable VPN/proxy/adblock</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Use 7-Zip to extract ZIP files by right-clicking and "Extract to folder"
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">Use 7-Zip to extract ZIP files by right-clicking and "Extract to folder"</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Run as administrator and check Redist folder for missing DLLs
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">Run as administrator and check Redist folder for missing DLLs</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        Update GPU drivers and temporarily disable antivirus if needed
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">Update GPU drivers and temporarily disable antivirus if needed</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-400">•</span>
-                        For questions, visit contact page or comment - our team replies urgently
+                        <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">For questions, visit contact page or comment - our team replies urgently</span>
                       </li>
                     </ul>
                   </div>
