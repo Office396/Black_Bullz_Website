@@ -294,34 +294,59 @@ export function AdminFeedback() {
     if (!msgReplyTarget || !msgReplySubject.trim() || !msgReplyBody.trim()) return
     setMsgSending(true)
     try {
-      const serviceId = "service_p71xuen"
-      const templateId = "template_p0o71di"
-      const publicKey = "HHNlyU_5jLIQ1Parg"
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">${msgReplySubject}</h2>
+          <div style="white-space: pre-wrap; line-height: 1.6; color: #555;">
+            ${msgReplyBody}
+          </div>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <div style="color: #888; font-size: 12px;">
+            <p><strong>Original Message:</strong></p>
+            <p><strong>Subject:</strong> ${msgReplyTarget.subject}</p>
+            <p><strong>From:</strong> ${msgReplyTarget.name} (${msgReplyTarget.email})</p>
+            <p><strong>Message:</strong></p>
+            <div style="background: #f9f9f9; padding: 10px; border-left: 3px solid #ccc; margin: 10px 0;">
+              ${msgReplyTarget.message}
+            </div>
+          </div>
+          <p style="color: #888; font-size: 12px; margin-top: 20px;">
+            This email was sent from BlackBullz contact system.
+          </p>
+        </div>
+      `
 
-      // Lazy import to avoid any SSR hiccups
-      const emailjs = (await import("@emailjs/browser")).default
+      const text = `
+${msgReplySubject}
 
-      // These variables must match what you configured in your EmailJS template
-      const templateParams: Record<string, any> = {
-        // Core fields for your EmailJS template
-        to_email: msgReplyTarget.email,
-        to_name: msgReplyTarget.name || "",
-        subject: msgReplySubject,
-        message: msgReplyBody,
-        // Preferred branding and headers
-        from_name: "BlackBullz",
-        reply_to: "contact@blackbullz.com",
-        // Optional recipients (leave empty to skip)
-        cc: "",
-        bcc: "",
-        // Common alternative names some templates use
-        content: msgReplyBody,
-        // Metadata from original message if you want to include it in the email
-        original_subject: msgReplyTarget.subject,
-        original_message: msgReplyTarget.message,
+${msgReplyBody}
+
+---
+Original Message:
+Subject: ${msgReplyTarget.subject}
+From: ${msgReplyTarget.name} (${msgReplyTarget.email})
+Message:
+${msgReplyTarget.message}
+
+This email was sent from BlackBullz contact system.
+      `
+
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: msgReplyTarget.email,
+          subject: msgReplySubject,
+          html: html,
+          text: text,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send email')
       }
-
-      await emailjs.send(serviceId, templateId, templateParams, publicKey)
 
       // Mark as read locally
       markMessageStatus(msgReplyTarget.id, "read")
@@ -330,10 +355,10 @@ export function AdminFeedback() {
       setMsgReplyTarget(null)
       setMsgReplySubject("")
       setMsgReplyBody("")
-      alert("Email sent successfully via EmailJS.")
+      alert("Email sent successfully via Resend.")
     } catch (e) {
       console.error(e)
-      alert("Failed to send email. Ensure EmailJS service/template/keys are set and the template variables match.")
+      alert("Failed to send email. Ensure RESEND_API_KEY is configured.")
     } finally {
       setMsgSending(false)
     }
@@ -744,7 +769,7 @@ export function AdminFeedback() {
             />
             <div className="flex flex-col gap-1 text-xs text-gray-400">
               <span>Will send to: {msgReplyTarget?.email}</span>
-              <span>Powered by EmailJS (free)</span>
+              <span>Powered by Resend (free tier: 100 emails/day)</span>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-2">
               <Button

@@ -137,14 +137,15 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
   const filteredGames = useMemo(() => {
     let games = activeTab === "all" ? allGames : allGames.filter((game) => game.tab === activeTab)
 
+    // Sort all games by upload/update date (newest first)
+    games.sort((a, b) => {
+      const dateA = new Date(a.uploadDate || a.releaseDate || 0).getTime()
+      const dateB = new Date(b.uploadDate || b.releaseDate || 0).getTime()
+      return dateB - dateA
+    })
+
     if (filterLatest) {
       games = games.filter((game) => game.latest)
-      // Sort latest items by upload date (newest first)
-      games.sort((a, b) => {
-        const dateA = new Date(a.uploadDate || a.releaseDate || 0).getTime()
-        const dateB = new Date(b.uploadDate || b.releaseDate || 0).getTime()
-        return dateB - dateA
-      })
     }
 
     return games
@@ -162,6 +163,12 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
       router.push(`/?tab=${tabId}`)
     }
   }
+
+  // Store current page in sessionStorage when page changes
+  useEffect(() => {
+    const currentUrl = `${window.location.pathname}${window.location.search}`
+    sessionStorage.setItem('previousPage', currentUrl)
+  }, [currentPage, activeTab])
   // Don't render anything until the initial load is complete
   if (!isLoaded) {
     return (
@@ -308,27 +315,42 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
               <span className="md:hidden">«</span>
             </Button>
 
-            {/* Page numbers */}
+            {/* Page numbers - Smart pagination like admin panel */}
             {(() => {
               const pages: (number | string)[] = []
+              const maxVisible = 5
 
-              if (totalPages <= 7) {
-                // Show all pages if 7 or fewer
+              if (totalPages <= maxVisible) {
+                // Show all pages if 5 or fewer
                 for (let i = 1; i <= totalPages; i++) {
                   pages.push(i)
                 }
               } else {
-                // Always show first 4 pages
-                for (let i = 1; i <= 4; i++) {
-                  pages.push(i)
+                // Smart pagination logic
+                if (currentPage <= 3) {
+                  // Near the beginning: show first 4, ellipsis, last
+                  for (let i = 1; i <= 4; i++) {
+                    pages.push(i)
+                  }
+                  pages.push('...')
+                  pages.push(totalPages)
+                } else if (currentPage >= totalPages - 2) {
+                  // Near the end: show first, ellipsis, last 4
+                  pages.push(1)
+                  pages.push('...')
+                  for (let i = totalPages - 3; i <= totalPages; i++) {
+                    pages.push(i)
+                  }
+                } else {
+                  // In the middle: show first, ellipsis, current-1, current, current+1, ellipsis, last
+                  pages.push(1)
+                  pages.push('...')
+                  for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    pages.push(i)
+                  }
+                  pages.push('...')
+                  pages.push(totalPages)
                 }
-
-                // Add ellipsis
-                pages.push('...')
-
-                // Always show last 2 pages
-                pages.push(totalPages - 1)
-                pages.push(totalPages)
               }
 
               return pages.map((page, index) => (

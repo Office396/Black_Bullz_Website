@@ -20,7 +20,7 @@ function forbidden(message: string) {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const admin = searchParams.get("admin")
+    const admin = searchParams.get("BlackBullz-Admin ")
     const itemIdStr = searchParams.get("itemId")
 
     if (admin === "1") {

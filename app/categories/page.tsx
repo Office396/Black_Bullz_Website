@@ -14,7 +14,7 @@ export default function CategoriesPage() {
     {
       id: "pc-games",
       name: "PC Games",
-      description: "Latest PC games for Windows",
+      description: "Free Latest PC games for Windows",
       count: 0,
       icon: Monitor,
       image: "/pc-gaming-setup.jpg",
@@ -23,7 +23,7 @@ export default function CategoriesPage() {
     {
       id: "android-games",
       name: "Android Games",
-      description: "Mobile games for Android devices",
+      description: "Free Mobile games for Android devices",
       count: 0,
       icon: Smartphone,
       image: "/android-mobile-gaming.jpg",
@@ -32,7 +32,7 @@ export default function CategoriesPage() {
     {
       id: "software",
       name: "Software",
-      description: "Productivity and utility software",
+      description: "Free Productivity and utility software",
       count: 0,
       icon: Gamepad2,
       image: "/software-applications.jpg",
@@ -44,27 +44,15 @@ export default function CategoriesPage() {
     const adminItems = JSON.parse(localStorage.getItem("admin_items") || "[]")
     const defaultGames = [
       { category: "PC Games" },
-      { category: "PC Games" },
-      { category: "Software" },
-      { category: "Android Games" },
-      { category: "PC Games" },
-      { category: "Software" },
-      { category: "Android Games" },
-      { category: "PC Games" },
-      { category: "Android Games" },
-      { category: "PC Games" },
-      { category: "Software" },
-      { category: "Android Games" },
-      { category: "PC Games" },
       { category: "Software" },
       { category: "Android Games" },
     ]
 
     const combinedGames = [...defaultGames, ...adminItems]
 
-    const pcGamesCount = combinedGames.filter((g) => g.category === "PC Games").length
-    const androidGamesCount = combinedGames.filter((g) => g.category === "Android Games").length
-    const softwareCount = combinedGames.filter((g) => g.category === "Software").length
+    const pcGamesCount = 1000 
+    const androidGamesCount = 1000
+    const softwareCount = 1000
 
     setCategories((prev) =>
       prev.map((cat) => ({
@@ -96,29 +84,27 @@ export default function CategoriesPage() {
                   const IconComponent = category.icon
                   return (
                     <Link key={category.id} href={`/?tab=${category.id}`}>
-                      <Card className="bg-gray-800 border-gray-700 hover:border-red-500 transition-all duration-300 group overflow-hidden">
-                        <div className="relative">
+                      <Card className="bg-gray-800 border-gray-700 hover:border-red-500 transition-all duration-300 group overflow-hidden p-0 rounded-lg">
+                        <div className="relative aspect-[3/3] w-full overflow-hidden bg-gray-800">
                           <Image
                             src={category.image || "/placeholder.svg"}
                             alt={category.name}
-                            width={300}
-                            height={200}
-                            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                            fill
+                            className="absolute inset-0 w-full h-full object-cover object-top block group-hover:scale-105 transition-transform duration-300"
+                            sizes="(max-width: 640px) 40vw, (max-width: 768px) 33vw, 30vw"
                           />
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <div className={`${category.color} p-4 rounded-full`}>
-                              <IconComponent className="h-12 w-12 text-white" />
-                            </div>
-                          </div>
+                          <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[13px] px-1 py-0 z-10">
+                            {category.name}
+                          </Badge>
                         </div>
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-white font-bold text-xl group-hover:text-red-400 transition-colors">
+                        <CardContent className="p-3">
+                          <div className="flex items-top justify-between mb-3">
+                            <h3 className="text-white font-bold text-m group-hover:text-red-400 transition-colors line-clamp-1">
                               {category.name}
                             </h3>
-                            <Badge className="bg-red-600 text-white">{category.count}</Badge>
+                            <Badge className="bg-gray-700 text-red-600">{category.count}+</Badge>
                           </div>
-                          <p className="text-gray-400">{category.description}</p>
+                          <p className="text-gray-400 line-clamp-4">{category.description}</p>
                         </CardContent>
                       </Card>
                     </Link>

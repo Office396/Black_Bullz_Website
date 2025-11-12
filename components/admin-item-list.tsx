@@ -17,7 +17,8 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
   const [editingItem, setEditingItem] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const [globalSearch, setGlobalSearch] = useState("")
+  // Use the searchQuery prop as the single source of truth for global search
+  const globalSearch = searchQuery
 
   const itemsPerPage = 10
 
@@ -45,7 +46,7 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
 
   // Global search across all items
   const globalFilteredItems = useMemo(() => {
-    if (!globalSearch.trim()) return items
+    if (!globalSearch?.trim()) return items
 
     const searchTerm = globalSearch.toLowerCase()
     return items.filter((item) =>
@@ -59,20 +60,9 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
 
   // Local search for current tab (backward compatibility)
   const filteredItems = useMemo(() => {
-    let filtered = globalSearch.trim() ? globalFilteredItems : items
-
-    if (searchQuery.trim()) {
-      const localSearchTerm = searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (item) =>
-          item.title.toLowerCase().includes(localSearchTerm) ||
-          item.category.toLowerCase().includes(localSearchTerm) ||
-          item.developer.toLowerCase().includes(localSearchTerm),
-      )
-    }
-
-    return filtered
-  }, [items, searchQuery, globalFilteredItems, globalSearch])
+    // With single search bar, global search is the only filter
+    return globalSearch.trim() ? globalFilteredItems : items
+  }, [items, globalFilteredItems, globalSearch])
 
   // Pagination
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
@@ -149,35 +139,6 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
 
   return (
     <div className="space-y-4">
-      {/* Global Search */}
-      <div className="flex items-center space-x-4 mb-4">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            placeholder="Search all items (title, category, developer, description, size)..."
-            value={globalSearch}
-            onChange={(e) => {
-              setGlobalSearch(e.target.value)
-              setCurrentPage(1) // Reset to first page when searching
-            }}
-            className="w-full pl-4 pr-4 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-          />
-        </div>
-        {globalSearch && (
-          <Button
-            onClick={() => {
-              setGlobalSearch("")
-              setCurrentPage(1)
-            }}
-            variant="outline"
-            size="sm"
-            className="bg-gray-700 border-gray-600 text-gray-300"
-          >
-            Clear
-          </Button>
-        )}
-      </div>
-
       {/* Results count */}
       <div className="text-sm text-gray-400 mb-4">
         Showing {paginatedItems.length} of {filteredItems.length} items

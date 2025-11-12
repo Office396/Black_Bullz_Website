@@ -243,7 +243,7 @@ export function GameDetails({ game }: GameDetailsProps) {
       {/* Navigation */}
       <div className="flex items-center justify-between ">
         <Link
-          href="/"
+          href={typeof window !== 'undefined' && sessionStorage.getItem('previousPage') ? sessionStorage.getItem('previousPage')! : '/'}
           className="flex items-center gap-2 text-white hover:text-red-600 transition-colors duration-200"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -629,9 +629,16 @@ export function GameDetails({ game }: GameDetailsProps) {
               <div className="space-y-6">
                 {Object.entries(typedUpdatesByVersion).map(([version, updates]) => (
                   <div key={version} className="space-y-4">
-                    <h3 className="text-white font-semibold text-lg">
-                      {version === 'general' ? 'Updates' : `Update ${version}`}
-                    </h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-white font-semibold text-lg">
+                        {version === 'general' ? 'Updates' : `Update ${version}`}
+                      </h3>
+                      {version !== 'general' && (
+                        <Badge className="bg-green-600 text-white text-sm px-3 py-1">
+                          v{version}
+                        </Badge>
+                      )}
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {updates.map((item) => {
                         const { cloudDownload, originalIndex } = item

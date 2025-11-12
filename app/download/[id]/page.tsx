@@ -25,6 +25,7 @@ export default function DownloadPage() {
   const [timeLeft, setTimeLeft] = useState(0)
   const [hasVisitedMain, setHasVisitedMain] = useState(false)
   const [error, setError] = useState("")
+  const [pageExpiryTime, setPageExpiryTime] = useState<number | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -39,12 +40,27 @@ export default function DownloadPage() {
       // Try to get existing page first
       let page = await getDownloadPage(gameId, cloudIndex, token)
 
-      // If no page exists and we have a token, the page might still be creating
-      // Wait a bit and try again
+      // If no page exists and we have a token, the user came from a survey link
+      // Create the download page immediately instead of showing loading
       if (!page && token) {
-        console.log('Download page not found initially, waiting and retrying...')
-        await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds
-        page = await getDownloadPage(gameId, cloudIndex, token)
+        console.log('Creating download page for survey completion...')
+        try {
+          // Call the API directly to create the download page
+          const createResponse = await fetch('/api/download-pages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gameId, cloudIndex }),
+          })
+
+          if (createResponse.ok) {
+            page = await createResponse.json()
+            console.log('Download page created successfully')
+          } else {
+            console.error('Failed to create download page:', createResponse.status, createResponse.statusText)
+          }
+        } catch (error) {
+          console.error('Failed to create download page:', error)
+        }
       }
 
       if (page) {
@@ -53,6 +69,18 @@ export default function DownloadPage() {
         // Calculate remaining time
         const now = Date.now()
         const expiresAt = new Date(page.expiresAt).getTime()
+        const initialExpiryTime = expiresAt
+        setPageExpiryTime(initialExpiryTime)
+
+        // Check if page has already expired
+        if (now >= expiresAt) {
+          // Page has expired, remove from localStorage and redirect
+          const pageKey = `download_page_${gameId}_${cloudIndex}_${token || ''}`
+          localStorage.removeItem(pageKey)
+          router.push("/")
+          return
+        }
+
         const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))
         setTimeLeft(remaining)
 
@@ -86,18 +114,26 @@ export default function DownloadPage() {
   }, [tokenParam])
 
   useEffect(() => {
-    if (!downloadPage) return
-    const expiresAt = new Date(downloadPage.expiresAt).getTime()
+    if (!downloadPage || !pageExpiryTime) return
+
     const timer = setInterval(() => {
       const now = Date.now()
-      const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))
+      const remaining = Math.max(0, Math.floor((pageExpiryTime - now) / 1000))
       setTimeLeft(remaining)
+
       if (remaining === 0) {
         setIsUnlocked(false)
+        // Clear the download page from localStorage when it expires
+        const gameId = Number.parseInt(params.id as string)
+        const cloudIndex = searchParams.get('cloud') ? Number.parseInt(searchParams.get('cloud') as string) : 0
+        const token = searchParams.get('token') || undefined
+        const pageKey = `download_page_${gameId}_${cloudIndex}_${token || ''}`
+        localStorage.removeItem(pageKey)
       }
     }, 1000)
+
     return () => clearInterval(timer)
-  }, [downloadPage])
+  }, [downloadPage, pageExpiryTime, params.id, searchParams])
 
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -193,22 +229,16 @@ export default function DownloadPage() {
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
-        <Card className="bg-gray-800 border-gray-700 mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-white text-2xl">{gameData?.title || 'Download'}</CardTitle>
-                {cloudData?.cloudName && (
-                  <p className="text-gray-400 text-sm mt-1">Cloud Provider: {cloudData.cloudName}</p>
-                )}
-              </div>
-              <Badge className="bg-green-600 text-white">
-                <Clock className="h-3 w-3 mr-1" />
-                {formatTime(timeLeft)}
-              </Badge>
+          {cloudData?.cloudName && (
+            <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
+              <p className="text-blue-300 text-sm">
+                <strong>Cloud Provider:</strong> {cloudData.customProvider || cloudData.actualProvider || cloudData.cloudName}
+              </p>
+              <p className="text-blue-200 text-xs mt-1">
+                These links are hosted on {cloudData.customProvider || cloudData.actualProvider || cloudData.cloudName}. Please follow their terms of service.
+              </p>
             </div>
-          </CardHeader>
-        </Card>
+          )}
 
         {/* Download Links */}
         <Card className="bg-gray-800 border-gray-700 mb-6">
@@ -280,16 +310,6 @@ export default function DownloadPage() {
                   </code>
                 </div>
               )}
-              {cloudData?.cloudName && (
-                <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
-                  <p className="text-blue-300 text-sm">
-                    <strong>Cloud Provider:</strong> {cloudData.customProvider || cloudData.actualProvider || cloudData.cloudName}
-                  </p>
-                  <p className="text-blue-200 text-xs mt-1">
-                    These links are hosted on {cloudData.customProvider || cloudData.actualProvider || cloudData.cloudName}. Please follow their terms of service.
-                  </p>
-                </div>
-              )}
               {/* Installation Notes for PC Games and Software */}
               {(gameData?.category === "PC Games" || gameData?.category === "Software") && (
                 <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
@@ -300,6 +320,10 @@ export default function DownloadPage() {
                         <span className="text-blue-400 text-xl">•</span>
                         <span className="text-lg">Links are interchangeable - if one fails, try another cloud provider</span>
                       </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 text-xl">•</span>
+                        <span className="text-lg">Every part is available but there is for some games their part number are incorrect</span>
+                      </li>                     
                       <li className="flex items-start gap-2">
                         <span className="text-blue-400 text-xl">•</span>
                         <span className="text-lg">Rar password: {downloadPage.rarPassword || "www.ovagames.com"}</span>
