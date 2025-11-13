@@ -631,7 +631,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                   <div key={version} className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-white font-semibold text-lg">
-                        {version === 'general' ? 'Updates' : `Update ${version}`}
+                        {version === 'general' ? 'Updates' : `Update`}
                       </h3>
                       {version !== 'general' && (
                         <Badge className="bg-green-600 text-white text-sm px-3 py-1">

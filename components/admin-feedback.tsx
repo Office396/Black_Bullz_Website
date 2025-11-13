@@ -67,7 +67,7 @@ export function AdminFeedback() {
     const fetchData = async () => {
       try {
         // Centralized comments across all items
-        const cRes = await fetch('/api/comments?admin=1', { cache: 'no-store' })
+        const cRes = await fetch('/api/comments?BlackBullz-Admin=1', { cache: 'no-store' })
         const cJson = await cRes.json()
         if (Array.isArray(cJson?.data)) setComments(cJson.data)
       } catch {}
@@ -172,7 +172,7 @@ export function AdminFeedback() {
 
   const fetchAdminComments = async () => {
     try {
-      const res = await fetch('/api/comments?admin=1', { cache: 'no-store' })
+      const res = await fetch('/api/comments?BlackBullz-Admin=1', { cache: 'no-store' })
       const json = await res.json()
       if (json?.success) setComments(json.data)
     } catch {}

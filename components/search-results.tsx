@@ -280,7 +280,7 @@ export function SearchResults({ query }: SearchResultsProps) {
                       src={game.image || "/placeholder.svg"}
                       alt={game.title}
                       fill
-                      className="absolute inset-0 w-full h-full object-cover object-center block group-hover:scale-105 transition-transform duration-300"
+                      className="absolute inset-0 w-full h-full object-cover object-top block group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 640px) 40vw, (max-width: 768px) 33vw, 30vw"
                     />
                   <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[13px] px-1 py-0 z-10">

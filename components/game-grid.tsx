@@ -103,6 +103,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [adminItems, setAdminItems] = useState<GameItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   const itemsPerPage = activeTab === "android-games" ? 20 : 12 // Show 20 items per page for Android games, 12 for others
 
@@ -123,8 +124,13 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
         setIsLoaded(true)
       }
     }
-    fetchItems()
-  }, [])
+
+    // Only fetch items on initial load, not when navigating back
+    if (isInitialLoad) {
+      fetchItems()
+      setIsInitialLoad(false)
+    }
+  }, [isInitialLoad])
 
   const allGames = useMemo(() => 
     adminItems.map((item) => ({
@@ -164,11 +170,61 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
     }
   }
 
-  // Store current page in sessionStorage when page changes
+  const handlePageChange = (pageNum: number) => {
+    setCurrentPage(pageNum)
+    // Update URL with page parameter
+    const currentTab = searchParams.get("tab")
+    const baseUrl = currentTab && currentTab !== "all" ? `/?tab=${currentTab}` : "/"
+    const newUrl = pageNum > 1 ? `${baseUrl}${baseUrl === "/" ? "?" : "&"}page=${pageNum}` : baseUrl
+    router.push(newUrl, { scroll: false })
+  }
+
+  // Store current page in sessionStorage when page changes and restore on mount
   useEffect(() => {
     const currentUrl = `${window.location.pathname}${window.location.search}`
     sessionStorage.setItem('previousPage', currentUrl)
   }, [currentPage, activeTab])
+
+  // Restore page number when component mounts (after navigation)
+  useEffect(() => {
+    if (isLoaded) {
+      // Try to restore the page number from the URL
+      const urlParams = new URLSearchParams(window.location.search)
+      const pageParam = urlParams.get('page')
+
+      if (pageParam) {
+        const pageNum = parseInt(pageParam, 10)
+        if (!isNaN(pageNum) && pageNum > 0 && pageNum <= totalPages) {
+          setCurrentPage(pageNum)
+          return
+        }
+      }
+
+      // Fallback: try to extract page from stored URL (only if no page param in current URL)
+      if (!pageParam) {
+        const storedUrl = sessionStorage.getItem('previousPage')
+        if (storedUrl) {
+          try {
+            const url = new URL(storedUrl, window.location.origin)
+            const storedPageParam = url.searchParams.get('page')
+            if (storedPageParam) {
+              const pageNum = parseInt(storedPageParam, 10)
+              if (!isNaN(pageNum) && pageNum > 0 && pageNum <= totalPages) {
+                // Only restore if we're on the same tab/category
+                const storedTab = url.searchParams.get('tab') || 'all'
+                const currentTab = searchParams.get('tab') || 'all'
+                if (storedTab === currentTab) {
+                  setCurrentPage(pageNum)
+                }
+              }
+            }
+          } catch (e) {
+            // Ignore invalid URLs
+          }
+        }
+      }
+    }
+  }, [isLoaded, totalPages, searchParams])
   // Don't render anything until the initial load is complete
   if (!isLoaded) {
     return (
@@ -299,7 +355,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
           <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2 max-w-full overflow-x-auto px-2">
             {/* First page button */}
             <Button
-              onClick={() => setCurrentPage(1)}
+              onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
               className="px-2 md:px-3 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 min-w-[60px] md:min-w-auto"
             >
@@ -307,7 +363,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
               <span className="md:hidden">««</span>
             </Button>
             <Button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
               disabled={currentPage === 1}
               className="px-2 md:px-3 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 min-w-[60px] md:min-w-auto"
             >
@@ -357,7 +413,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
                 typeof page === 'number' ? (
                   <Button
                     key={page}
-                    onClick={() => setCurrentPage(page)}
+                    onClick={() => handlePageChange(page)}
                     className={`px-2 md:px-3 py-2 text-sm rounded-lg transition-colors min-w-[40px] md:min-w-auto ${
                       currentPage === page ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
                     }`}
@@ -371,7 +427,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
             })()}
 
             <Button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="px-2 md:px-3 py-2 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 min-w-[60px] md:min-w-auto"
             >
@@ -380,7 +436,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
             </Button>
             {/* Last page button */}
             <Button
-              onClick={() => setCurrentPage(totalPages)}
+              onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
               className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
             >
