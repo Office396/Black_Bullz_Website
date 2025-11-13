@@ -90,3 +90,38 @@ export async function GET() {
     return NextResponse.json({ success: false, error: "Failed to retrieve messages" }, { status: 500 })
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Message ID required" }, { status: 400 })
+    }
+
+    // Check if Supabase is properly configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Supabase configuration missing")
+      return NextResponse.json({ success: false, error: "Database not configured" }, { status: 500 })
+    }
+
+    const { error } = await supabase
+      .from('contact_messages')
+      .delete()
+      .eq('id', parseInt(id))
+
+    if (error) {
+      console.error("Failed to delete message:", error)
+      return NextResponse.json({ success: false, error: "Failed to delete message" }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, message: "Message deleted successfully" })
+  } catch (error) {
+    console.error("Failed to delete message:", error)
+    return NextResponse.json({ success: false, error: "Failed to delete message" }, { status: 500 })
+  }
+}

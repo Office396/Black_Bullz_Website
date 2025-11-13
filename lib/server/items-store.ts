@@ -15,6 +15,7 @@ export interface Item {
   latest: boolean
   keyFeatures: string[]
   screenshots: string[]
+  note?: string
   systemRequirements: {
     recommended: {
       os: string
@@ -61,6 +62,7 @@ export async function getItems(): Promise<Item[]> {
       releaseDate: item.release_date,
       keyFeatures: item.key_features || [],
       screenshots: item.screenshots || [],
+      note: item.note || "",
       systemRequirements: item.system_requirements,
       androidRequirements: item.android_requirements,
       sharedPinCode: item.shared_pin_code,
@@ -89,6 +91,7 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate'>): Promis
     latest: itemData.latest,
     key_features: itemData.keyFeatures,
     screenshots: itemData.screenshots,
+    note: itemData.note,
     system_requirements: itemData.systemRequirements,
     android_requirements: itemData.androidRequirements,
     shared_pin_code: itemData.sharedPinCode,
@@ -115,6 +118,7 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate'>): Promis
     releaseDate: data.release_date,
     keyFeatures: data.key_features || [],
     screenshots: data.screenshots || [],
+    note: data.note || "",
     systemRequirements: data.system_requirements,
     androidRequirements: data.android_requirements,
     sharedPinCode: data.shared_pin_code,
@@ -139,6 +143,7 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
   if (itemData.latest !== undefined) dbUpdate.latest = itemData.latest
   if (itemData.keyFeatures !== undefined) dbUpdate.key_features = itemData.keyFeatures
   if (itemData.screenshots !== undefined) dbUpdate.screenshots = itemData.screenshots
+  if (itemData.note !== undefined) dbUpdate.note = itemData.note
   if (itemData.systemRequirements !== undefined) dbUpdate.system_requirements = itemData.systemRequirements
   if (itemData.androidRequirements !== undefined) dbUpdate.android_requirements = itemData.androidRequirements
   if (itemData.sharedPinCode !== undefined) dbUpdate.shared_pin_code = itemData.sharedPinCode
@@ -165,6 +170,7 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
     releaseDate: data.release_date,
     keyFeatures: data.key_features || [],
     screenshots: data.screenshots || [],
+    note: data.note || "",
     systemRequirements: data.system_requirements,
     androidRequirements: data.android_requirements,
     sharedPinCode: data.shared_pin_code,
@@ -175,7 +181,18 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
 
 export async function deleteItem(id: number): Promise<boolean> {
   try {
-    // First, delete all associated download pages
+    // First, delete all associated comments
+    const { error: commentsError } = await supabase
+      .from('comments')
+      .delete()
+      .eq('item_id', id)
+
+    if (commentsError) {
+      console.error('Error deleting associated comments:', commentsError)
+      // Continue with deletion even if comments fail to delete
+    }
+
+    // Then delete all associated download pages
     const { error: downloadPagesError } = await supabase
       .from('download_pages')
       .delete()
@@ -197,7 +214,7 @@ export async function deleteItem(id: number): Promise<boolean> {
       return false
     }
 
-    console.log(`Successfully deleted item ${id} and all associated download pages`)
+    console.log(`Successfully deleted item ${id}, all associated comments, and download pages`)
     return true
   } catch (error) {
     console.error('Error in deleteItem:', error)

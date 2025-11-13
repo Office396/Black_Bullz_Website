@@ -226,8 +226,25 @@ export function AdminFeedback() {
   const markMessageStatus = (id: number, status: "new" | "read") => {
     saveMessages(messages.map((m) => (m.id === id ? { ...m, status } : m)))
   }
-  const deleteMessage = (id: number) => {
-    saveMessages(messages.filter((m) => m.id !== id))
+  const deleteMessage = async (id: number) => {
+    try {
+      const response = await fetch(`/api/contact?id=${id}`, {
+        method: 'DELETE',
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        // Remove from local state as well
+        saveMessages(messages.filter((m) => m.id !== id))
+        alert("Message deleted successfully!")
+      } else {
+        throw new Error(result.error || 'Failed to delete message')
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error)
+      alert("Failed to delete message. Please try again.")
+    }
   }
   const clearMessages = () => {
     if (confirm("Clear all messages?")) saveMessages([])
@@ -291,54 +308,19 @@ export function AdminFeedback() {
   }
 
   const sendEmailReply = async () => {
-    if (!msgReplyTarget || !msgReplySubject.trim() || !msgReplyBody.trim()) return
+    if (!msgReplyTarget || !msgReplyBody.trim()) return
     setMsgSending(true)
     try {
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">${msgReplySubject}</h2>
-          <div style="white-space: pre-wrap; line-height: 1.6; color: #555;">
-            ${msgReplyBody}
-          </div>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-          <div style="color: #888; font-size: 12px;">
-            <p><strong>Original Message:</strong></p>
-            <p><strong>Subject:</strong> ${msgReplyTarget.subject}</p>
-            <p><strong>From:</strong> ${msgReplyTarget.name} (${msgReplyTarget.email})</p>
-            <p><strong>Message:</strong></p>
-            <div style="background: #f9f9f9; padding: 10px; border-left: 3px solid #ccc; margin: 10px 0;">
-              ${msgReplyTarget.message}
-            </div>
-          </div>
-          <p style="color: #888; font-size: 12px; margin-top: 20px;">
-            This email was sent from BlackBullz contact system.
-          </p>
-        </div>
-      `
-
-      const text = `
-${msgReplySubject}
-
-${msgReplyBody}
-
----
-Original Message:
-Subject: ${msgReplyTarget.subject}
-From: ${msgReplyTarget.name} (${msgReplyTarget.email})
-Message:
-${msgReplyTarget.message}
-
-This email was sent from BlackBullz contact system.
-      `
-
       const response = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: msgReplyTarget.email,
           subject: msgReplySubject,
-          html: html,
-          text: text,
+          replyContent: msgReplyBody,
+          originalMessage: msgReplyTarget.message,
+          customerName: msgReplyTarget.name,
+          messageDate: msgReplyTarget.timestamp
         }),
       })
 
@@ -355,10 +337,10 @@ This email was sent from BlackBullz contact system.
       setMsgReplyTarget(null)
       setMsgReplySubject("")
       setMsgReplyBody("")
-      alert("Email sent successfully via Resend.")
+      alert("Email sent successfully via Resend with professional template.")
     } catch (e) {
       console.error(e)
-      alert("Failed to send email. Ensure RESEND_API_KEY is configured.")
+      alert("Failed to send email. Ensure RESEND_API_KEY is configured and domain is verified.")
     } finally {
       setMsgSending(false)
     }

@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS items (
   latest BOOLEAN DEFAULT FALSE,
   key_features TEXT[] DEFAULT '{}',
   screenshots TEXT[] DEFAULT '{}',
+  note TEXT DEFAULT '',
   system_requirements JSONB DEFAULT '{"recommended": {"os": "", "processor": "", "memory": "", "graphics": "", "storage": ""}}',
   android_requirements JSONB DEFAULT '{"recommended": {"os": "", "ram": "", "storage": "", "processor": ""}}',
   shared_pin_code TEXT NOT NULL,
