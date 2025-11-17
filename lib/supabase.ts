@@ -25,6 +25,7 @@ export interface Database {
           latest: boolean
           key_features: string[]
           screenshots: string[]
+          note: string
           system_requirements: {
             recommended: {
               os: string
@@ -65,6 +66,7 @@ export interface Database {
           latest?: boolean
           key_features?: string[]
           screenshots?: string[]
+          note?: string
           system_requirements?: {
             recommended: {
               os: string
@@ -105,6 +107,7 @@ export interface Database {
           latest?: boolean
           key_features?: string[]
           screenshots?: string[]
+          note?: string
           system_requirements?: {
             recommended: {
               os: string
