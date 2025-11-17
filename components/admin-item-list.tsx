@@ -44,25 +44,35 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
     fetchItems()
   }, [])
 
+  // Calculate download links count for each item
+  const itemsWithDownloadCount = useMemo(() => {
+    return items.map(item => {
+      const downloadCount = item.cloudDownloads?.reduce((total: number, cloud: any) =>
+        total + (cloud.actualDownloadLinks?.length || 0), 0) || 0
+      return { ...item, downloadCount }
+    })
+  }, [items])
+
   // Global search across all items
   const globalFilteredItems = useMemo(() => {
-    if (!globalSearch?.trim()) return items
+    if (!globalSearch?.trim()) return itemsWithDownloadCount
 
     const searchTerm = globalSearch.toLowerCase()
-    return items.filter((item) =>
+    return itemsWithDownloadCount.filter((item) =>
       item.title?.toLowerCase().includes(searchTerm) ||
       item.category?.toLowerCase().includes(searchTerm) ||
       item.developer?.toLowerCase().includes(searchTerm) ||
       item.description?.toLowerCase().includes(searchTerm) ||
       item.size?.toLowerCase().includes(searchTerm)
     )
-  }, [items, globalSearch])
+  }, [itemsWithDownloadCount, globalSearch])
 
   // Local search for current tab (backward compatibility)
   const filteredItems = useMemo(() => {
-    // With single search bar, global search is the only filter
-    return globalSearch.trim() ? globalFilteredItems : items
-  }, [items, globalFilteredItems, globalSearch])
+    // Sort items by download count (0 first, then ascending)
+    const sortedItems = globalSearch.trim() ? globalFilteredItems : itemsWithDownloadCount
+    return sortedItems.sort((a: any, b: any) => a.downloadCount - b.downloadCount)
+  }, [itemsWithDownloadCount, globalFilteredItems, globalSearch])
 
   // Pagination
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
@@ -209,6 +219,7 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
                   <div className="flex items-center gap-4 text-xs text-gray-400">
                     <span>Size: {item.size}</span>
                     <span>Rating: {item.rating}/5</span>
+                    <span>Downloads: {item.downloadCount}</span>
                     <span>Added: {item.uploadDate ? new Date(item.uploadDate).toLocaleDateString() : new Date(item.id).toLocaleDateString()}</span>
                   </div>
                 </div>
