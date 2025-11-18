@@ -297,7 +297,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                     <div className="flex items-center gap-1">
                       <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                       <span className="text-white font-medium">{game.rating}</span>
-                      <span className="text-gray-400">/5</span>
+                      <span className="text-gray-400"></span>
                     </div>
                   </div>
                 )}
