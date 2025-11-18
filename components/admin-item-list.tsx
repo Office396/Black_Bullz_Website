@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { AdminItemForm } from "@/components/admin-item-form"
 import { Edit, Trash2, Eye, Star, TrendingUp } from "lucide-react"
 import Image from "next/image"
@@ -12,11 +13,19 @@ interface AdminItemListProps {
   searchQuery: string
 }
 
+const tabs = [
+  { id: "all", label: "All" },
+  { id: "pc-games", label: "PC Games" },
+  { id: "android-games", label: "Android Games" },
+  { id: "software", label: "Software" },
+]
+
 export function AdminItemList({ searchQuery }: AdminItemListProps) {
   const [items, setItems] = useState<any[]>([])
   const [editingItem, setEditingItem] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
+  const [activeTab, setActiveTab] = useState("all")
   // Use the searchQuery prop as the single source of truth for global search
   const globalSearch = searchQuery
 
@@ -67,12 +76,35 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
     )
   }, [itemsWithDownloadCount, globalSearch])
 
-  // Local search for current tab (backward compatibility)
+  // Category and search filtering
   const filteredItems = useMemo(() => {
+    let filtered = itemsWithDownloadCount
+
+    // Apply category filter
+    if (activeTab !== "all") {
+      const categoryMap: Record<string, string> = {
+        "pc-games": "PC Games",
+        "android-games": "Android Games",
+        "software": "Software"
+      }
+      filtered = filtered.filter(item => item.category === categoryMap[activeTab])
+    }
+
+    // Apply search filter
+    if (globalSearch?.trim()) {
+      const searchTerm = globalSearch.toLowerCase()
+      filtered = filtered.filter((item) =>
+        item.title?.toLowerCase().includes(searchTerm) ||
+        item.category?.toLowerCase().includes(searchTerm) ||
+        item.developer?.toLowerCase().includes(searchTerm) ||
+        item.description?.toLowerCase().includes(searchTerm) ||
+        item.size?.toLowerCase().includes(searchTerm)
+      )
+    }
+
     // Sort items by download count (0 first, then ascending)
-    const sortedItems = globalSearch.trim() ? globalFilteredItems : itemsWithDownloadCount
-    return sortedItems.sort((a: any, b: any) => a.downloadCount - b.downloadCount)
-  }, [itemsWithDownloadCount, globalFilteredItems, globalSearch])
+    return filtered.sort((a: any, b: any) => a.downloadCount - b.downloadCount)
+  }, [itemsWithDownloadCount, globalSearch, activeTab])
 
   // Pagination
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
@@ -140,15 +172,44 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
   }
 
   if (loading) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-400">Loading items...</p>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   return (
     <div className="space-y-4">
+      {/* Category filter tabs */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {tabs.map((tab) => {
+          const count = tab.id === "all"
+            ? itemsWithDownloadCount.length
+            : itemsWithDownloadCount.filter((item) => {
+                const categoryMap: Record<string, string> = {
+                  "pc-games": "PC Games",
+                  "android-games": "Android Games",
+                  "software": "Software"
+                }
+                return item.category === categoryMap[tab.id]
+              }).length
+          return (
+            <Button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id)
+                setCurrentPage(1)
+              }}
+              variant={activeTab === tab.id ? "default" : "outline"}
+              className={`${
+                activeTab === tab.id
+                  ? "bg-red-600 hover:bg-red-700 text-white"
+                  : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              {tab.label} ({count})
+            </Button>
+          )
+        })}
+      </div>
+
       {/* Results count */}
       <div className="text-sm text-gray-400 mb-4">
         Showing {paginatedItems.length} of {filteredItems.length} items
