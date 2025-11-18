@@ -26,6 +26,7 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [activeTab, setActiveTab] = useState("all")
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
   // Use the searchQuery prop as the single source of truth for global search
   const globalSearch = searchQuery
 
@@ -46,6 +47,7 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
       setItems([])
     } finally {
       setLoading(false)
+      setInitialLoadComplete(true)
     }
   }
 
@@ -161,17 +163,7 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
     )
   }
 
-  if (filteredItems.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-400">
-          {globalSearch || searchQuery ? `No items found matching "${globalSearch || searchQuery}"` : "No items found. Add some items to get started."}
-        </p>
-      </div>
-    )
-  }
-
-  if (loading) {
+  if (loading && !initialLoadComplete) {
     return (
       <div className="space-y-4">
         <div className="animate-pulse bg-gray-800 h-8 w-32 rounded"></div>
@@ -381,3 +373,4 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
     </div>
   )
 }
+
