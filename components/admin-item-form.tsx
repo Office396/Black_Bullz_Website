@@ -1,387 +1,1298 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { LoadingSpinner } from "@/components/loading-spinner"
-import { AdminItemForm } from "@/components/admin-item-form"
-import { Edit, Trash2, Eye, Star, TrendingUp } from "lucide-react"
-import Image from "next/image"
+import type React from "react"
 
-interface AdminItemListProps {
-  searchQuery: string
+import { useState, useCallback } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Plus, Trash2, Save, Copy } from "lucide-react"
+import Editor from "@monaco-editor/react"
+
+interface FormData {
+  title: string
+  category: string
+  description: string
+  longDescription: string
+  developer: string
+  size: string
+  releaseDate: string
+  image: string
+  rating: string
+  latest: boolean
+  keyFeatures: string[]
+  screenshots: string[] // Added screenshots array
+  note?: string
+  systemRequirements: {
+    recommended: {
+      // Removed minimum, kept only recommended
+      os: string
+      processor: string
+      memory: string
+      graphics: string
+      storage: string
+    }
+  }
+  androidRequirements: {
+    recommended: {
+      // Removed minimum, kept only recommended
+      os: string
+      ram: string
+      storage: string
+      processor: string
+    }
+  }
+  sharedPinCode: string
+  sharedRarPassword?: string
+  cloudDownloads: Array<{
+    cloudName: string
+    actualProvider?: string
+    customProvider?: string
+    partsNumber?: number
+    version?: string
+    actualDownloadLinks: Array<{ name: string; url: string; size: string }>
+  }>
 }
 
-const tabs = [
-  { id: "all", label: "All" },
-  { id: "pc-games", label: "PC Games" },
-  { id: "android-games", label: "Android Games" },
-  { id: "software", label: "Software" },
-]
+const initialFormData: FormData = {
+  title: "",
+  category: "",
+  description: "",
+  longDescription: "",
+  developer: "",
+  size: "",
+  releaseDate: "",
+  image: "",
+  rating: "4.0",
+  latest: true,
+  keyFeatures: [""],
+  screenshots: [], // Added empty screenshots array
+  note: "",
+  systemRequirements: {
+    recommended: { os: "", processor: "", memory: "", graphics: "", storage: "" }, // Only recommended
+  },
+  androidRequirements: {
+    recommended: { os: "Android 12", ram: "8 GB", storage: "350 MB", processor: "Snapdragon / MediaTek (Average Processors)" }, // Only recommended
+  },
+  sharedPinCode: Math.floor(1000 + Math.random() * 9000).toString(), // Generate random 4-digit PIN
+  sharedRarPassword: "",
+  cloudDownloads: [{
+    cloudName: "",
+    partsNumber: undefined,
+    version: undefined,
+    actualDownloadLinks: [{ name: "", url: "", size: "" }],
+  }],
+}
 
-export function AdminItemList({ searchQuery }: AdminItemListProps) {
-  const [items, setItems] = useState<any[]>([])
-  const [editingItem, setEditingItem] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [activeTab, setActiveTab] = useState("all")
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
-  // Use the searchQuery prop as the single source of truth for global search
-  const globalSearch = searchQuery
-
-  const itemsPerPage = 10
-
-  const fetchItems = async () => {
-    try {
-      const response = await fetch("/api/items")
-      const result = await response.json()
-      if (result.success) {
-        setItems(result.data)
-      } else {
-        console.error("Failed to fetch items:", result.error)
-        setItems([])
+export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: () => void }) {
+  const [formData, setFormData] = useState<FormData>(() => {
+    if (editItem) {
+      // Ensure all required fields exist for existing items
+      return {
+        ...editItem,
+        screenshots: editItem.screenshots || [],
+        note: editItem.note || "",
+        sharedPinCode: editItem.sharedPinCode || Math.floor(1000 + Math.random() * 9000).toString(),
+        sharedRarPassword: editItem.sharedRarPassword || "",
+        cloudDownloads: editItem.cloudDownloads || [{
+          cloudName: "",
+          partsNumber: undefined,
+          version: undefined,
+          actualDownloadLinks: [{ name: "", url: "", size: "" }],
+        }],
+        systemRequirements: editItem.systemRequirements || {
+          recommended: {
+            os: "",
+            processor: "",
+            memory: "",
+            graphics: "",
+            storage: "",
+          },
+        },
+        androidRequirements: editItem.androidRequirements || {
+          recommended: {
+            os: "Android 12",
+            ram: "8 GB",
+            storage: "350 MB",
+            processor: "Snapdragon / MediaTek (Average Processors)",
+          },
+        },
       }
-    } catch (error) {
-      console.error("Error fetching items:", error)
-      setItems([])
-    } finally {
-      setLoading(false)
-      setInitialLoadComplete(true)
+    }
+    return initialFormData
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const url = "/api/items"
+      const method = editItem ? "PUT" : "POST"
+      const body = editItem ? { id: editItem.id, ...formData } : formData
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        alert(editItem ? "Item updated successfully!" : "Item saved successfully!")
+        if (onSave) onSave()
+        if (!editItem) setFormData(initialFormData)
+      } else {
+        throw new Error(result.error || "Failed to save item.")
+      }
+    } catch (err) {
+      console.error("Failed to save item", err)
+      alert("Failed to save item. Please try again.")
     }
   }
 
-  useEffect(() => {
-    fetchItems()
+  const addKeyFeature = () => {
+    setFormData({ ...formData, keyFeatures: [...formData.keyFeatures, ""] })
+  }
+
+  const removeKeyFeature = (index: number) => {
+    setFormData({
+      ...formData,
+      keyFeatures: formData.keyFeatures.filter((_, i) => i !== index),
+    })
+  }
+
+  const updateKeyFeature = (index: number, value: string) => {
+    const updated = [...formData.keyFeatures]
+    updated[index] = value
+    setFormData({ ...formData, keyFeatures: updated })
+  }
+
+  // Cloud Downloads Functions
+  const addCloudDownload = () => {
+    setFormData({
+      ...formData,
+      cloudDownloads: [...formData.cloudDownloads, {
+        cloudName: "",
+        partsNumber: undefined,
+        version: undefined,
+        actualDownloadLinks: [{ name: "", url: "", size: "" }],
+      }],
+    })
+  }
+
+  const removeCloudDownload = (cloudIndex: number) => {
+    setFormData({
+      ...formData,
+      cloudDownloads: formData.cloudDownloads.filter((_, i) => i !== cloudIndex),
+    })
+  }
+
+  const duplicateCloudDownload = (cloudIndex: number) => {
+    const cloudToDuplicate = formData.cloudDownloads[cloudIndex]
+    const duplicatedCloud = {
+      ...cloudToDuplicate,
+      actualDownloadLinks: cloudToDuplicate.actualDownloadLinks.map(link => ({ ...link }))
+    }
+    duplicatedCloud.partsNumber = undefined // Reset parts number for duplicated entry
+    duplicatedCloud.version = undefined // Reset version for duplicated entry
+    const updated = [...formData.cloudDownloads]
+    updated.splice(cloudIndex + 1, 0, duplicatedCloud)
+    setFormData({ ...formData, cloudDownloads: updated })
+  }
+
+  const updateCloudDownload = (cloudIndex: number, field: string, value: string | number | undefined) => {
+    const updated = [...formData.cloudDownloads]
+    updated[cloudIndex] = { ...updated[cloudIndex], [field]: value }
+    setFormData({ ...formData, cloudDownloads: updated })
+  }
+
+  const addDownloadLink = (cloudIndex: number) => {
+    const updated = [...formData.cloudDownloads]
+    updated[cloudIndex].actualDownloadLinks.push({ name: "", url: "", size: "" })
+    setFormData({ ...formData, cloudDownloads: updated })
+  }
+
+  const removeDownloadLink = (cloudIndex: number, linkIndex: number) => {
+    const updated = [...formData.cloudDownloads]
+    updated[cloudIndex].actualDownloadLinks = updated[cloudIndex].actualDownloadLinks.filter((_, i) => i !== linkIndex)
+    setFormData({ ...formData, cloudDownloads: updated })
+  }
+
+  const duplicateDownloadLink = (cloudIndex: number, linkIndex: number) => {
+    const updated = [...formData.cloudDownloads]
+    const link = updated[cloudIndex].actualDownloadLinks[linkIndex]
+    if (!link) return
+    updated[cloudIndex].actualDownloadLinks.splice(linkIndex + 1, 0, { ...link })
+    setFormData({ ...formData, cloudDownloads: updated })
+  }
+
+  const updateDownloadLink = (cloudIndex: number, linkIndex: number, field: string, value: string) => {
+    const updated = [...formData.cloudDownloads]
+    updated[cloudIndex].actualDownloadLinks[linkIndex] = { 
+      ...updated[cloudIndex].actualDownloadLinks[linkIndex], 
+      [field]: value 
+    }
+    setFormData({ ...formData, cloudDownloads: updated })
+  }
+
+  const generateNewSharedPin = () => {
+    setFormData({
+      ...formData,
+      sharedPinCode: Math.floor(1000 + Math.random() * 9000).toString(),
+    })
+  }
+
+  const showSystemRequirements = formData.category === "PC Games" || formData.category === "Software"
+  const showAndroidRequirements = formData.category === "Android Games"
+  const showKeyFeatures = formData.category === "Software"
+
+  // State for multi-link text input mode per cloud
+  const [multiLinkMode, setMultiLinkMode] = useState<Record<number, boolean>>({})
+  const [multiLinkSections, setMultiLinkSections] = useState<Record<number, Array<{name: string, size: string, text: string}>>>({})
+
+  // Initialize with one empty section when toggling on
+  const handleToggleMultiLink = (cloudIndex: number, checked: boolean) => {
+    if (checked) {
+      setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: [{ name: "", size: "", text: "" }] })
+    }
+    setMultiLinkMode({ ...multiLinkMode, [cloudIndex]: checked })
+  }
+
+  // State for system requirements text input
+  const [sysReqTextMode, setSysReqTextMode] = useState(false)
+  const [sysReqTextInput, setSysReqTextInput] = useState("")
+
+  // Parse system requirements from text
+  const parseSystemRequirements = useCallback((text: string) => {
+    const lines = text.split("\n").map((line) => line.trim()).filter((line) => line.length > 0)
+    
+    const requirements = {
+      os: "",
+      processor: "",
+      memory: "",
+      graphics: "",
+      storage: "",
+    }
+
+    lines.forEach((line) => {
+      const lowerLine = line.toLowerCase()
+      
+      // OS detection
+      if (lowerLine.includes("os:") || lowerLine.includes("operating system")) {
+        requirements.os = line.replace(/^(os:|operating system:?)/i, "").trim()
+      }
+      // Processor detection
+      else if (lowerLine.includes("processor:") || lowerLine.includes("cpu:")) {
+        requirements.processor = line.replace(/^(processor:|cpu:?)/i, "").trim()
+      }
+      // Memory detection
+      else if (lowerLine.includes("memory:") || lowerLine.includes("ram:")) {
+        requirements.memory = line.replace(/^(memory:|ram:?)/i, "").trim()
+      }
+      // Graphics detection
+      else if (lowerLine.includes("graphics:") || lowerLine.includes("gpu:") || lowerLine.includes("video card:")) {
+        requirements.graphics = line.replace(/^(graphics:|gpu:|video card:?)/i, "").trim()
+      }
+      // Storage detection
+      else if (lowerLine.includes("storage:") || lowerLine.includes("disk space:") || lowerLine.includes("hard drive:")) {
+        requirements.storage = line.replace(/^(storage:|disk space:|hard drive:?)/i, "").trim()
+      }
+    })
+
+    return requirements
   }, [])
 
-  // Calculate download links count for each item
-  const itemsWithDownloadCount = useMemo(() => {
-    return items.map(item => {
-      const downloadCount = item.cloudDownloads?.reduce((total: number, cloud: any) =>
-        total + (cloud.actualDownloadLinks?.length || 0), 0) || 0
-      return { ...item, downloadCount }
+  // Apply parsed system requirements
+  const handleApplySystemRequirements = useCallback(() => {
+    const parsed = parseSystemRequirements(sysReqTextInput)
+    
+    setFormData({
+      ...formData,
+      systemRequirements: {
+        ...formData.systemRequirements,
+        recommended: {
+          ...formData.systemRequirements.recommended,
+          os: parsed.os || formData.systemRequirements.recommended.os,
+          processor: parsed.processor || formData.systemRequirements.recommended.processor,
+          memory: parsed.memory || formData.systemRequirements.recommended.memory,
+          graphics: parsed.graphics || formData.systemRequirements.recommended.graphics,
+          storage: parsed.storage || formData.systemRequirements.recommended.storage,
+        },
+      },
     })
-  }, [items])
+    
+    setSysReqTextInput("")
+    setSysReqTextMode(false)
+  }, [formData, sysReqTextInput, parseSystemRequirements])
 
-  // Global search across all items
-  const globalFilteredItems = useMemo(() => {
-    if (!globalSearch?.trim()) return itemsWithDownloadCount
+  // Parse and apply multiple links from textarea
+  const handleApplyMultipleLinks = useCallback((cloudIndex: number) => {
+    const sections = multiLinkSections[cloudIndex] || []
+    const allNewLinks: Array<{ name: string; url: string; size: string }> = []
 
-    const searchTerm = globalSearch.toLowerCase()
-    return itemsWithDownloadCount.filter((item) =>
-      item.title?.toLowerCase().includes(searchTerm) ||
-      item.category?.toLowerCase().includes(searchTerm) ||
-      item.developer?.toLowerCase().includes(searchTerm) ||
-      item.description?.toLowerCase().includes(searchTerm) ||
-      item.size?.toLowerCase().includes(searchTerm)
-    )
-  }, [itemsWithDownloadCount, globalSearch])
+    sections.forEach(section => {
+      const lines = section.text.split("\n").filter(line => line.trim().length > 0)
 
-  // Category and search filtering
-  const filteredItems = useMemo(() => {
-    let filtered = itemsWithDownloadCount
+      if (lines.length === 0) return
 
-    // Apply category filter
-    if (activeTab !== "all") {
-      const categoryMap: Record<string, string> = {
-        "pc-games": "PC Games",
-        "android-games": "Android Games",
-        "software": "Software"
-      }
-      filtered = filtered.filter(item => item.category === categoryMap[activeTab])
-    }
+      const linkName = section.name || ""
+      const linkSize = section.size || ""
 
-    // Apply search filter
-    if (globalSearch?.trim()) {
-      const searchTerm = globalSearch.toLowerCase()
-      filtered = filtered.filter((item) =>
-        item.title?.toLowerCase().includes(searchTerm) ||
-        item.category?.toLowerCase().includes(searchTerm) ||
-        item.developer?.toLowerCase().includes(searchTerm) ||
-        item.description?.toLowerCase().includes(searchTerm) ||
-        item.size?.toLowerCase().includes(searchTerm)
-      )
-    }
-
-    // Sort items by download count (0 first, then ascending)
-    return filtered.sort((a: any, b: any) => a.downloadCount - b.downloadCount)
-  }, [itemsWithDownloadCount, globalSearch, activeTab])
-
-  // Pagination
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage)
-
-  const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this item?")) {
-      try {
-        const response = await fetch("/api/items", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id }),
+      lines.forEach((line: string, idx: number) => {
+        allNewLinks.push({
+          name: linkName ? `${linkName} - Part ${idx + 1}` : `Part ${idx + 1}`,
+          url: line.trim(),
+          size: linkSize,
         })
-        const result = await response.json()
-        if (result.success) {
-          setLoading(true)
-          fetchItems() // Refetch items
-        } else {
-          alert("Failed to delete item: " + result.error)
-        }
-      } catch (error) {
-        console.error("Error deleting item:", error)
-        alert("Failed to delete item. Please try again.")
-      }
+      })
+    })
+
+    const updated = [...formData.cloudDownloads]
+    updated[cloudIndex] = {
+      ...updated[cloudIndex],
+      actualDownloadLinks: allNewLinks, // Replace all existing links
     }
-  }
+    setFormData({ ...formData, cloudDownloads: updated })
 
-  const handleEdit = (item: any) => {
-    setEditingItem(item)
-  }
-
-  const handleSaveEdit = () => {
-    setLoading(true)
-    fetchItems()
-    setEditingItem(null)
-  }
-
-  if (editingItem) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-white">Edit Item</h3>
-          <Button
-            onClick={() => setEditingItem(null)}
-            variant="outline"
-            className="bg-gray-700 border-gray-600 text-gray-300"
-          >
-            Cancel
-          </Button>
-        </div>
-        <AdminItemForm editItem={editingItem} onSave={handleSaveEdit} />
-      </div>
-    )
-  }
-
-  if (loading && !initialLoadComplete) {
-    return (
-      <div className="space-y-4">
-        <div className="animate-pulse bg-gray-800 h-8 w-32 rounded"></div>
-        <div className="grid grid-cols-1 gap-4">
-          {Array.from({ length: 10 }, (_, i) => (
-            <div key={i} className="bg-gray-800 rounded-lg p-4 animate-pulse">
-              <div className="flex gap-4">
-                <div className="w-20 h-20 bg-gray-700 rounded-lg flex-shrink-0"></div>
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <div className="h-6 bg-gray-700 rounded w-48"></div>
-                      <div className="h-4 bg-gray-700 rounded w-32"></div>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="h-8 w-8 bg-gray-700 rounded"></div>
-                      <div className="h-8 w-8 bg-gray-700 rounded"></div>
-                      <div className="h-8 w-8 bg-gray-700 rounded"></div>
-                    </div>
-                  </div>
-                  <div className="h-4 bg-gray-700 rounded w-full"></div>
-                  <div className="flex gap-4">
-                    <div className="h-3 bg-gray-700 rounded w-16"></div>
-                    <div className="h-3 bg-gray-700 rounded w-12"></div>
-                    <div className="h-3 bg-gray-700 rounded w-20"></div>
-                    <div className="h-3 bg-gray-700 rounded w-24"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (filteredItems.length === 0 && !loading) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-400">
-          {globalSearch || searchQuery ? `No items found matching "${globalSearch || searchQuery}"` : "No items found. Add some items to get started."}
-        </p>
-      </div>
-    )
-  }
+    // Clear sections after applying
+    setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: [] })
+  }, [formData, multiLinkSections])
 
   return (
-    <div className="space-y-4">
-      {/* Category filter tabs */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {tabs.map((tab) => {
-          const count = tab.id === "all"
-            ? itemsWithDownloadCount.length
-            : itemsWithDownloadCount.filter((item) => {
-                const categoryMap: Record<string, string> = {
-                  "pc-games": "PC Games",
-                  "android-games": "Android Games",
-                  "software": "Software"
-                }
-                return item.category === categoryMap[tab.id]
-              }).length
-          return (
-            <Button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id)
-                setCurrentPage(1)
-              }}
-              variant={activeTab === tab.id ? "default" : "outline"}
-              className={`${
-                activeTab === tab.id
-                  ? "bg-red-600 hover:bg-red-700 text-white"
-                  : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              {tab.label} ({count})
-            </Button>
-          )
-        })}
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+      {/* Basic Information */}
+      <Card className="bg-gray-700 border-gray-600">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-white text-lg md:text-xl">Basic Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 px-4 md:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="title" className="text-white text-sm md:text-base">
+                Title *
+              </Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="bg-gray-600 border-gray-500 text-white text-sm"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="category" className="text-white text-sm md:text-base">
+                Category *
+              </Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => {
+                  const updatedFormData = { ...formData, category: value }
+                  
+                  // Auto-set MediaFire for Android Games
+                  if (value === "Android Games" && formData.cloudDownloads[0]?.cloudName === "") {
+                    updatedFormData.cloudDownloads = [{
+                      ...formData.cloudDownloads[0],
+                      cloudName: "MediaFire",
+                    }]
+                  }
+                  
+                  setFormData(updatedFormData)
+                }}
+              >
+                <SelectTrigger className="bg-gray-600 border-gray-500 text-white text-sm">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-600 border-gray-500">
+                  <SelectItem value="PC Games">PC Games</SelectItem>
+                  <SelectItem value="Android Games">Android Games</SelectItem>
+                  <SelectItem value="Software">Software</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-      {/* Results count */}
-      <div className="text-sm text-gray-400 mb-4">
-        Showing {paginatedItems.length} of {filteredItems.length} items
-        {globalSearch && ` (filtered from ${items.length} total)`}
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="developer" className="text-white text-sm md:text-base">
+                Developer
+              </Label>
+              <Input
+                id="developer"
+                value={formData.developer}
+                onChange={(e) => setFormData({ ...formData, developer: e.target.value })}
+                className="bg-gray-600 border-gray-500 text-white text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label className="text-white text-sm md:text-base">Options</Label>
+              <div className="flex flex-wrap gap-4">
+                <Label htmlFor="latest" className="text-white flex items-center space-x-2 text-sm">
+                  <input
+                    type="checkbox"
+                    id="latest"
+                    checked={formData.latest}
+                    onChange={(e) => setFormData({ ...formData, latest: e.target.checked })}
+                    className="w-4 h-4 text-green-600 bg-gray-600 border-gray-500 rounded focus:ring-green-500"
+                  />
+                  <span>Latest</span>
+                </Label>
+                <Label htmlFor="hasNote" className="text-white flex items-center space-x-2 text-sm">
+                  <input
+                    type="checkbox"
+                    id="hasNote"
+                    checked={formData.note !== undefined}
+                    onChange={(e) => setFormData({ ...formData, note: e.target.checked ? "" : undefined })}
+                    className="w-4 h-4 text-green-600 bg-gray-600 border-gray-500 rounded focus:ring-green-500"
+                  />
+                  <span>Note</span>
+                </Label>
+              </div>
+              <div className="bg-blue-900/20 border border-blue-600 p-3 rounded-lg">
+                <p className="text-blue-300 text-sm">
+                  📊 Use the "Trending Management" tab to add/remove items from trending section.
+                </p>
+              </div>
+            </div>
+          </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        {paginatedItems.map((item) => (
-          <Card key={item.id} className="bg-gray-700 border-gray-600">
-            <CardContent className="p-4">
-              <div className="flex gap-4">
-                <Image
-                  src={item.image || "/placeholder.svg"}
-                  alt={item.title}
-                  width={80}
-                  height={80}
-                  className="rounded-lg object-cover"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="size" className="text-white text-sm md:text-base">
+                File Size
+              </Label>
+              <Input
+                id="size"
+                value={formData.size}
+                onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                className="bg-gray-600 border-gray-500 text-white text-sm"
+                placeholder="e.g., 2.5 GB"
+              />
+            </div>
+            <div>
+              <Label htmlFor="rating" className="text-white text-sm md:text-base">
+                Rating
+              </Label>
+              <Input
+                id="rating"
+                type="number"
+                min="1"
+                max="5"
+                step="0.1"
+                value={formData.rating}
+                onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
+                className="bg-gray-600 border-gray-500 text-white text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="image" className="text-white text-sm md:text-base">
+                Image URL
+              </Label>
+              <Input
+                id="image"
+                value={formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                className="bg-gray-600 border-gray-500 text-white text-sm"
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="description" className="text-white text-sm md:text-base">
+              Short Description
+            </Label>
+            <Editor
+              value={formData.description}
+              onChange={(value) => setFormData({ ...formData, description: value || "" })}
+              language="plaintext"
+              theme="vs-dark"
+              height="80px"
+              options={{ minimap: { enabled: false }, fontSize: 12, wordWrap: "on" }}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="longDescription" className="text-white text-sm md:text-base">
+              Long Description
+            </Label>
+            <Editor
+              value={formData.longDescription}
+              onChange={(value) => setFormData({ ...formData, longDescription: value || "" })}
+              language="plaintext"
+              theme="vs-dark"
+              height="120px"
+              options={{ minimap: { enabled: false }, fontSize: 12, wordWrap: "on" }}
+            />
+          </div>
+
+          {/* Note Input (when enabled) */}
+          {formData.note !== undefined && (
+            <div>
+              <Label htmlFor="note" className="text-white text-sm md:text-base">
+                Note (Optional)
+              </Label>
+              <Textarea
+                id="note"
+                value={formData.note}
+                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                className="bg-gray-600 border-gray-500 text-white text-sm min-h-[80px]"
+                placeholder="Enter a note that will be displayed to users on the download page..."
+              />
+              <p className="text-gray-400 text-xs mt-1">This note will be shown to users after they enter the PIN and access the download page.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Key Features (Software only) */}
+      {showKeyFeatures && (
+        <Card className="bg-gray-700 border-gray-600">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-white text-lg md:text-xl">Key Features</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 px-4 md:px-6">
+            {formData.keyFeatures.map((feature, index) => (
+              <div key={index} className="flex gap-2">
+                <Input
+                  value={feature}
+                  onChange={(e) => updateKeyFeature(index, e.target.value)}
+                  className="bg-gray-600 border-gray-500 text-white text-sm flex-1"
+                  placeholder="Enter key feature"
                 />
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-white font-semibold text-lg">{item.title}</h3>
-                      <p className="text-gray-400 text-sm">{item.developer}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-red-600 text-white">{item.category}</Badge>
-                      {item.trending && (
-                        <Badge className="bg-orange-600 text-white flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          Trending
-                        </Badge>
-                      )}
-                      {item.latest && (
-                        <Badge className="bg-green-600 text-white flex items-center gap-1">
-                          <Star className="h-3 w-3" />
-                          Latest
-                        </Badge>
-                      )}
-                      <div className="flex gap-1">
-                        <Button
-                          onClick={() => window.open(`/game/${item.id}`, "_blank")}
-                          size="sm"
-                          variant="outline"
-                          className="bg-gray-600 border-gray-500 text-gray-300"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleEdit(item)}
-                          size="sm"
-                          variant="outline"
-                          className="bg-gray-600 border-gray-500 text-blue-400"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleDelete(item.id)}
-                          size="sm"
-                          variant="outline"
-                          className="bg-gray-600 border-gray-500 text-red-400"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-gray-300 text-sm line-clamp-2">{item.description}</p>
-                  <div className="flex items-center gap-4 text-xs text-gray-400">
-                    <span>Size: {item.size}</span>
-                    <span>Rating: {item.rating}/5</span>
-                    <span>Downloads: {item.downloadCount}</span>
-                    <span>Added: {item.uploadDate ? new Date(item.uploadDate).toLocaleDateString() : new Date(item.id).toLocaleDateString()}</span>
-                  </div>
+                <Button
+                  type="button"
+                  onClick={() => removeKeyFeature(index)}
+                  variant="outline"
+                  size="sm"
+                  className="bg-gray-600 border-gray-500 text-red-400 h-10 w-10 p-0"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              onClick={addKeyFeature}
+              variant="outline"
+              className="bg-gray-600 border-gray-500 text-white w-full md:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Feature
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Screenshots */}
+      <Card className="bg-gray-700 border-gray-600">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-white text-lg md:text-xl">Screenshots (Max 5)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 px-4 md:px-6">
+          {formData.screenshots.map((screenshot, index) => (
+            <div key={index} className="flex gap-2">
+              <Input
+                value={screenshot}
+                onChange={(e) => {
+                  const updatedScreenshots = [...formData.screenshots]
+                  updatedScreenshots[index] = e.target.value
+                  setFormData({ ...formData, screenshots: updatedScreenshots })
+                }}
+                className="bg-gray-600 border-gray-500 text-white text-sm flex-1"
+                placeholder="Enter screenshot URL"
+              />
+              <Button
+                type="button"
+                onClick={() => {
+                  const updatedScreenshots = formData.screenshots.filter((_, i) => i !== index)
+                  setFormData({ ...formData, screenshots: updatedScreenshots })
+                }}
+                variant="outline"
+                size="sm"
+                className="bg-gray-600 border-gray-500 text-red-400 h-10 w-10 p-0"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          {formData.screenshots.length < 5 && (
+            <Button
+              type="button"
+              onClick={() => setFormData({ ...formData, screenshots: [...formData.screenshots, ""] })}
+              variant="outline"
+              className="bg-gray-600 border-gray-500 text-white w-full md:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Screenshot
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* System Requirements (PC Games and Software only) */}
+      {showSystemRequirements && (
+        <Card className="bg-gray-700 border-gray-600">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-white text-lg md:text-xl">Recommended System Requirements</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 px-4 md:px-6">
+            {/* Toggle for intelligent text input */}
+            <div className="mb-4 flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="sysreq-text-toggle"
+                checked={sysReqTextMode}
+                onChange={(e) => setSysReqTextMode(e.target.checked)}
+                className="w-4 h-4 text-green-600 bg-gray-600 border-gray-500 rounded cursor-pointer"
+              />
+              <Label htmlFor="sysreq-text-toggle" className="text-white text-sm cursor-pointer">
+                Paste system requirements text
+              </Label>
+            </div>
+
+            {/* Intelligent text input mode */}
+            {sysReqTextMode && (
+              <div className="mb-4 p-4 bg-gray-600 rounded-lg border border-gray-500 space-y-3">
+                <Label className="text-white mb-2 block text-sm">Paste system requirements (one per line)</Label>
+                <Textarea
+                  value={sysReqTextInput}
+                  onChange={(e) => setSysReqTextInput(e.target.value)}
+                  placeholder="OS: Windows 10&#10;Processor: Intel i7 gen 2 or AMD Ryzen&#10;Memory: 12 GB RAM&#10;Graphics: Nvidia GTX 2080 6GB&#10;Storage: 8 GB available space"
+                  className="bg-gray-700 border-gray-500 text-white text-sm min-h-[150px]"
+                />
+                <p className="text-gray-300 text-xs">Supported keywords: OS, Operating System, Processor, CPU, Memory, RAM, Graphics, GPU, Video Card, Storage, Disk Space, Hard Drive</p>
+                
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleApplySystemRequirements}
+                    className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                  >
+                    Apply Requirements
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setSysReqTextMode(false)
+                      setSysReqTextInput("")
+                    }}
+                    variant="outline"
+                    className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 text-sm"
+                  >
+                    Cancel
+                  </Button>
                 </div>
+                <p className="text-gray-400 text-xs">Missing fields will be ignored. Existing values will be updated only if found in the text.</p>
+              </div>
+            )}
+
+            {/* Individual input fields */}
+            {!sysReqTextMode && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-white text-sm md:text-base">Operating System</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.os}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, os: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white text-sm md:text-base">Processor</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.processor}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, processor: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white text-sm md:text-base">Memory</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.memory}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, memory: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white text-sm md:text-base">Graphics</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.graphics}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, graphics: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label className="text-white text-sm md:text-base">Storage</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.storage}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, storage: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Android Requirements (Android Games only) */}
+      {showAndroidRequirements && (
+        <Card className="bg-gray-700 border-gray-600">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-white text-lg md:text-xl">Recommended Android Requirements</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 px-4 md:px-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-white text-sm md:text-base">Android Version</Label>
+                <Input
+                  value={formData.androidRequirements.recommended.os}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      androidRequirements: {
+                        ...formData.androidRequirements,
+                        recommended: { ...formData.androidRequirements.recommended, os: e.target.value },
+                      },
+                    })
+                  }
+                  className="bg-gray-600 border-gray-500 text-white text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-white text-sm md:text-base">RAM</Label>
+                <Input
+                  value={formData.androidRequirements.recommended.ram}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      androidRequirements: {
+                        ...formData.androidRequirements,
+                        recommended: { ...formData.androidRequirements.recommended, ram: e.target.value },
+                      },
+                    })
+                  }
+                  className="bg-gray-600 border-gray-500 text-white text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-white text-sm md:text-base">Storage</Label>
+                <Input
+                  value={formData.androidRequirements.recommended.storage}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      androidRequirements: {
+                        ...formData.androidRequirements,
+                        recommended: { ...formData.androidRequirements.recommended, storage: e.target.value },
+                      },
+                    })
+                  }
+                  className="bg-gray-600 border-gray-500 text-white text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-white text-sm md:text-base">Processor</Label>
+                <Input
+                  value={formData.androidRequirements.recommended.processor}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      androidRequirements: {
+                        ...formData.androidRequirements,
+                        recommended: { ...formData.androidRequirements.recommended, processor: e.target.value },
+                      },
+                    })
+                  }
+                  className="bg-gray-600 border-gray-500 text-white text-sm"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
+      {/* Cloud Downloads Configuration */}
+      <Card className="bg-gray-700 border-gray-600">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-white text-lg md:text-xl">Cloud Downloads Configuration</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 px-4 md:px-6">
+          <div className="bg-blue-900/20 border border-blue-600 p-3 md:p-4 rounded-lg mb-4">
+            <p className="text-blue-300 text-sm mb-2">📋 How it works:</p>
+            <ul className="text-blue-200 text-xs space-y-1 list-disc pl-4">
+              <li>Users click cloud download button → GP Links/V2Links survey opens automatically</li>
+              <li>After completing survey → PIN entry page appears</li>
+              <li>Users enter the shared PIN → Access to download page with direct links</li>
+              <li>All cloud providers use the same PIN and RAR password</li>
+              <li>Download pages expire after 12 hours for security</li>
+            </ul>
+          </div>
+
+          {/* Shared PIN and RAR Password */}
+          <Card className="bg-gray-600 border-gray-500">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-white text-base md:text-lg">Shared Settings for All Cloud Providers</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 px-4 md:px-6">
+              {/* Shared PIN Configuration */}
+              <div className="bg-gray-700 p-3 md:p-4 rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+                  <Label className="text-white text-sm md:text-base">Shared PIN Code (for all clouds)</Label>
+                  <Button
+                    type="button"
+                    onClick={generateNewSharedPin}
+                    variant="outline"
+                    size="sm"
+                    className="bg-gray-800 border-gray-700 text-white hover:bg-gray-600 text-xs md:text-sm w-full sm:w-auto"
+                  >
+                    Generate New PIN
+                  </Button>
+                </div>
+                <Input
+                  value={formData.sharedPinCode}
+                  onChange={(e) => setFormData({ ...formData, sharedPinCode: e.target.value })}
+                  className="bg-gray-800 border-gray-700 text-white text-center text-lg font-mono tracking-widest"
+                  maxLength={4}
+                  placeholder="1234"
+                />
+                <p className="text-gray-400 text-xs mt-1">Users will need this PIN to access any cloud download page</p>
+              </div>
+
+              {/* Shared RAR Password (Optional) */}
+              <div>
+                <Label className="text-white mb-2 block text-sm md:text-base">Shared RAR/Archive Password (Optional)</Label>
+                <Input
+                  value={formData.sharedRarPassword || ""}
+                  onChange={(e) => setFormData({ ...formData, sharedRarPassword: e.target.value })}
+                  className="bg-gray-700 border-gray-600 text-white text-sm"
+                  placeholder="Enter password for compressed files"
+                />
+                <p className="text-gray-400 text-xs mt-1">Will be shown to users on all download pages</p>
               </div>
             </CardContent>
           </Card>
-        ))}
+
+          {/* Cloud Providers */}
+          {formData.cloudDownloads.map((cloudDownload, cloudIndex) => (
+            <Card key={cloudIndex} className="bg-gray-600 border-gray-500">
+              <CardHeader className="pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <CardTitle className="text-white text-base md:text-lg">
+                    Cloud Provider {cloudIndex + 1}
+                  </CardTitle>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      onClick={() => duplicateCloudDownload(cloudIndex)}
+                      variant="outline"
+                      size="sm"
+                      className="bg-gray-700 border-gray-600 text-blue-400 hover:bg-blue-600 hover:text-white w-full sm:w-auto"
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Duplicate</span>
+                    </Button>
+                    {formData.cloudDownloads.length > 1 && (
+                      <Button
+                        type="button"
+                        onClick={() => removeCloudDownload(cloudIndex)}
+                        variant="outline"
+                        size="sm"
+                        className="bg-gray-700 border-gray-600 text-red-400 hover:bg-red-600 hover:text-white w-full sm:w-auto"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Remove</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 px-4 md:px-6">
+                {/* Version (only for Update) */}
+                {cloudDownload.cloudName === "Update" && (
+                  <div>
+                    <Label className="text-white mb-2 block text-sm md:text-base">Version (Optional)</Label>
+                    <Input
+                      placeholder="e.g., v1.2.0, Hotfix 1.1.5 (leave empty for general updates)"
+                      value={cloudDownload.version || ""}
+                      onChange={(e) => {
+                        updateCloudDownload(cloudIndex, "version", e.target.value || undefined)
+                      }}
+                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                    />
+                    <p className="text-gray-400 text-xs mt-1">Version for this update. If empty, will be grouped with other general updates.</p>
+                  </div>
+                )}
+
+                {/* Parts Number */}
+                <div>
+                  <Label className="text-white mb-2 block text-sm md:text-base">Parts Number (Optional)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    placeholder="e.g., 5 (leave empty to auto-count links)"
+                    value={cloudDownload.partsNumber || ""}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseInt(e.target.value) : undefined
+                      updateCloudDownload(cloudIndex, "partsNumber", value)
+                    }}
+                    className="bg-gray-700 border-gray-600 text-white text-sm"
+                  />
+                  <p className="text-gray-400 text-xs mt-1">Custom parts number to display. If empty, will show actual number of download links.</p>
+                </div>
+
+                {/* Cloud Name */}
+                <div>
+                  <Label className="text-white mb-2 block text-sm md:text-base">Cloud Provider Name *</Label>
+                  <Select
+                    value={cloudDownload.cloudName || ""}
+                    onValueChange={(value) => {
+                      updateCloudDownload(cloudIndex, "cloudName", value)
+                    }}
+                  >
+                    <SelectTrigger className="bg-gray-700 border-gray-600 text-white text-sm">
+                      <SelectValue placeholder="Select cloud provider" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-700 border-gray-600">
+                      <SelectItem value="Black bullz">Black bullz</SelectItem>
+                      <SelectItem value="Direct Link">Direct Link</SelectItem>
+                      <SelectItem value="Update">Update</SelectItem>
+                      <SelectItem value="Google Drive">Google Drive</SelectItem>
+                      <SelectItem value="GoFile">GoFile</SelectItem>
+                      <SelectItem value="MediaFire">MediaFire</SelectItem>
+                      <SelectItem value="MEGA UP">MEGA UP</SelectItem>
+                      <SelectItem value="Dropbox">Dropbox</SelectItem>
+                      <SelectItem value="pCloud">pCloud</SelectItem>
+                      <SelectItem value="DDownload">DDownload</SelectItem>
+                      <SelectItem value="RANOZ">RANOZ</SelectItem>
+                      <SelectItem value="MEGA">MEGA</SelectItem>
+                      <SelectItem value="Upload-Haven">Upload-Haven</SelectItem>
+                      <SelectItem value="Multi-up">Multi-up</SelectItem>
+                      <SelectItem value="Data Nodes">Data Nodes</SelectItem>
+                      <SelectItem value="Pixel Drain">Pixel Drain</SelectItem>
+                      <SelectItem value="RapidGator">RapidGator</SelectItem>
+                      <SelectItem value="Viking File">Viking File</SelectItem>
+                      <SelectItem value="Fucking Fast">Fucking Fast</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {(cloudDownload.cloudName === "Direct Link" || cloudDownload.cloudName === "Update") && (
+                    <div className="mt-2">
+                      <Label className="text-white mb-1 block text-sm">Actual Cloud Provider for {cloudDownload.cloudName}</Label>
+                      <Select
+                        value={cloudDownload.actualProvider || ""}
+                        onValueChange={(value) => {
+                          const updated = [...formData.cloudDownloads]
+                          updated[cloudIndex].actualProvider = value
+                          setFormData({ ...formData, cloudDownloads: updated })
+                        }}
+                      >
+                        <SelectTrigger className="bg-gray-700 border-gray-600 text-white text-sm">
+                          <SelectValue placeholder="Select actual cloud provider" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-700 border-gray-600">
+                            <SelectItem value="Black bullz">Black bullz</SelectItem>                          
+                            <SelectItem value="Google Drive">Google Drive</SelectItem>
+                            <SelectItem value="GoFile">GoFile</SelectItem>
+                            <SelectItem value="MediaFire">MediaFire</SelectItem>
+                            <SelectItem value="MEGA UP">MEGA UP</SelectItem>
+                            <SelectItem value="Dropbox">Dropbox</SelectItem>
+                            <SelectItem value="pCloud">pCloud</SelectItem>
+                            <SelectItem value="DDownload">DDownload</SelectItem>
+                            <SelectItem value="RANOZ">RANOZ</SelectItem>
+                            <SelectItem value="MEGA">MEGA</SelectItem>
+                            <SelectItem value="Upload-Haven">Upload-Haven</SelectItem>
+                            <SelectItem value="Multi-up">Multi-up</SelectItem>
+                            <SelectItem value="RapidGator">RapidGator</SelectItem>
+                            <SelectItem value="Data Nodes">Data Nodes</SelectItem>
+                            <SelectItem value="Pixel Drain">Pixel Drain</SelectItem>
+                            <SelectItem value="Viking File">Viking File</SelectItem>
+                            <SelectItem value="Fucking Fast">Fucking Fast</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {cloudDownload.actualProvider === "Other" || cloudDownload.cloudName === "Other" ? (
+                    <Input
+                      className="bg-gray-700 border-gray-600 text-white mt-2 text-sm"
+                      placeholder="Enter custom cloud provider name"
+                      value={cloudDownload.customProvider || ""}
+                      onChange={(e) => {
+                        const updated = [...formData.cloudDownloads]
+                        updated[cloudIndex].customProvider = e.target.value
+                        setFormData({ ...formData, cloudDownloads: updated })
+                      }}
+                    />
+                  ) : null}
+                </div>
+
+                {/* Download Links for this cloud */}
+                <div>
+                  <Label className="text-white mb-2 block text-sm md:text-base">Download Links for {cloudDownload.cloudName || 'this cloud'}</Label>
+                  <p className="text-gray-400 text-xs mb-3">These are the actual download links users will see after entering the shared PIN</p>
+
+                  {/* Toggle for multi-link text input */}
+                  <div className="mb-4 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`multilink-toggle-${cloudIndex}`}
+                      checked={multiLinkMode[cloudIndex] || false}
+                      onChange={(e) => handleToggleMultiLink(cloudIndex, e.target.checked)}
+                      className="w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded cursor-pointer"
+                    />
+                    <Label htmlFor={`multilink-toggle-${cloudIndex}`} className="text-white text-sm cursor-pointer">
+                      Add multiple links at once
+                    </Label>
+                  </div>
+
+                  {/* Multi-link text input mode */}
+                  {multiLinkMode[cloudIndex] && (
+                    <div className="mb-4 p-4 bg-gray-700 rounded-lg border border-gray-600 space-y-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-white text-sm font-medium">Multi-Link Input</Label>
+                        <Button
+                          type="button"
+                          onClick={() => setMultiLinkMode({ ...multiLinkMode, [cloudIndex]: false })}
+                          variant="outline"
+                          size="sm"
+                          className="bg-red-700 border-red-600 text-white hover:bg-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+
+                      {(multiLinkSections[cloudIndex] || []).map((section, sectionIdx) => (
+                        <div key={sectionIdx} className="mb-4 p-3 bg-gray-600 rounded-lg border border-gray-500 space-y-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label className="text-white text-sm font-medium">Section {sectionIdx + 1}</Label>
+                            <Button
+                              type="button"
+                              onClick={() => {
+                                const updatedSections = [...(multiLinkSections[cloudIndex] || [])]
+                                updatedSections.splice(sectionIdx, 1)
+                                setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: updatedSections })
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="bg-red-700 border-red-600 text-white hover:bg-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Remove
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-white mb-1 block text-sm">Link Name (Optional)</Label>
+                              <Input
+                                placeholder="e.g., Main File, Setup"
+                                value={section.name}
+                                onChange={(e) => {
+                                  const updatedSections = [...(multiLinkSections[cloudIndex] || [])]
+                                  updatedSections[sectionIdx] = { ...section, name: e.target.value }
+                                  setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: updatedSections })
+                                }}
+                                className="bg-gray-800 border-gray-600 text-white text-sm"
+                              />
+                              <p className="text-gray-400 text-xs mt-1">Will be combined with Part number (e.g., "Main File - Part 1")</p>
+                            </div>
+                            <div>
+                              <Label className="text-white mb-1 block text-sm">File Size (Optional)</Label>
+                              <Input
+                                placeholder="e.g., 2.5 GB"
+                                value={section.size}
+                                onChange={(e) => {
+                                  const updatedSections = [...(multiLinkSections[cloudIndex] || [])]
+                                  updatedSections[sectionIdx] = { ...section, size: e.target.value }
+                                  setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: updatedSections })
+                                }}
+                                className="bg-gray-800 border-gray-600 text-white text-sm"
+                              />
+                              <p className="text-gray-400 text-xs mt-1">Same size for all links</p>
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label className="text-white mb-2 block text-sm">Paste multiple download URLs (one per line)</Label>
+                            <Textarea
+                              value={section.text}
+                              onChange={(e) => {
+                                const updatedSections = [...(multiLinkSections[cloudIndex] || [])]
+                                updatedSections[sectionIdx] = { ...section, text: e.target.value }
+                                setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: updatedSections })
+                              }}
+                              placeholder="https://drive.google.com/file/d/...\nhttps://mega.nz/file/..."
+                              className="bg-gray-800 border-gray-600 text-white text-sm min-h-[120px]"
+                            />
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            const updatedSections = [...(multiLinkSections[cloudIndex] || []), { name: "", size: "", text: "" }]
+                            setMultiLinkSections({ ...multiLinkSections, [cloudIndex]: updatedSections })
+                          }}
+                          variant="outline"
+                          className="bg-blue-700 border-blue-600 text-white hover:bg-blue-600"
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Duplicate Section
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => handleApplyMultipleLinks(cloudIndex)}
+                          className="bg-green-600 hover:bg-green-700 text-white text-sm flex-1"
+                        >
+                          Apply Links
+                        </Button>
+                      </div>
+                      <p className="text-gray-400 text-xs">This will add all links from all sections to the download links below.</p>
+                    </div>
+                  )}
+
+                  {/* Single link editing mode */}
+                  {!multiLinkMode[cloudIndex] && cloudDownload.actualDownloadLinks.map((link, linkIndex) => (
+                    <div key={linkIndex} className="space-y-3 p-3 md:p-4 bg-gray-700 rounded-lg mb-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-white mb-1 block text-sm">Link Name *</Label>
+                          <Input
+                            placeholder="e.g., Part 1, Main File, Setup"
+                            value={link.name}
+                            onChange={(e) => updateDownloadLink(cloudIndex, linkIndex, "name", e.target.value)}
+                            className="bg-gray-800 border-gray-700 text-white text-sm"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-white mb-1 block text-sm">File Size *</Label>
+                          <Input
+                            placeholder="e.g., 2.5 GB"
+                            value={link.size}
+                            onChange={(e) => updateDownloadLink(cloudIndex, linkIndex, "size", e.target.value)}
+                            className="bg-gray-800 border-gray-700 text-white text-sm"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-white mb-1 block text-sm">Direct Download URL *</Label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Input
+                            placeholder="https://drive.google.com/... or https://mega.nz/..."
+                            value={link.url}
+                            onChange={(e) => updateDownloadLink(cloudIndex, linkIndex, "url", e.target.value)}
+                            className="bg-gray-800 border-gray-700 text-white flex-1 text-sm"
+                            required
+                          />
+                          <Button
+                            type="button"
+                            onClick={() => duplicateDownloadLink(cloudIndex, linkIndex)}
+                            variant="outline"
+                            size="sm"
+                            className="bg-gray-800 border-gray-700 text-white hover:bg-gray-600 w-full sm:w-auto"
+                          >
+                            <Copy className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Duplicate</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => removeDownloadLink(cloudIndex, linkIndex)}
+                            variant="outline"
+                            size="sm"
+                            className="bg-gray-800 border-gray-700 text-red-400 hover:bg-red-600 hover:text-white w-full sm:w-auto"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Remove</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {!multiLinkMode[cloudIndex] && (
+                    <Button
+                      type="button"
+                      onClick={() => addDownloadLink(cloudIndex)}
+                      variant="outline"
+                      className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600 w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Download Link
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          <Button
+            type="button"
+            onClick={addCloudDownload}
+            variant="outline"
+            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 w-full"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Cloud Provider
+          </Button>
+        </CardContent>
+      </Card>
+      <div className="flex justify-end pt-4">
+        <Button type="submit" className="bg-red-600 hover:bg-red-700 transition-colors w-full md:w-auto">
+          <Save className="h-4 w-4 mr-2" />
+          {editItem ? "Update Item" : "Save Item"}
+        </Button>
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-8">
-          <div className="flex items-center space-x-2">
-            <Button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
-            >
-              Previous
-            </Button>
-
-            {/* Page numbers */}
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              let pageNum
-              if (totalPages <= 5) {
-                pageNum = i + 1
-              } else if (currentPage <= 3) {
-                pageNum = i + 1
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i
-              } else {
-                pageNum = currentPage - 2 + i
-              }
-
-              return (
-                <Button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`px-3 py-2 rounded-lg transition-colors ${
-                    currentPage === pageNum ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
-                  }`}
-                >
-                  {pageNum}
-                </Button>
-              )
-            })}
-
-            <Button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Page info */}
-      {totalPages > 1 && (
-        <div className="text-center text-sm text-gray-400 mt-4">
-          Page {currentPage} of {totalPages} ({filteredItems.length} total items)
-        </div>
-      )}
-    </div>
+    </form>
   )
 }
