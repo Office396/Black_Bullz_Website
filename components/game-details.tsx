@@ -486,6 +486,7 @@ export function GameDetails({ game }: GameDetailsProps) {
               <div className="inline-block w-fit max-w-full bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
                 <p className="text-white text-sm mb-3 font-bold">📋 Download Process:</p>
                 <ul className="text-blue-100 text-x space-y-1 list-disc pl-4 font-semibold">
+                  {game?.category === "PC Games" && <li>Use Data Nodes Or Fucking Fast Cloud Providers,For Addition DLC /Bonus Content /Other Optional Languages /Mode Packs /4k Videos /Sign Language Videos Or More Additional things</li>}
                   <li>Choose your preferred cloud provider below</li>
                   <li>Click the cloud download button</li>
                   <li>Complete Ad-survey to access download page</li>
@@ -733,6 +734,10 @@ export function GameDetails({ game }: GameDetailsProps) {
                     <ul className="space-y-2 text-gray-300 ml-4">
                       <li className="flex items-start gap-2">
                         <span className="text-red-400 text-xl">•</span>
+                        <span className="text-lg">Use Data Nodes Or Fucking Fast Cloud Providers,For Addition DLC /Bonus Content /Other Optional Languages /Mode Packs /4k Videos /Sign Language Videos Or More Additional things</span>
+                      </li>                      
+                      <li className="flex items-start gap-2">
+                        <span className="text-red-400 text-xl">•</span>
                         <span className="text-lg">If download fails, try another cloud provider</span>
                       </li>
                       <li className="flex items-start gap-2">
@@ -766,3 +771,4 @@ export function GameDetails({ game }: GameDetailsProps) {
     </div>
   )
 }
+
