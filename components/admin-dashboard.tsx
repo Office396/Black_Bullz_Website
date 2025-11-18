@@ -168,6 +168,14 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
                     />
                   </div>
+                  {/* <Button
+                    onClick={() => setActiveTab("add")}
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add New
+                  </Button> */}
                 </div>
               </CardHeader>
               <CardContent className="px-2 md:px-6">
