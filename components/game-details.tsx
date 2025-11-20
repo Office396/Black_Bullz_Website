@@ -89,62 +89,62 @@ const cleanScreenshotUrl = (url: string): string => {
 // ScreenshotSkeleton component
 const ScreenshotSkeleton = ({ src, alt }: { src: string; alt: string }) => {
   const cleanedSrc = cleanScreenshotUrl(src)
-   const [isLoaded, setIsLoaded] = useState(false)
-   const [hasError, setHasError] = useState(false)
+    const [isLoaded, setIsLoaded] = useState(false)
+    const [hasError, setHasError] = useState(false)
 
-   return (
-     <Dialog>
-       <DialogTrigger asChild>
-         <div className={`relative aspect-video cursor-pointer group overflow-hidden rounded-lg ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse' : ''}`}>
-           {!hasError && (
-             <Image
-               src={src}
-               alt={alt}
-               fill
-               className="object-cover transition-all duration-300 rounded-lg"
-               onLoad={() => setIsLoaded(true)}
-               onError={() => {
-                 // Add timeout before showing error
-                 setTimeout(() => {
-                   setHasError(true)
-                 }, 5000) // 5 seconds timeout
-               }}
-             />
-           )}
-           {hasError && (
-             <div className="w-full h-full flex items-center justify-center bg-gray-700 rounded-lg">
-               <div className="text-center text-gray-400">
-                 <div className="w-8 h-8 mx-auto mb-2 opacity-50">
-                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                   </svg>
-                 </div>
-                 <p className="text-xs">Failed to load</p>
-               </div>
-             </div>
-           )}
-         </div>
-       </DialogTrigger>
-       {!hasError && (
-         <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
-           <div className="relative">
-             <Image
-               src={cleanedSrc}
-               alt={`${alt} - Full Size`}
-               width={1920}
-               height={1080}
-               className="w-auto h-auto max-w-[90vw] max-h-[90vh] object-contain"
-               priority
-             />
-             <DialogClose className="absolute top-3 right-3 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
-               <X className="h-5 w-5" />
-             </DialogClose>
-           </div>
-         </DialogContent>
-       )}
-     </Dialog>
-   )
- }
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <div className={`relative aspect-video cursor-pointer group overflow-hidden rounded-lg ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse' : ''}`}>
+            {!hasError && (
+              <Image
+                src={cleanedSrc}
+                alt={alt}
+                fill
+                className="object-cover transition-all duration-300 rounded-lg"
+                onLoad={() => setIsLoaded(true)}
+                onError={() => {
+                  // Add timeout before showing error
+                  setTimeout(() => {
+                    setHasError(true)
+                  }, 5000) // 5 seconds timeout
+                }}
+              />
+            )}
+            {hasError && (
+              <div className="w-full h-full flex items-center justify-center bg-gray-700 rounded-lg">
+                <div className="text-center text-gray-400">
+                  <div className="w-8 h-8 mx-auto mb-2 opacity-50">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <p className="text-xs">Failed to load</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogTrigger>
+        {!hasError && (
+          <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
+            <div className="relative">
+              <Image
+                src={cleanedSrc}
+                alt={`${alt} - Full Size`}
+                width={1920}
+                height={1080}
+                className="w-auto h-auto max-w-[90vw] max-h-[90vh] object-contain"
+                priority
+              />
+              <DialogClose className="absolute top-3 right-3 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
+                <X className="h-5 w-5" />
+              </DialogClose>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+    )
+  }
 
 interface GameDetailsProps {
   game: {
@@ -522,7 +522,7 @@ export function GameDetails({ game }: GameDetailsProps) {
               <div className="inline-block w-fit max-w-full bg-grey-900/20 border border-grey-600 p-4 rounded-lg">
                 <p className="text-white text-sm mb-3 font-bold">📋 Download Process:</p>
                 <ul className="text-blue-100 text-x space-y-1 list-disc pl-4 font-semibold">
-                  {game?.category === "PC Games" && <li>Use Data Nodes Or Fucking Fast Cloud Providers,For Addition DLC /Bonus Content /Other Optional Languages /Mode Packs /4k Videos /Sign Language Videos Or More Additional things</li>}
+                  {game?.category === "PC Games" && <li>Use <strong className="text-yellow-400 font-bold">Data Nodes</strong> Or <strong className="text-red-400 font-bold">Fucking Fast</strong> Cloud Providers,For Addition DLC /Bonus Content /Other Optional Languages /Mode Packs /4k Videos /Sign Language Videos Or More Additional things</li>}
                   <li>Choose your preferred cloud provider below</li>
                   <li>Click the cloud download button</li>
                   <li>Complete Ad-survey to access download page</li>
@@ -770,7 +770,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                     <ul className="space-y-2 text-gray-300 ml-4">
                       <li className="flex items-start gap-2">
                         <span className="text-red-400 text-xl">•</span>
-                        <span className="text-lg">Use Data Nodes Or Fucking Fast Cloud Providers,For Addition DLC /Bonus Content /Other Optional Languages /Mode Packs /4k Videos /Sign Language Videos Or More Additional things</span>
+                        <span className="text-lg">Use <strong className="text-yellow-400 font-bold">Data Nodes</strong> Or <strong className="text-red-400 font-bold">Fucking Fast</strong> Cloud Providers,For Addition DLC /Bonus Content /Other Optional Languages /Mode Packs /4k Videos /Sign Language Videos Or More Additional things</span>
                       </li>                      
                       <li className="flex items-start gap-2">
                         <span className="text-red-400 text-xl">•</span>

@@ -111,13 +111,39 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate'>): Promis
     throw error
   }
 
-  // Transform back to interface format
+  // Transform back to interface format and clean screenshots
+  const cleanedScreenshots = (data.screenshots || []).map((url: string) => {
+    if (!url) return url
+
+    // Handle RiotPixels URLs with size modifiers and additional paths
+    if (url.includes('riotpixels.net')) {
+      // First, remove any additional path after .jpg (like /screenshot.filename.jpg)
+      const pathMatch = url.match(/^(.+\.jpg(?:\.\w+)*)(?:\/.*)?$/)
+      if (pathMatch) {
+        url = pathMatch[1]
+      }
+
+      // Remove size modifiers: .240p.jpg, .480p.jpg, .1080p.jpg
+      url = url.replace(/\.240p\.jpg$/, '.jpg')
+      url = url.replace(/\.480p\.jpg$/, '.jpg')
+      url = url.replace(/\.1080p\.jpg$/, '.jpg')
+
+      // Also handle cases where the extension might be .jpg.jpg (double extension)
+      url = url.replace(/\.jpg\.jpg$/, '.jpg')
+
+      // Ensure HTTPS protocol
+      url = url.replace(/^http:/, 'https:')
+    }
+
+    return url
+  })
+
   return {
     ...data,
     longDescription: data.long_description,
     releaseDate: data.release_date,
     keyFeatures: data.key_features || [],
-    screenshots: data.screenshots || [],
+    screenshots: cleanedScreenshots,
     note: data.note || "",
     systemRequirements: data.system_requirements,
     androidRequirements: data.android_requirements,
