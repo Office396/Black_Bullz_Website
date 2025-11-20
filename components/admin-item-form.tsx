@@ -12,6 +12,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Trash2, Save, Copy } from "lucide-react"
 import Editor from "@monaco-editor/react"
 
+// Function to clean screenshot URLs from RiotPixels and similar services
+const cleanScreenshotUrl = (url: string): string => {
+  if (!url) return url
+
+  // Handle RiotPixels URLs with size modifiers and additional paths
+  if (url.includes('riotpixels.net')) {
+    // First, remove any additional path after .jpg (like /screenshot.filename.jpg)
+    const pathMatch = url.match(/^(.+\.jpg(?:\.\w+)*)(?:\/.*)?$/)
+    if (pathMatch) {
+      url = pathMatch[1]
+    }
+
+    // Remove size modifiers: .240p.jpg, .480p.jpg, .1080p.jpg
+    // These appear as: filename.jpg.240p.jpg -> filename.jpg
+    url = url.replace(/\.240p\.jpg$/, '.jpg')
+    url = url.replace(/\.480p\.jpg$/, '.jpg')
+    url = url.replace(/\.1080p\.jpg$/, '.jpg')
+
+    // Also handle cases where the extension might be .jpg.jpg (double extension)
+    url = url.replace(/\.jpg\.jpg$/, '.jpg')
+
+    // Ensure HTTPS protocol
+    url = url.replace(/^http:/, 'https:')
+  }
+
+  // Handle other common image size modifiers (can be extended for other services)
+  // Remove common size patterns
+  url = url.replace(/_\d+x\d+\./g, '.') // Remove _1920x1080. patterns
+  url = url.replace(/-thumb\./g, '.') // Remove -thumb. patterns
+  url = url.replace(/-small\./g, '.') // Remove -small. patterns
+  url = url.replace(/-medium\./g, '.') // Remove -medium. patterns
+
+  return url
+}
+
 interface FormData {
   title: string
   category: string
@@ -599,12 +634,17 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
               <Input
                 value={screenshot}
                 onChange={(e) => {
+                  let cleanedUrl = e.target.value
+                  // Auto-clean RiotPixels URLs when user types or pastes
+                  if (cleanedUrl.includes('riotpixels.net')) {
+                    cleanedUrl = cleanScreenshotUrl(cleanedUrl)
+                  }
                   const updatedScreenshots = [...formData.screenshots]
-                  updatedScreenshots[index] = e.target.value
+                  updatedScreenshots[index] = cleanedUrl
                   setFormData({ ...formData, screenshots: updatedScreenshots })
                 }}
                 className="bg-gray-600 border-gray-500 text-white text-sm flex-1"
-                placeholder="Enter screenshot URL"
+                placeholder="Enter screenshot URL - RiotPixels URLs will be auto-cleaned for full resolution"
               />
               <Button
                 type="button"
