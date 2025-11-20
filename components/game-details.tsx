@@ -55,19 +55,25 @@ const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, p
 const cleanScreenshotUrl = (url: string): string => {
   if (!url) return url
 
-  // Handle RiotPixels URLs with size modifiers
+  // Handle RiotPixels URLs with size modifiers and additional paths
   if (url.includes('riotpixels.net')) {
-    // Remove .240p.jpg, .480p.jpg, .1080p.jpg extensions
+    // First, remove any additional path after .jpg (like /screenshot.filename.jpg)
+    const pathMatch = url.match(/^(.+\.jpg(?:\.\w+)*)(?:\/.*)?$/)
+    if (pathMatch) {
+      url = pathMatch[1]
+    }
+
+    // Remove size modifiers: .240p.jpg, .480p.jpg, .1080p.jpg
+    // These appear as: filename.jpg.240p.jpg -> filename.jpg
     url = url.replace(/\.240p\.jpg$/, '.jpg')
     url = url.replace(/\.480p\.jpg$/, '.jpg')
     url = url.replace(/\.1080p\.jpg$/, '.jpg')
 
-    // Remove additional path components like /screenshot.filename.jpg
-    // Match pattern: base.jpg/additional-path.jpg
-    const riotPixelsMatch = url.match(/^(.+\.jpg)\/[^\/]*$/)
-    if (riotPixelsMatch) {
-      url = riotPixelsMatch[1]
-    }
+    // Also handle cases where the extension might be .jpg.jpg (double extension)
+    url = url.replace(/\.jpg\.jpg$/, '.jpg')
+
+    // Ensure HTTPS protocol
+    url = url.replace(/^http:/, 'https:')
   }
 
   // Handle other common image size modifiers (can be extended for other services)

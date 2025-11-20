@@ -1001,6 +1001,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                     </SelectTrigger>
                     <SelectContent className="bg-gray-700 border-gray-600">
                       <SelectItem value="Black bullz">Black bullz</SelectItem>
+                      <SelectItem value="Black bullz(updated)">Black bullz(updated)</SelectItem>
                       <SelectItem value="Direct Link">Direct Link</SelectItem>
                       <SelectItem value="Update">Update</SelectItem>
                       <SelectItem value="Google Drive">Google Drive</SelectItem>
@@ -1037,7 +1038,8 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                           <SelectValue placeholder="Select actual cloud provider" />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-700 border-gray-600">
-                            <SelectItem value="Black bullz">Black bullz</SelectItem>                          
+                            <SelectItem value="Black bullz">Black bullz</SelectItem> 
+                            <SelectItem value="Black bullz(updated)">Black bullz(updated)</SelectItem>                         
                             <SelectItem value="Google Drive">Google Drive</SelectItem>
                             <SelectItem value="GoFile">GoFile</SelectItem>
                             <SelectItem value="MediaFire">MediaFire</SelectItem>
