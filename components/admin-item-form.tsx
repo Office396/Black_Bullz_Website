@@ -18,10 +18,13 @@ const cleanScreenshotUrl = (url: string): string => {
 
   // Handle RiotPixels URLs with size modifiers and additional paths
   if (url.includes('riotpixels.net')) {
-    // First, remove any additional path after .jpg (like /screenshot.filename.jpg)
-    const pathMatch = url.match(/^(.+\.jpg(?:\.\w+)*)(?:\/.*)?$/)
-    if (pathMatch) {
-      url = pathMatch[1]
+    // Find the last .jpg extension (which includes size modifiers like .480p.jpg)
+    const lastJpgIndex = url.lastIndexOf('.jpg')
+
+    // If there's a slash after the .jpg extension, remove everything after it
+    const slashAfterJpg = url.indexOf('/', lastJpgIndex)
+    if (slashAfterJpg !== -1) {
+      url = url.substring(0, slashAfterJpg)
     }
 
     // Remove size modifiers: .240p.jpg, .480p.jpg, .1080p.jpg
