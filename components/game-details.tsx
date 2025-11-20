@@ -51,8 +51,38 @@ const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, p
    )
  }
 
+// Function to clean screenshot URLs from RiotPixels and similar services
+const cleanScreenshotUrl = (url: string): string => {
+  if (!url) return url
+
+  // Handle RiotPixels URLs with size modifiers
+  if (url.includes('riotpixels.net')) {
+    // Remove .240p.jpg, .480p.jpg, .1080p.jpg extensions
+    url = url.replace(/\.240p\.jpg$/, '.jpg')
+    url = url.replace(/\.480p\.jpg$/, '.jpg')
+    url = url.replace(/\.1080p\.jpg$/, '.jpg')
+
+    // Remove additional path components like /screenshot.filename.jpg
+    // Match pattern: base.jpg/additional-path.jpg
+    const riotPixelsMatch = url.match(/^(.+\.jpg)\/[^\/]*$/)
+    if (riotPixelsMatch) {
+      url = riotPixelsMatch[1]
+    }
+  }
+
+  // Handle other common image size modifiers (can be extended for other services)
+  // Remove common size patterns
+  url = url.replace(/_\d+x\d+\./g, '.') // Remove _1920x1080. patterns
+  url = url.replace(/-thumb\./g, '.') // Remove -thumb. patterns
+  url = url.replace(/-small\./g, '.') // Remove -small. patterns
+  url = url.replace(/-medium\./g, '.') // Remove -medium. patterns
+
+  return url
+}
+
 // ScreenshotSkeleton component
 const ScreenshotSkeleton = ({ src, alt }: { src: string; alt: string }) => {
+  const cleanedSrc = cleanScreenshotUrl(src)
    const [isLoaded, setIsLoaded] = useState(false)
    const [hasError, setHasError] = useState(false)
 
@@ -93,7 +123,7 @@ const ScreenshotSkeleton = ({ src, alt }: { src: string; alt: string }) => {
          <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
            <div className="relative">
              <Image
-               src={src}
+               src={cleanedSrc}
                alt={`${alt} - Full Size`}
                width={1920}
                height={1080}
