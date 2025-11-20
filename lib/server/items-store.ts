@@ -117,10 +117,11 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate'>): Promis
 
     // Handle RiotPixels URLs with size modifiers and additional paths
     if (url.includes('riotpixels.net')) {
-      // First, remove any additional path after .jpg (like /screenshot.filename.jpg)
-      const pathMatch = url.match(/^(.+\.jpg(?:\.\w+)*)(?:\/.*)?$/)
-      if (pathMatch) {
-        url = pathMatch[1]
+      // Remove any additional path after .jpg first (like /screenshot.filename.jpg)
+      // This handles the complex case: filename.jpg.480p.jpg/screenshot.filename.jpg
+      const pathSeparatorIndex = url.indexOf('/', url.indexOf('riotpixels.net'))
+      if (pathSeparatorIndex !== -1) {
+        url = url.substring(0, pathSeparatorIndex)
       }
 
       // Remove size modifiers: .240p.jpg, .480p.jpg, .1080p.jpg
