@@ -1,55 +1,75 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTrigger, DialogClose } from "@/components/ui/dialog"
 import Image from "next/image"
 import Link from "next/link"
-import { Star, Download, Monitor, Smartphone, HardDrive, Cpu, MemoryStick, ArrowLeft, X } from "lucide-react"
+import { Star, Download, Monitor, Smartphone, HardDrive, Cpu, MemoryStick, ArrowLeft, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { createSurveyLink, createDownloadPage } from "@/lib/link-shortener"
 
 // ImageSkeleton component
 const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, priority }: { src: string; alt: string; className?: string; fill?: boolean; width?: number; height?: number; priority?: boolean }) => {
-   const [isLoaded, setIsLoaded] = useState(false)
-   const [hasError, setHasError] = useState(false)
+    const [isLoaded, setIsLoaded] = useState(false)
+    const [hasError, setHasError] = useState(false)
+    const [retryCount, setRetryCount] = useState(0)
 
-   return (
-     <div className={`relative overflow-hidden ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse rounded-lg' : ''} ${className}`}>
-       {!hasError && (
-         <Image
-           src={src}
-           alt={alt}
-           fill={fill}
-           width={fill ? undefined : width}
-           height={fill ? undefined : height}
-           className="object-cover transition-all duration-300 rounded-lg"
-           onLoad={() => setIsLoaded(true)}
-           onError={() => {
-             // Add timeout before showing error
-             setTimeout(() => {
-               setHasError(true)
-             }, 5000) // 5 seconds timeout
-           }}
-           priority={priority}
-         />
-       )}
-       {hasError && (
-         <div className={`w-full h-full flex items-center justify-center bg-gray-700 rounded-lg ${fill ? 'absolute inset-0' : ''}`}>
-           <div className="text-center text-gray-400">
-             <div className="w-8 h-8 mx-auto mb-2 opacity-50">
-               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-               </svg>
-             </div>
-             <p className="text-xs">Failed to load</p>
-           </div>
-         </div>
-       )}
-     </div>
-   )
- }
+    const handleImageError = () => {
+      console.log('Main image failed to load:', {
+        src,
+        retryCount,
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server'
+      })
+
+      if (retryCount < 1) {
+        setRetryCount(prev => prev + 1)
+        setTimeout(() => {
+          setHasError(true)
+        }, 2000)
+      } else {
+        setHasError(true)
+      }
+    }
+
+    return (
+      <div className={`relative overflow-hidden ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse rounded-lg' : ''} ${className}`}>
+        {!hasError && (
+          <Image
+            src={src}
+            alt={alt}
+            fill={fill}
+            width={fill ? undefined : width}
+            height={fill ? undefined : height}
+            className="object-cover transition-all duration-300 rounded-lg"
+            onLoad={() => setIsLoaded(true)}
+            onError={handleImageError}
+            priority={priority}
+            unoptimized={retryCount > 0}
+          />
+        )}
+        {hasError && (
+          <div className={`w-full h-full flex items-center justify-center bg-gray-700 rounded-lg ${fill ? 'absolute inset-0' : ''}`}>
+            <div className="text-center text-gray-400">
+              <div className="w-8 h-8 mx-auto mb-2 opacity-50">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-xs">Image unavailable</p>
+              <button
+                onClick={() => window.open(src, '_blank')}
+                className="text-xs text-blue-400 hover:text-blue-300 mt-1 underline"
+              >
+                Open externally
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
 // Function to clean screenshot URLs from RiotPixels and similar services
 const cleanScreenshotUrl = (url: string): string => {
@@ -96,62 +116,245 @@ const cleanScreenshotUrl = (url: string): string => {
 // ScreenshotSkeleton component
 const ScreenshotSkeleton = ({ src, alt }: { src: string; alt: string }) => {
   const cleanedSrc = cleanScreenshotUrl(src)
-    const [isLoaded, setIsLoaded] = useState(false)
-    const [hasError, setHasError] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
 
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <div className={`relative aspect-video cursor-pointer group overflow-hidden rounded-lg ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse' : ''}`}>
-            {!hasError && (
-              <Image
-                src={cleanedSrc}
-                alt={alt}
-                fill
-                className="object-cover transition-all duration-300 rounded-lg"
-                onLoad={() => setIsLoaded(true)}
-                onError={() => {
-                  // Add timeout before showing error
-                  setTimeout(() => {
-                    setHasError(true)
-                  }, 5000) // 5 seconds timeout
-                }}
-              />
-            )}
-            {hasError && (
-              <div className="w-full h-full flex items-center justify-center bg-gray-700 rounded-lg">
-                <div className="text-center text-gray-400">
-                  <div className="w-8 h-8 mx-auto mb-2 opacity-50">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <p className="text-xs">Failed to load</p>
+  // Add debugging for failed images
+  const handleImageError = () => {
+    console.log('Screenshot failed to load:', {
+      original: src,
+      cleaned: cleanedSrc,
+      retryCount,
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server'
+    })
+
+    if (retryCount < 2) {
+      // Retry with original URL after cleaning fails
+      setRetryCount(prev => prev + 1)
+      setTimeout(() => {
+        setHasError(true)
+      }, 1000) // Shorter timeout for retries
+    } else {
+      setHasError(true)
+    }
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <div className={`relative aspect-video cursor-pointer group overflow-hidden rounded-lg ${!isLoaded && !hasError ? 'bg-gray-700 animate-pulse' : ''}`}>
+          {!hasError && (
+            <Image
+              src={cleanedSrc}
+              alt={alt}
+              fill
+              className="object-cover transition-all duration-300 rounded-lg"
+              onLoad={() => setIsLoaded(true)}
+              onError={handleImageError}
+              unoptimized={retryCount > 0} // Try unoptimized on retry
+            />
+          )}
+          {hasError && (
+            <div className="w-full h-full flex items-center justify-center bg-gray-700 rounded-lg">
+              <div className="text-center text-gray-400">
+                <div className="w-8 h-8 mx-auto mb-2 opacity-50">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                 </div>
+                <p className="text-xs">Failed to load</p>
               </div>
-            )}
+            </div>
+          )}
+        </div>
+      </DialogTrigger>
+      {!hasError && (
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
+          <div className="relative">
+            <Image
+              src={cleanedSrc}
+              alt={`${alt} - Full Size`}
+              width={1920}
+              height={1080}
+              className="w-auto h-auto max-w-[90vw] max-h-[90vh] object-contain"
+              priority
+              unoptimized
+            />
+            <DialogClose className="absolute top-3 right-3 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
+              <X className="h-5 w-5" />
+            </DialogClose>
           </div>
-        </DialogTrigger>
-        {!hasError && (
-          <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
-            <div className="relative">
-              <Image
-                src={cleanedSrc}
-                alt={`${alt} - Full Size`}
-                width={1920}
-                height={1080}
-                className="w-auto h-auto max-w-[90vw] max-h-[90vh] object-contain"
-                priority
-              />
+        </DialogContent>
+      )}
+      {hasError && (
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/80 border-none flex items-center justify-center">
+          <div className="relative flex items-center justify-center min-h-[50vh] min-w-[50vw]">
+            <div className="text-center text-white">
+              <div className="w-16 h-16 mx-auto mb-4 opacity-50">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Screenshot Unavailable</h3>
+              <p className="text-gray-400 mb-4">This image could not be loaded due to external hosting restrictions.</p>
               <DialogClose className="absolute top-3 right-3 z-50 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110">
                 <X className="h-5 w-5" />
               </DialogClose>
             </div>
-          </DialogContent>
-        )}
-      </Dialog>
-    )
+          </div>
+        </DialogContent>
+      )}
+    </Dialog>
+  )
+}
+
+// Intelligent screenshot gallery with prev/next arrows, keyboard and swipe navigation
+const ScreenshotGallery = ({ screenshots, altPrefix = 'Screenshot' }: { screenshots: string[]; altPrefix?: string }) => {
+  const cleaned = (screenshots || []).map((s) => cleanScreenshotUrl(s)).filter(Boolean)
+  const [open, setOpen] = useState(false)
+  const [current, setCurrent] = useState(0)
+  const [showControls, setShowControls] = useState(true)
+  const [touchStartX, setTouchStartX] = useState<number | null>(null)
+  const idleTimer = useRef<any>(null)
+
+  const hasPrev = current > 0
+  const hasNext = current < cleaned.length - 1
+
+  const openAt = (idx: number) => {
+    setCurrent(idx)
+    setOpen(true)
+    setShowControls(true)
+    resetIdleTimer()
   }
+
+  const prev = () => {
+    if (hasPrev) setCurrent((i) => Math.max(0, i - 1))
+  }
+  const next = () => {
+    if (hasNext) setCurrent((i) => Math.min(cleaned.length - 1, i + 1))
+  }
+
+  const resetIdleTimer = () => {
+    if (idleTimer.current) window.clearTimeout(idleTimer.current)
+    // Respect reduced motion users by not auto-hiding too aggressively
+    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    idleTimer.current = window.setTimeout(() => setShowControls(!prefersReducedMotion && cleaned.length > 1 ? false : true), 2000)
+  }
+
+  useEffect(() => {
+    if (!open) return
+    setShowControls(true)
+    resetIdleTimer()
+    return () => {
+      if (idleTimer.current) window.clearTimeout(idleTimer.current)
+    }
+  }, [open, current])
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) return
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); resetIdleTimer() }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); next(); resetIdleTimer() }
+    else if (e.key === 'Home') { e.preventDefault(); setCurrent(0); resetIdleTimer() }
+    else if (e.key === 'End') { e.preventDefault(); setCurrent(cleaned.length - 1); resetIdleTimer() }
+  }
+
+  if (!cleaned.length) return null
+
+  return (
+    <>
+      {/* Thumbnails grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {cleaned.map((url, idx) => (
+          <button
+            key={idx}
+            onClick={() => openAt(idx)}
+            className="relative aspect-video overflow-hidden rounded-lg group focus:outline-none focus:ring-2 focus:ring-red-500"
+            aria-label={`${altPrefix} ${idx + 1}`}
+          >
+            <Image
+              src={url}
+              alt={`${altPrefix} ${idx + 1}`}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+          </button>
+        ))}
+      </div>
+
+      {/* Lightbox dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-fit h-fit p-0 bg-black/90 border-none flex items-center justify-center">
+          <div
+            className="relative select-none"
+            tabIndex={0}
+            onKeyDown={onKeyDown}
+            onMouseMove={() => { if (!showControls) setShowControls(true); resetIdleTimer() }}
+            onTouchStart={(e) => { setTouchStartX(e.changedTouches[0].clientX); setShowControls(true); resetIdleTimer() }}
+            onTouchEnd={(e) => {
+              if (touchStartX === null) return
+              const dx = e.changedTouches[0].clientX - touchStartX
+              if (Math.abs(dx) > 40) { dx > 0 ? prev() : next() }
+              setTouchStartX(null)
+              resetIdleTimer()
+            }}
+          >
+            <Image
+              src={cleaned[current]}
+              alt={`${altPrefix} ${current + 1} of ${cleaned.length}`}
+              width={1920}
+              height={1080}
+              className="w-auto h-auto max-w-[90vw] max-h-[90vh] object-contain"
+              priority
+              unoptimized
+            />
+
+            {/* Close button */}
+            <DialogClose className={`absolute top-3 right-3 z-50 rounded-full p-2 transition-all duration-200 bg-red-600 ${showControls ? 'opacity-100' : 'opacity-0'} hover:bg-red-700 text-white`}
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </DialogClose>
+
+            {/* Prev/Next arrows */}
+            {cleaned.length > 1 && (
+              <>
+                {hasPrev && (
+                  <button
+                    type="button"
+                    onClick={() => { prev(); resetIdleTimer() }}
+                    className={`absolute left-3 top-1/2 -translate-y-1/2 z-40 p-3 rounded-full text-white transition-opacity duration-200 ${showControls ? 'opacity-100' : 'opacity-0'} ${hasPrev ? 'bg-black/60 hover:bg-black/80' : 'bg-black/40 cursor-not-allowed opacity-30'}`}
+                    aria-label="Previous screenshot"
+                    disabled={!hasPrev}
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                )}
+                {hasNext && (
+                  <button
+                    type="button"
+                    onClick={() => { next(); resetIdleTimer() }}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 z-40 p-3 rounded-full text-white transition-opacity duration-200 ${showControls ? 'opacity-100' : 'opacity-0'} ${hasNext ? 'bg-black/60 hover:bg-black/80' : 'bg-black/40 cursor-not-allowed opacity-30'}`}
+                    aria-label="Next screenshot"
+                    disabled={!hasNext}
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* Index indicator */}
+            <div className={`absolute bottom-3 left-1/2 -translate-x-1/2 z-40 px-3 py-1 rounded-full text-white text-sm bg-black/60 transition-opacity duration-200 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+              {current + 1} / {cleaned.length}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
 
 interface GameDetailsProps {
   game: {
@@ -497,13 +700,10 @@ export function GameDetails({ game }: GameDetailsProps) {
             <CardTitle className="text-red-500">Screenshots</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {game.screenshots
-                .filter(url => typeof url === 'string' && url.trim())
-                .map((url, index) => (
-                  <ScreenshotSkeleton key={index} src={url} alt={`Screenshot ${index + 1}`} />
-                ))}
-            </div>
+            {(() => {
+              const filtered = game.screenshots.filter((url: any) => typeof url === 'string' && url.trim())
+              return <ScreenshotGallery screenshots={filtered} altPrefix={game?.title || 'Screenshot'} />
+            })()}
           </CardContent>
         </Card>
       )}
@@ -559,10 +759,10 @@ export function GameDetails({ game }: GameDetailsProps) {
                 <h3 className="text-white font-semibold text-lg">Choose Download Options:</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {(() => {
-                    // Define the priority order
-                    const priorityOrder = ['Direct Link', 'Google Drive', 'GoFile', 'MediaFire']
+                    // Define the priority order - Direct Link first, then others
+                    const priorityOrder = ['Direct Link', 'Google Drive', 'GoFile', 'MediaFire', 'Data Nodes', 'Fucking Fast']
 
-                    // Sort cloud downloads according to priority
+                    // Sort cloud downloads according to priority and sub-priority for Direct Links
                     const sortedCloudDownloads = gameData.cloudDownloads
                       .map((cloudDownload: any, index: number) => ({ cloudDownload, originalIndex: index }))
                       .filter((item: { cloudDownload: any; originalIndex: number }) => item.cloudDownload.cloudName !== "Update")
@@ -571,8 +771,31 @@ export function GameDetails({ game }: GameDetailsProps) {
                         const bName = b.cloudDownload.cloudName || ''
 
                         // Get priority index, default to high number for unknown providers
-                        const aPriority = priorityOrder.indexOf(aName)
-                        const bPriority = priorityOrder.indexOf(bName)
+                        let aPriority = priorityOrder.indexOf(aName)
+                        let bPriority = priorityOrder.indexOf(bName)
+
+                        // Special handling for Direct Link sub-priorities
+                        if (aName === 'Direct Link' && bName === 'Direct Link') {
+                          // Sub-priority for Direct Link providers
+                          const aProvider = a.cloudDownload.actualProvider || a.cloudDownload.customProvider || ''
+                          const bProvider = b.cloudDownload.actualProvider || b.cloudDownload.customProvider || ''
+
+                          // Black Bullz(Updated) has highest sub-priority (0)
+                          // Black Bullz has second highest sub-priority (1)
+                          // Others have lower priority (2)
+                          const getDirectLinkSubPriority = (provider: string) => {
+                            if (provider === 'Black bullz(Updated)' || provider === 'Black bullz(updated)') return 0
+                            if (provider === 'Black bullz') return 1
+                            return 2
+                          }
+
+                          const aSubPriority = getDirectLinkSubPriority(aProvider)
+                          const bSubPriority = getDirectLinkSubPriority(bProvider)
+
+                          if (aSubPriority !== bSubPriority) {
+                            return aSubPriority - bSubPriority
+                          }
+                        }
 
                         // If both are in priority list, sort by priority
                         if (aPriority !== -1 && bPriority !== -1) {

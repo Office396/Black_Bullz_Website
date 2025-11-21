@@ -197,13 +197,13 @@ export default function ContactPage() {
 
   const copyYoutubeToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText("@blackbullz")
+      await navigator.clipboard.writeText("@blackbullz-games")
       setCopiedYoutube(true)
       setTimeout(() => setCopiedYoutube(false), 2000)
     } catch (err) {
       // Fallback for older browsers
       const textArea = document.createElement("textarea")
-      textArea.value = "@blackbullz"
+      textArea.value = "@blackbullz-games"
       document.body.appendChild(textArea)
       textArea.focus()
       textArea.select()
@@ -329,29 +329,7 @@ export default function ContactPage() {
                           </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
-                        <Phone className="h-7 w-7 text-green-400" />
-                        <div className="flex-1">
-                          <p className="text-white font-medium">WhatsApp</p>
-                          <p className="text-gray-400 text-sm">+92 349 4081854</p>
-                        </div>
-                        <Button
-                          onClick={() => window.open("https://wa.me/923494081854?text=Hello%2C%20I%E2%80%99m%20interested%20in%20your%20services%21", "_blank")}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                          <Button
-                            onClick={copyPhoneToClipboard}
-                            size="sm"
-                            variant="outline"
-                            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500"
-                          >
-                            Copy {copiedPhone && <span className="text-green-400 ml-1">✓</span>}
-                          </Button>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
+                      {/* <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
                         <Facebook className="h-7 w-7 text-blue-400" />
                         <div className="flex-1">
                           <p className="text-white font-medium">Facebook</p>
@@ -372,8 +350,8 @@ export default function ContactPage() {
                           >
                             Copy {copiedFacebook && <span className="text-green-400 ml-1">✓</span>}
                           </Button>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
+                      </div> */}
+                      {/* <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
                         <Instagram className="h-7 w-7 text-pink-400" />
                         <div className="flex-1">
                           <p className="text-white font-medium">Instagram</p>
@@ -394,12 +372,12 @@ export default function ContactPage() {
                           >
                             Copy {copiedInstagram && <span className="text-green-400 ml-1">✓</span>}
                           </Button>
-                      </div>
+                      </div> */}
                       <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
                         <Youtube className="h-7 w-7 text-red-400" />
                         <div className="flex-1">
                           <p className="text-white font-medium">YouTube</p>
-                          <p className="text-gray-400 text-sm">@blackbullz</p>
+                          <p className="text-gray-400 text-sm">@blackbullz-games</p>
                         </div>
                         <Button
                           onClick={() => window.open("https://www.youtube.com/@unaffordablz?sub_confirmation=1", "_blank")}
@@ -449,7 +427,7 @@ export default function ContactPage() {
                         <p className="text-gray-400 text-sm">Contact for website development, partnerships</p>
                       </div>
                     </div>
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
+                      {/* <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
                         <Phone className="h-7 w-7 text-green-400" />
                         <div className="flex-1">
                           <p className="text-white font-medium">WhatsApp</p>
@@ -472,12 +450,12 @@ export default function ContactPage() {
                             Copy {copieddevPhone && <span className="text-green-400 ml-1">✓</span>}
                           </Button>
                         </div>
-                      </div>
+                      </div> */}
                       <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
                         <Mail className="h-7 w-7 text-red-400" />
                         <div className="flex-1">
                           <p className="text-white font-medium">Email</p>
-                          <p className="text-gray-400 text-sm">MTAStudios@gmail.com</p>
+                          <p className="text-gray-400 text-sm">MTAStudioscompany@gmail.com</p>
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -512,7 +490,7 @@ export default function ContactPage() {
 
             {/* Footer Credit */}
             <div className="text-right text-gray-500 text-m">
-              <p>Made by <span className="text-gray-400 font-medium">MTA Studios</span></p>
+              <p>Made by <span className="text-gray-400 font-bold">MTA Studios</span></p>
             </div>
           </main>
         </div>

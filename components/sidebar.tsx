@@ -197,7 +197,7 @@ export function Sidebar() {
             {/* How to downlaod games and softwares video */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-white text-lg">How to Downlaod games and softwares</CardTitle>
+          <CardTitle className="text-white text-lg">How to Download games and softwares</CardTitle>
         </CardHeader>
       </Card>
     </div>
