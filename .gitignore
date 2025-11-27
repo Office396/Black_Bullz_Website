@@ -25,15 +25,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# add node_modules ignore
-echo "node_modules/" >> .gitignore
-git add .gitignore
-git commit -m "Ignore node_modules" || true
-node_modules/
-.next/
-build/
-node_modules/
-.next/
-node_modules/
-.next/
