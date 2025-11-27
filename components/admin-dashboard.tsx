@@ -11,7 +11,8 @@ import { AdminSettings } from "@/components/admin-settings"
 import { AdminFeedback } from "@/components/admin-feedback"
 import { AdminTrendingManagement } from "@/components/admin-trending-management"
 import AdminSystemStatus from "@/components/admin-system-status"
-import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, TrendingUp, Menu } from "lucide-react"
+import AdminDetailsAutomation from "@/components/admin-details-automation"
+import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, TrendingUp, Menu, Workflow } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -136,6 +137,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <Plus className="h-4 w-4 mr-2" />
               Add New Item
             </TabsTrigger>
+            <TabsTrigger value="automation" className="data-[state=active]:bg-red-600 text-sm">
+              <Workflow className="h-4 w-4 mr-2" />
+              Details Automation
+            </TabsTrigger>
             <TabsTrigger value="trending" className="data-[state=active]:bg-red-600 text-sm">
               <TrendingUp className="h-4 w-4 mr-2" />
               Trending
@@ -193,6 +198,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <AdminItemForm />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="automation">
+            <AdminDetailsAutomation />
           </TabsContent>
 
           <TabsContent value="trending">

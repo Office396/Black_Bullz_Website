@@ -33,6 +33,8 @@ export interface Database {
               memory: string
               graphics: string
               storage: string
+              directx: string
+              sound_card: string
             }
           }
           android_requirements: {
@@ -74,6 +76,8 @@ export interface Database {
               memory: string
               graphics: string
               storage: string
+              directx: string
+              sound_card: string
             }
           }
           android_requirements?: {

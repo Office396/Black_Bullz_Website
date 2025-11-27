@@ -271,9 +271,9 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
 
   const updateDownloadLink = (cloudIndex: number, linkIndex: number, field: string, value: string) => {
     const updated = [...formData.cloudDownloads]
-    updated[cloudIndex].actualDownloadLinks[linkIndex] = { 
-      ...updated[cloudIndex].actualDownloadLinks[linkIndex], 
-      [field]: value 
+    updated[cloudIndex].actualDownloadLinks[linkIndex] = {
+      ...updated[cloudIndex].actualDownloadLinks[linkIndex],
+      [field]: value
     }
     setFormData({ ...formData, cloudDownloads: updated })
   }
@@ -291,7 +291,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
 
   // State for multi-link text input mode per cloud
   const [multiLinkMode, setMultiLinkMode] = useState<Record<number, boolean>>({})
-  const [multiLinkSections, setMultiLinkSections] = useState<Record<number, Array<{name: string, size: string, text: string}>>>({})
+  const [multiLinkSections, setMultiLinkSections] = useState<Record<number, Array<{ name: string, size: string, text: string }>>>({})
 
   // Initialize with one empty section when toggling on
   const handleToggleMultiLink = (cloudIndex: number, checked: boolean) => {
@@ -308,7 +308,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
   // Parse system requirements from text
   const parseSystemRequirements = useCallback((text: string) => {
     const lines = text.split("\n").map((line) => line.trim()).filter((line) => line.length > 0)
-    
+
     const requirements = {
       os: "",
       processor: "",
@@ -319,7 +319,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
 
     lines.forEach((line) => {
       const lowerLine = line.toLowerCase()
-      
+
       // OS detection
       if (lowerLine.includes("os:") || lowerLine.includes("operating system")) {
         requirements.os = line.replace(/^(os:|operating system:?)/i, "").trim()
@@ -348,7 +348,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
   // Apply parsed system requirements
   const handleApplySystemRequirements = useCallback(() => {
     const parsed = parseSystemRequirements(sysReqTextInput)
-    
+
     setFormData({
       ...formData,
       systemRequirements: {
@@ -363,7 +363,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
         },
       },
     })
-    
+
     setSysReqTextInput("")
     setSysReqTextMode(false)
   }, [formData, sysReqTextInput, parseSystemRequirements])
@@ -430,7 +430,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                 value={formData.category}
                 onValueChange={(value) => {
                   const updatedFormData = { ...formData, category: value }
-                  
+
                   // Auto-set MediaFire for Android Games
                   if (value === "Android Games" && formData.cloudDownloads[0]?.cloudName === "") {
                     updatedFormData.cloudDownloads = [{
@@ -438,7 +438,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                       cloudName: "MediaFire",
                     }]
                   }
-                  
+
                   setFormData(updatedFormData)
                 }}
               >
@@ -519,7 +519,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                 id="rating"
                 type="number"
                 min="1"
-                max="5"
+                max="10"
                 step="0.1"
                 value={formData.rating}
                 onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
@@ -709,7 +709,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                   className="bg-gray-700 border-gray-500 text-white text-sm min-h-[150px]"
                 />
                 <p className="text-gray-300 text-xs">Supported keywords: OS, Operating System, Processor, CPU, Memory, RAM, Graphics, GPU, Video Card, Storage, Disk Space, Hard Drive</p>
-                
+
                 <div className="flex gap-2">
                   <Button
                     type="button"
@@ -801,7 +801,7 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                     className="bg-gray-600 border-gray-500 text-white text-sm"
                   />
                 </div>
-                <div className="md:col-span-2">
+                <div>
                   <Label className="text-white text-sm md:text-base">Storage</Label>
                   <Input
                     value={formData.systemRequirements.recommended.storage}
@@ -811,6 +811,38 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                         systemRequirements: {
                           ...formData.systemRequirements,
                           recommended: { ...formData.systemRequirements.recommended, storage: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white text-sm md:text-base">DirectX</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.directx || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, directx: e.target.value },
+                        },
+                      })
+                    }
+                    className="bg-gray-600 border-gray-500 text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white text-sm md:text-base">Sound Card</Label>
+                  <Input
+                    value={formData.systemRequirements.recommended.sound_card || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        systemRequirements: {
+                          ...formData.systemRequirements,
+                          recommended: { ...formData.systemRequirements.recommended, sound_card: e.target.value },
                         },
                       })
                     }
@@ -1081,26 +1113,26 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                           <SelectValue placeholder="Select actual cloud provider" />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-700 border-gray-600">
-                            <SelectItem value="Black bullz">Black bullz</SelectItem> 
-                            <SelectItem value="Black bullz(updated)">Black bullz(updated)</SelectItem>                         
-                            <SelectItem value="Google Drive">Google Drive</SelectItem>
-                            <SelectItem value="GoFile">GoFile</SelectItem>
-                            <SelectItem value="MediaFire">MediaFire</SelectItem>
-                            <SelectItem value="MEGA UP">MEGA UP</SelectItem>
-                            <SelectItem value="Dropbox">Dropbox</SelectItem>
-                            <SelectItem value="pCloud">pCloud</SelectItem>
-                            <SelectItem value="DDownload">DDownload</SelectItem>
-                            <SelectItem value="RANOZ">RANOZ</SelectItem>
-                            <SelectItem value="MEGA">MEGA</SelectItem>
-                            <SelectItem value="Upload-Haven">Upload-Haven</SelectItem>
-                            <SelectItem value="Multi-up">Multi-up</SelectItem>
-                            <SelectItem value="RapidGator">RapidGator</SelectItem>
-                            <SelectItem value="Data Nodes">Data Nodes</SelectItem>
-                            <SelectItem value="Pixel Drain">Pixel Drain</SelectItem>
-                            <SelectItem value="Viking File">Viking File</SelectItem>
-                            <SelectItem value="Fucking Fast">Fucking Fast</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
+                          <SelectItem value="Black bullz">Black bullz</SelectItem>
+                          <SelectItem value="Black bullz(updated)">Black bullz(updated)</SelectItem>
+                          <SelectItem value="Google Drive">Google Drive</SelectItem>
+                          <SelectItem value="GoFile">GoFile</SelectItem>
+                          <SelectItem value="MediaFire">MediaFire</SelectItem>
+                          <SelectItem value="MEGA UP">MEGA UP</SelectItem>
+                          <SelectItem value="Dropbox">Dropbox</SelectItem>
+                          <SelectItem value="pCloud">pCloud</SelectItem>
+                          <SelectItem value="DDownload">DDownload</SelectItem>
+                          <SelectItem value="RANOZ">RANOZ</SelectItem>
+                          <SelectItem value="MEGA">MEGA</SelectItem>
+                          <SelectItem value="Upload-Haven">Upload-Haven</SelectItem>
+                          <SelectItem value="Multi-up">Multi-up</SelectItem>
+                          <SelectItem value="RapidGator">RapidGator</SelectItem>
+                          <SelectItem value="Data Nodes">Data Nodes</SelectItem>
+                          <SelectItem value="Pixel Drain">Pixel Drain</SelectItem>
+                          <SelectItem value="Viking File">Viking File</SelectItem>
+                          <SelectItem value="Fucking Fast">Fucking Fast</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
                       </Select>
                     </div>
                   )}
