@@ -55,32 +55,31 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
     fetchItems()
   }, [])
 
-  // Calculate download links count for each item
-  const itemsWithDownloadCount = useMemo(() => {
+  // Calculate cloud providers count for each item
+  const itemsWithCloudCount = useMemo(() => {
     return items.map(item => {
-      const downloadCount = item.cloudDownloads?.reduce((total: number, cloud: any) =>
-        total + (cloud.actualDownloadLinks?.length || 0), 0) || 0
-      return { ...item, downloadCount }
+      const cloudCount = item.cloudDownloads?.length || 0
+      return { ...item, cloudCount }
     })
   }, [items])
 
   // Global search across all items
   const globalFilteredItems = useMemo(() => {
-    if (!globalSearch?.trim()) return itemsWithDownloadCount
+    if (!globalSearch?.trim()) return itemsWithCloudCount
 
     const searchTerm = globalSearch.toLowerCase()
-    return itemsWithDownloadCount.filter((item) =>
+    return itemsWithCloudCount.filter((item) =>
       item.title?.toLowerCase().includes(searchTerm) ||
       item.category?.toLowerCase().includes(searchTerm) ||
       item.developer?.toLowerCase().includes(searchTerm) ||
       item.description?.toLowerCase().includes(searchTerm) ||
       item.size?.toLowerCase().includes(searchTerm)
     )
-  }, [itemsWithDownloadCount, globalSearch])
+  }, [itemsWithCloudCount, globalSearch])
 
   // Category and search filtering
   const filteredItems = useMemo(() => {
-    let filtered = itemsWithDownloadCount
+    let filtered = itemsWithCloudCount
 
     // Apply category filter
     if (activeTab !== "all") {
@@ -104,9 +103,9 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
       )
     }
 
-    // Sort items by download count (0 first, then ascending)
-    return filtered.sort((a: any, b: any) => a.downloadCount - b.downloadCount)
-  }, [itemsWithDownloadCount, globalSearch, activeTab])
+    // Sort items by cloud providers count (lowest first, then ascending)
+    return filtered.sort((a: any, b: any) => a.cloudCount - b.cloudCount)
+  }, [itemsWithCloudCount, globalSearch, activeTab])
 
   // Pagination
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
@@ -203,11 +202,11 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
   return (
     <div className="space-y-4">
       {/* Category filter tabs */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-1 sm:gap-2 mb-4">
         {tabs.map((tab) => {
           const count = tab.id === "all"
-            ? itemsWithDownloadCount.length
-            : itemsWithDownloadCount.filter((item) => {
+            ? itemsWithCloudCount.length
+            : itemsWithCloudCount.filter((item) => {
                 const categoryMap: Record<string, string> = {
                   "pc-games": "PC Games",
                   "android-games": "Android Games",
@@ -223,13 +222,16 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
                 setCurrentPage(1)
               }}
               variant={activeTab === tab.id ? "default" : "outline"}
+              size="sm"
               className={`${
                 activeTab === tab.id
                   ? "bg-red-600 hover:bg-red-700 text-white"
                   : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-              }`}
+              } text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 flex-shrink-0`}
             >
-              {tab.label} ({count})
+              <span className="hidden xs:inline">{tab.label}</span>
+              <span className="xs:hidden">{tab.label.split(' ')[0]}</span>
+              <span className="ml-1">({count})</span>
             </Button>
           )
         })}
@@ -241,72 +243,87 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
         {globalSearch && ` (filtered from ${items.length} total)`}
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-3 md:gap-4">
         {paginatedItems.map((item) => (
           <Card key={item.id} className="bg-gray-700 border-gray-600">
-            <CardContent className="p-4">
-              <div className="flex gap-4">
+            <CardContent className="p-3 md:p-4">
+              <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                 <Image
                   src={item.image || "/placeholder.svg"}
                   alt={item.title}
-                  width={80}
-                  height={80}
-                  className="rounded-lg object-cover"
+                  width={70}
+                  height={70}
+                  className="rounded-lg object-cover flex-shrink-0 mx-auto sm:mx-0"
                 />
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-white font-semibold text-lg">{item.title}</h3>
-                      <p className="text-gray-400 text-sm">{item.developer}</p>
+                <div className="flex-1 space-y-2 min-w-0">
+                  {/* Title and badges row */}
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-white font-semibold text-base md:text-lg truncate">{item.title}</h3>
+                      <p className="text-gray-400 text-sm truncate">{item.developer}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-red-600 text-white">{item.category}</Badge>
-                      {item.trending && (
-                        <Badge className="bg-orange-600 text-white flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          Trending
-                        </Badge>
-                      )}
-                      {item.latest && (
-                        <Badge className="bg-green-600 text-white flex items-center gap-1">
-                          <Star className="h-3 w-3" />
-                          Latest
-                        </Badge>
-                      )}
-                      <div className="flex gap-1">
-                        <Button
-                          onClick={() => window.open(`/game/${item.id}`, "_blank")}
-                          size="sm"
-                          variant="outline"
-                          className="bg-gray-600 border-gray-500 text-gray-300"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleEdit(item)}
-                          size="sm"
-                          variant="outline"
-                          className="bg-gray-600 border-gray-500 text-blue-400"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleDelete(item.id)}
-                          size="sm"
-                          variant="outline"
-                          className="bg-gray-600 border-gray-500 text-red-400"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-shrink-0">
+                      <Badge className="bg-red-600 text-white text-xs self-start sm:self-center">{item.category}</Badge>
+                      <div className="flex gap-1 flex-shrink-0">
+                        {item.trending && (
+                          <Badge className="bg-orange-600 text-white flex items-center gap-1 text-xs">
+                            <TrendingUp className="h-2.5 w-2.5" />
+                            <span className="hidden sm:inline">Trending</span>
+                          </Badge>
+                        )}
+                        {item.latest && (
+                          <Badge className="bg-green-600 text-white flex items-center gap-1 text-xs">
+                            <Star className="h-2.5 w-2.5" />
+                            <span className="hidden sm:inline">Latest</span>
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2 justify-end sm:justify-start">
+                    <Button
+                      onClick={() => window.open(`/game/${item.id}`, "_blank")}
+                      size="sm"
+                      variant="outline"
+                      className="bg-gray-600 border-gray-500 text-gray-300 px-2 md:px-3"
+                      title="View"
+                    >
+                      <Eye className="h-3 w-3 md:h-4 md:w-4" />
+                      <span className="hidden sm:inline ml-1">View</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleEdit(item)}
+                      size="sm"
+                      variant="outline"
+                      className="bg-gray-600 border-gray-500 text-blue-400 px-2 md:px-3"
+                      title="Edit"
+                    >
+                      <Edit className="h-3 w-3 md:h-4 md:w-4" />
+                      <span className="hidden sm:inline ml-1">Edit</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleDelete(item.id)}
+                      size="sm"
+                      variant="outline"
+                      className="bg-gray-600 border-gray-500 text-red-400 px-2 md:px-3"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
+                      <span className="hidden sm:inline ml-1">Delete</span>
+                    </Button>
+                  </div>
+
+                  {/* Description */}
                   <p className="text-gray-300 text-sm line-clamp-2">{item.description}</p>
-                  <div className="flex items-center gap-4 text-xs text-gray-400">
+
+                  {/* Bottom info */}
+                  <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-gray-400">
                     <span>Size: {item.size}</span>
                     <span>Rating: {item.rating}/5</span>
-                    <span>Downloads: {item.downloadCount}</span>
-                    <span>Added: {item.uploadDate ? new Date(item.uploadDate).toLocaleDateString() : new Date(item.id).toLocaleDateString()}</span>
+                    <span>Clouds: {item.cloudCount}</span>
+                    <span className="hidden sm:inline">Added: {item.uploadDate ? new Date(item.uploadDate).toLocaleDateString() : new Date(item.id).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
@@ -317,48 +334,55 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-8">
-          <div className="flex items-center space-x-2">
+        <div className="flex justify-center mt-6 md:mt-8">
+          <div className="flex items-center gap-1 md:gap-2">
             <Button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+              size="sm"
+              className="px-2 md:px-3 py-1 md:py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 text-xs md:text-sm"
             >
-              Previous
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Prev</span>
             </Button>
 
             {/* Page numbers */}
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              let pageNum
-              if (totalPages <= 5) {
-                pageNum = i + 1
-              } else if (currentPage <= 3) {
-                pageNum = i + 1
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i
-              } else {
-                pageNum = currentPage - 2 + i
-              }
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                let pageNum
+                if (totalPages <= 5) {
+                  pageNum = i + 1
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i
+                } else {
+                  pageNum = currentPage - 2 + i
+                }
 
-              return (
-                <Button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`px-3 py-2 rounded-lg transition-colors ${
-                    currentPage === pageNum ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
-                  }`}
-                >
-                  {pageNum}
-                </Button>
-              )
-            })}
+                return (
+                  <Button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    size="sm"
+                    className={`px-2 md:px-3 py-1 md:py-2 rounded-lg transition-colors text-xs md:text-sm ${
+                      currentPage === pageNum ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
+                    }`}
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              })}
+            </div>
 
             <Button
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+              size="sm"
+              className="px-2 md:px-3 py-1 md:py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 text-xs md:text-sm"
             >
-              Next
+              <span className="hidden sm:inline">Next</span>
+              <span className="sm:hidden">Next</span>
             </Button>
           </div>
         </div>
@@ -366,8 +390,9 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
 
       {/* Page info */}
       {totalPages > 1 && (
-        <div className="text-center text-sm text-gray-400 mt-4">
-          Page {currentPage} of {totalPages} ({filteredItems.length} total items)
+        <div className="text-center text-xs md:text-sm text-gray-400 mt-3 md:mt-4">
+          <span className="hidden sm:inline">Page {currentPage} of {totalPages} ({filteredItems.length} total items)</span>
+          <span className="sm:hidden">{currentPage}/{totalPages} ({filteredItems.length})</span>
         </div>
       )}
     </div>

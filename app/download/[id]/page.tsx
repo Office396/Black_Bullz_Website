@@ -229,16 +229,16 @@ export default function DownloadPage() {
     <div className="min-h-screen bg-gray-900 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
-          {cloudData?.cloudName && (
-            <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
-              <p className="text-blue-300 text-sm">
-                <strong>Cloud Provider:</strong> {cloudData.customProvider || cloudData.actualProvider || cloudData.cloudName}
-              </p>
-              <p className="text-blue-200 text-xs mt-1">
-                These links are hosted on {cloudData.customProvider || cloudData.actualProvider || cloudData.cloudName}. Please follow their terms of service.
-              </p>
-            </div>
-          )}
+        {cloudData?.cloudName && (
+          <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
+            <p className="text-blue-300 text-sm">
+              <strong>Cloud Provider:</strong> {cloudData.customProvider || cloudData.actualProvider || cloudData.cloudName}
+            </p>
+            <p className="text-blue-200 text-xs mt-1">
+              These links are hosted on {cloudData.customProvider || cloudData.actualProvider || cloudData.cloudName}. Please follow their terms of service.
+            </p>
+          </div>
+        )}
 
         {/* Download Links */}
         <Card className="bg-gray-800 border-gray-700 mb-6">
@@ -323,7 +323,7 @@ export default function DownloadPage() {
                       <li className="flex items-start gap-2">
                         <span className="text-blue-400 text-xl">•</span>
                         <span className="text-lg">Every part is available but there is for some games their part number are incorrect</span>
-                      </li>                     
+                      </li>
                       <li className="flex items-start gap-2">
                         <span className="text-blue-400 text-xl">•</span>
                         <span className="text-lg">Rar password: {downloadPage.rarPassword || "www.ovagames.com"}</span>

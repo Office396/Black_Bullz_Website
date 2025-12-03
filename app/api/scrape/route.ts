@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
+import { GameDetailsScraper } from '@/lib/scrapers/ova-scraper';
+import { IMDbGameScraper } from '@/lib/scrapers/imdb-scraper';
+import { GameDataExtractor } from '@/lib/scrapers/fitgirl-scraper';
 
-const execFileAsync = promisify(execFile);
+// Set runtime to nodejs for web scraping on Vercel
+export const runtime = 'nodejs';
+export const maxDuration = 60; // Maximum execution time for Vercel serverless functions
 
 export async function POST(request: NextRequest) {
     try {
@@ -27,10 +29,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Path to Python wrapper scripts
-        const scriptsDir = path.join(process.cwd(), 'Automation of PC games details');
+        // Initialize scrapers
+        const ovaScraper = new GameDetailsScraper();
+        const imdbScraper = new IMDbGameScraper();
+        const fitgirlScraper = new GameDataExtractor();
 
-        // Scrape data from all sources
+        // Scrape data from all sources with timeout handling
         const results = [];
 
         for (let i = 0; i < maxUrls; i++) {
@@ -41,36 +45,58 @@ export async function POST(request: NextRequest) {
                 imdb: null
             };
 
-            // Scrape OvaGames
+            // Scrape OvaGames with timeout
             if (ovagamesUrls[i]) {
                 try {
-                    gameData.ovagames = await scrapeOvaGames(scriptsDir, ovagamesUrls[i]);
+                    console.log(`Scraping OvaGames: ${ovagamesUrls[i]}`);
+                    gameData.ovagames = await Promise.race([
+                        ovaScraper.scrapeGame(ovagamesUrls[i]),
+                        new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Timeout')), 30000)
+                        )
+                    ]);
                 } catch (error) {
                     console.error(`Error scraping OvaGames URL ${i}:`, error);
+                    gameData.ovagames = null;
                 }
             }
 
-            // Scrape FitGirl
+            // Scrape FitGirl with timeout
             if (fitgirlUrls[i]) {
                 try {
-                    gameData.fitgirl = await scrapeFitGirl(scriptsDir, fitgirlUrls[i]);
+                    console.log(`Scraping FitGirl: ${fitgirlUrls[i]}`);
+                    gameData.fitgirl = await Promise.race([
+                        fitgirlScraper.extractFitgirlData(fitgirlUrls[i]),
+                        new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Timeout')), 30000)
+                        )
+                    ]);
                 } catch (error) {
                     console.error(`Error scraping FitGirl URL ${i}:`, error);
+                    gameData.fitgirl = null;
                 }
             }
 
-            // Scrape IMDB
+            // Scrape IMDB with timeout
             if (imdbUrls[i]) {
                 try {
-                    gameData.imdb = await scrapeIMDB(scriptsDir, imdbUrls[i]);
+                    console.log(`Scraping IMDB: ${imdbUrls[i]}`);
+                    gameData.imdb = await Promise.race([
+                        imdbScraper.scrapeGameDetails(imdbUrls[i]),
+                        new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Timeout')), 30000)
+                        )
+                    ]);
                 } catch (error) {
                     console.error(`Error scraping IMDB URL ${i}:`, error);
+                    gameData.imdb = null;
                 }
             }
 
             results.push(gameData);
         }
 
+        console.log(`Successfully scraped ${results.length} games`);
         return NextResponse.json({ success: true, data: results });
     } catch (error) {
         console.error('Scraping error:', error);
@@ -78,80 +104,5 @@ export async function POST(request: NextRequest) {
             { error: 'Failed to scrape game data', details: (error as Error).message },
             { status: 500 }
         );
-    }
-}
-
-async function scrapeOvaGames(scriptsDir: string, url: string) {
-    const scriptPath = path.join(scriptsDir, 'ova_scraper_wrapper.py');
-
-    try {
-        const { stdout, stderr } = await execFileAsync('python', [scriptPath, url], {
-            timeout: 30000 // 30 second timeout
-        });
-
-        if (stderr) {
-            console.warn(`OvaGames stderr: ${stderr}`);
-        }
-
-        try {
-            const data = JSON.parse(stdout);
-            return data;
-        } catch (parseError) {
-            console.error('OvaGames JSON parse error:', parseError);
-            console.error('OvaGames stdout:', stdout);
-            throw new Error(`Failed to parse JSON output: ${(parseError as Error).message}. Stdout: ${stdout.substring(0, 200)}...`);
-        }
-    } catch (error) {
-        throw new Error(`OvaGames scraping failed: ${(error as Error).message}`);
-    }
-}
-
-async function scrapeFitGirl(scriptsDir: string, url: string) {
-    const scriptPath = path.join(scriptsDir, 'fitgirl_scraper_wrapper.py');
-
-    try {
-        const { stdout, stderr } = await execFileAsync('python', [scriptPath, url], {
-            timeout: 30000
-        });
-
-        if (stderr) {
-            console.warn(`FitGirl stderr: ${stderr}`);
-        }
-
-        try {
-            const data = JSON.parse(stdout);
-            return data;
-        } catch (parseError) {
-            console.error('FitGirl JSON parse error:', parseError);
-            console.error('FitGirl stdout:', stdout);
-            throw new Error(`Failed to parse JSON output: ${(parseError as Error).message}. Stdout: ${stdout.substring(0, 200)}...`);
-        }
-    } catch (error) {
-        throw new Error(`FitGirl scraping failed: ${(error as Error).message}`);
-    }
-}
-
-async function scrapeIMDB(scriptsDir: string, url: string) {
-    const scriptPath = path.join(scriptsDir, 'imdb_scraper_wrapper.py');
-
-    try {
-        const { stdout, stderr } = await execFileAsync('python', [scriptPath, url], {
-            timeout: 30000
-        });
-
-        if (stderr) {
-            console.warn(`IMDB stderr: ${stderr}`);
-        }
-
-        try {
-            const data = JSON.parse(stdout);
-            return data;
-        } catch (parseError) {
-            console.error('IMDB JSON parse error:', parseError);
-            console.error('IMDB stdout:', stdout);
-            throw new Error(`Failed to parse JSON output: ${(parseError as Error).message}. Stdout: ${stdout.substring(0, 200)}...`);
-        }
-    } catch (error) {
-        throw new Error(`IMDB scraping failed: ${(error as Error).message}`);
     }
 }

@@ -226,16 +226,16 @@ export default function ContactPage() {
         backgroundRepeat: 'no-repeat'
       }}>
       <Header />
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex gap-6 justify-center">
-          <main className="flex-1 max-w-4xl">
-            <div className="space-y-6">
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-white mb-2">Contact Us</h1>
-                <p className="text-gray-400">Get in touch with our team</p>
+      <div className="container mx-auto px-4 py-4 md:py-6">
+        <div className="flex justify-center">
+          <main className="w-full max-w-6xl">
+            <div className="space-y-4 md:space-y-6">
+              <div className="text-center px-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Contact Us</h1>
+                <p className="text-gray-400 text-sm md:text-base">Get in touch with our team</p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 {/* Contact Form */}
                 <Card className="bg-gray-800 border-gray-700">
                   <CardHeader>
@@ -252,7 +252,7 @@ export default function ContactPage() {
                           placeholder="Your Name"
                           value={formData.name}
                           onChange={handleChange}
-                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm md:text-base h-10 md:h-11"
                           required
                         />
                       </div>
@@ -263,7 +263,7 @@ export default function ContactPage() {
                           placeholder="Your Email"
                           value={formData.email}
                           onChange={handleChange}
-                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm md:text-base h-10 md:h-11"
                           required
                         />
                       </div>
@@ -273,7 +273,7 @@ export default function ContactPage() {
                           placeholder="Subject"
                           value={formData.subject}
                           onChange={handleChange}
-                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm md:text-base h-10 md:h-11"
                           required
                         />
                       </div>
@@ -283,12 +283,12 @@ export default function ContactPage() {
                           placeholder="Your Message"
                           value={formData.message}
                           onChange={handleChange}
-                          rows={5}
-                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                          rows={4}
+                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm md:text-base min-h-[100px] md:min-h-[120px]"
                           required
                         />
                       </div>
-                      <Button type="submit" className="w-full bg-red-600 hover:bg-red-700" disabled={isSubmitting}>
+                      <Button type="submit" className="w-full bg-red-600 hover:bg-red-700 h-10 md:h-11 text-sm md:text-base font-medium" disabled={isSubmitting}>
                         {isSubmitting ? "Sending..." : "Send Message"}
                       </Button>
                     </form>
@@ -305,25 +305,27 @@ export default function ContactPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
-                        <Mail className="h-7 w-7 text-red-400" />
-                        <div className="flex-1">
-                          <p className="text-white font-medium">Email</p>
-                          <p className="text-gray-400 text-sm">blackbullzweb@gmail.com</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
+                        <div className="flex items-center gap-3 flex-1">
+                          <Mail className="h-6 w-6 md:h-7 md:w-7 text-red-400 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white font-medium text-sm md:text-base">Email</p>
+                            <p className="text-gray-400 text-xs md:text-sm break-all">blackbullzweb@gmail.com</p>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-shrink-0">
                           <Button
                             onClick={() => window.open("https://mail.google.com/mail/?view=cm&fs=1&to=blackbullzweb@gmail.com&su=Problem%20With%20BlackBullz&body=I%20got%20problem%20with%20BlackBullz", "_blank")}
                             size="sm"
-                            className="bg-red-600 hover:bg-red-700 text-white"
+                            className="bg-red-600 hover:bg-red-700 text-white px-2 md:px-3"
                           >
-                            <Mail className="h-4 w-4" />
+                            <Mail className="h-3 w-3 md:h-4 md:w-4" />
                           </Button>
                           <Button
                             onClick={copyEmailToClipboard}
                             size="sm"
                             variant="outline"
-                            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500"
+                            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 px-2 md:px-3 text-xs md:text-sm"
                           >
                             Copy {copiedEmail && <span className="text-green-400 ml-1">✓</span>}
                           </Button>
@@ -373,27 +375,31 @@ export default function ContactPage() {
                             Copy {copiedInstagram && <span className="text-green-400 ml-1">✓</span>}
                           </Button>
                       </div> */}
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
-                        <Youtube className="h-7 w-7 text-red-400" />
-                        <div className="flex-1">
-                          <p className="text-white font-medium">YouTube</p>
-                          <p className="text-gray-400 text-sm">@blackbullz-games</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
+                        <div className="flex items-center gap-3 flex-1">
+                          <Youtube className="h-6 w-6 md:h-7 md:w-7 text-red-400 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white font-medium text-sm md:text-base">YouTube</p>
+                            <p className="text-gray-400 text-xs md:text-sm break-all">@blackbullz-games</p>
+                          </div>
                         </div>
-                        <Button
-                          onClick={() => window.open("https://www.youtube.com/@unaffordablz?sub_confirmation=1", "_blank")}
-                          size="sm"
-                          className="bg-red-600 hover:bg-red-700 text-white"
-                        >
-                          <Youtube className="h-4 w-4" />
-                        </Button>
-                            <Button
+                        <div className="flex gap-2 flex-shrink-0">
+                          <Button
+                            onClick={() => window.open("https://www.youtube.com/@unaffordablz?sub_confirmation=1", "_blank")}
+                            size="sm"
+                            className="bg-red-600 hover:bg-red-700 text-white px-2 md:px-3"
+                          >
+                            <Youtube className="h-3 w-3 md:h-4 md:w-4" />
+                          </Button>
+                          <Button
                             onClick={copyYoutubeToClipboard}
                             size="sm"
                             variant="outline"
-                            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500"
+                            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 px-2 md:px-3 text-xs md:text-sm"
                           >
                             Copy {copiedYoutube && <span className="text-green-400 ml-1">✓</span>}
                           </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -409,22 +415,24 @@ export default function ContactPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold text-white mb-3">
+                  <div className="text-center px-2">
+                    <h3 className="text-lg md:text-xl font-semibold text-white mb-3">
                       Interested in Similar Website Development?
                     </h3>
-                    <p className="text-gray-300 mb-6 leading-relaxed">
+                    <p className="text-gray-300 mb-4 md:mb-6 leading-relaxed text-sm md:text-base px-2">
                       If you're interested in this website or want to develop a similar gaming/software download platform, business partnerships, custom development, or any related inquiries, feel free to contact us. We're always open to new opportunities and collaborations.
                     </p>
                   </div>
 
                   {/* Development Contact */}
-                  <div className="bg-gray-700 p-4 rounded-lg border border-gray-600">
-                    <div className="flex items-center gap-3 mb-4">
-                      <MessageSquare className="h-7 w-7 text-blue-400" />
-                      <div className="flex-1">
-                        <p className="text-white font-medium">MTA Studios Development & Business Inquiries</p>
-                        <p className="text-gray-400 text-sm">Contact for website development, partnerships</p>
+                  <div className="bg-gray-700 p-3 md:p-4 rounded-lg border border-gray-600">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+                      <div className="flex items-center gap-3 flex-1">
+                        <MessageSquare className="h-6 w-6 md:h-7 md:w-7 text-blue-400 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-white font-medium text-sm md:text-base">MTA Studios Development & Business Inquiries</p>
+                          <p className="text-gray-400 text-xs md:text-sm">Contact for website development, partnerships</p>
+                        </div>
                       </div>
                     </div>
                       {/* <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
@@ -451,25 +459,27 @@ export default function ContactPage() {
                           </Button>
                         </div>
                       </div> */}
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
-                        <Mail className="h-7 w-7 text-red-400" />
-                        <div className="flex-1">
-                          <p className="text-white font-medium">Email</p>
-                          <p className="text-gray-400 text-sm">MTAStudioscompany@gmail.com</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition-colors">
+                        <div className="flex items-center gap-3 flex-1">
+                          <Mail className="h-6 w-6 md:h-7 md:w-7 text-red-400 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white font-medium text-sm md:text-base">Email</p>
+                            <p className="text-gray-400 text-xs md:text-sm break-all">MTAStudioscompany@gmail.com</p>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-shrink-0">
                           <Button
                             onClick={() => window.open("https://mail.google.com/mail/?view=cm&fs=1&to=MTStudios@gmail.com&su=About%20Website%20Development&body=I%20got%20Interested%20in%20your%20Website%20Development%20Services.%20Please%20let%20me%20know%20more", "_blank")}
                             size="sm"
-                            className="bg-red-600 hover:bg-red-700 text-white"
+                            className="bg-red-600 hover:bg-red-700 text-white px-2 md:px-3"
                           >
-                            <Mail className="h-4 w-4" />
+                            <Mail className="h-3 w-3 md:h-4 md:w-4" />
                           </Button>
                           <Button
                             onClick={copyDEVEmailToClipboard}
                             size="sm"
                             variant="outline"
-                            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500"
+                            className="bg-gray-600 border-gray-500 text-white hover:bg-gray-500 px-2 md:px-3 text-xs md:text-sm"
                           >
                             Copy {copieddevEmail && <span className="text-green-400 ml-1">✓</span>}
                           </Button>
@@ -479,8 +489,8 @@ export default function ContactPage() {
                   </div>
 
                   {/* Note */}
-                  <div className="bg-blue-900/20 border border-blue-600 p-4 rounded-lg">
-                    <p className="text-blue-300 text-sm">
+                  <div className="bg-blue-900/20 border border-blue-600 p-3 md:p-4 rounded-lg">
+                    <p className="text-blue-300 text-xs md:text-sm leading-relaxed">
                       <strong>Note:</strong> For general game/software download questions, use the contact form above or the main contact information. This section is specifically for website development and business inquiries.
                     </p>
                   </div>
@@ -489,7 +499,7 @@ export default function ContactPage() {
             </div>
 
             {/* Footer Credit */}
-            <div className="text-right text-gray-500 text-m">
+            <div className="text-center md:text-right text-gray-500 text-xs md:text-sm mt-6 md:mt-8">
               <p>Made by <span className="text-gray-400 font-bold">MTA Studios</span></p>
             </div>
           </main>

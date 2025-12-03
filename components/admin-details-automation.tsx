@@ -61,7 +61,19 @@ export default function AdminDetailsAutomation() {
                     fitgirl: item.fitgirl,
                     imdb: item.imdb,
                 };
+
+                // Debug logging to see download links structure
+                if (item.fitgirl?.download_links) {
+                    console.log('FitGirl download_links:', JSON.stringify(item.fitgirl.download_links, null, 2));
+                }
+
                 const merged = mergeGameData(scraped);
+
+                // Debug logging to see merged download links
+                if (merged.downloadLinks) {
+                    console.log('Merged downloadLinks:', JSON.stringify(merged.downloadLinks, null, 2));
+                }
+
                 return { ...item, merged, preferences: {} };
             });
 

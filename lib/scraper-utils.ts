@@ -78,7 +78,7 @@ export interface MergedGameData {
 }
 
 /**
- * Clean FitGirl title to extract game name and edition
+ * Clean FitGirl title to extract game name and edition/version
  */
 export function cleanFitGirlTitle(title: string): string {
   if (!title) return '';
@@ -90,25 +90,28 @@ export function cleanFitGirlTitle(title: string): string {
     const firstPart = parts[0].trim();
     const secondPart = parts[1].trim();
 
-    // Check for edition keyword
-    if (/edition/i.test(secondPart)) {
-      const match = secondPart.match(/^(.+?edition)/i);
-      if (match) {
-        return `${firstPart}: ${match[1].trim()}`;
-      }
-    }
-
-    // Check for version number
-    const versionMatch = secondPart.match(/^(.+?)\s+v\d+/i);
+    // Look for version pattern (v followed by numbers/dots)
+    const versionMatch = secondPart.match(/^(.+?\s+v[\d.]+(?:\.\d+)*)/i);
     if (versionMatch) {
       return `${firstPart}: ${versionMatch[1].trim()}`;
     }
 
-    return `${firstPart}: ${secondPart}`;
+    // Priority 2: Look for edition keywords
+    const editionKeywords = ['edition', 'deluxe', 'ultimate', 'gold', 'complete', 'goty', 'definitive', 'remastered', 'enhanced', 'collection', 'pack'];
+    for (const keyword of editionKeywords) {
+      const editionRegex = new RegExp(`^(.+?\\s+${keyword}\\w*)`, 'i');
+      const editionMatch = secondPart.match(editionRegex);
+      if (editionMatch) {
+        return `${firstPart}: ${editionMatch[1].trim()}`;
+      }
+    }
+
+    // If no version or edition found, return just the first part
+    return firstPart;
   }
 
-  // If no colon, check for version
-  const versionMatch = title.match(/^(.+?)\s+v\d+/i);
+  // If no colon, look for version in the whole title
+  const versionMatch = title.match(/^(.+?\s+v[\d.]+(?:\.\d+)*)/i);
   if (versionMatch) {
     return versionMatch[1].trim();
   }
@@ -390,3 +393,4 @@ export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): 
     repackSize: getRepackSize()
   };
 }
+

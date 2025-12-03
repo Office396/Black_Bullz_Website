@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, Save, Copy } from "lucide-react"
+import { Plus, Trash2, Save, Copy, ExternalLink } from "lucide-react"
 import Editor from "@monaco-editor/react"
 
 // Function to clean screenshot URLs from RiotPixels and similar services
@@ -1312,6 +1312,21 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                             className="bg-gray-800 border-gray-700 text-white flex-1 text-sm"
                             required
                           />
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              if (link.url && link.url.trim()) {
+                                window.open(link.url.trim(), '_blank', 'noopener,noreferrer');
+                              }
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="bg-blue-800 border-blue-700 text-white hover:bg-blue-600 w-full sm:w-auto"
+                            title="Open link in new tab"
+                          >
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Open</span>
+                          </Button>
                           <Button
                             type="button"
                             onClick={() => duplicateDownloadLink(cloudIndex, linkIndex)}
