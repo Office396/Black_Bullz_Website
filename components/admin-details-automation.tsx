@@ -10,12 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-type FieldSource = 'ovagames' | 'fitgirl' | 'imdb';
+type FieldSource = 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
 
 interface GameResult {
     index: number;
     ovagames: any;
     fitgirl: any;
+    elamigos: any;
     imdb: any;
     merged: MergedGameData;
     preferences: MergePreferences;
@@ -25,6 +26,7 @@ export default function AdminDetailsAutomation() {
     const [category, setCategory] = useState<string>('PC Games');
     const [ovagamesUrls, setOvagamesUrls] = useState<string>('');
     const [fitgirlUrls, setFitgirlUrls] = useState<string>('');
+    const [elamigosUrls, setElamigosUrls] = useState<string>('');
     const [imdbUrls, setImdbUrls] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -40,6 +42,7 @@ export default function AdminDetailsAutomation() {
         try {
             const ovagamesUrlList = ovagamesUrls.split('\n').map(u => u.trim()).filter(u => u);
             const fitgirlUrlList = fitgirlUrls.split('\n').map(u => u.trim()).filter(u => u);
+            const elamigosUrlList = elamigosUrls.split('\n').map(u => u.trim()).filter(u => u);
             const imdbUrlList = imdbUrls.split('\n').map(u => u.trim()).filter(u => u);
 
             const response = await fetch('/api/scrape', {
@@ -48,6 +51,7 @@ export default function AdminDetailsAutomation() {
                 body: JSON.stringify({
                     ovagamesUrls: ovagamesUrlList,
                     fitgirlUrls: fitgirlUrlList,
+                    elamigosUrls: elamigosUrlList,
                     imdbUrls: imdbUrlList,
                 }),
             });
@@ -59,6 +63,7 @@ export default function AdminDetailsAutomation() {
                 const scraped: ScrapedGameData = {
                     ovagames: item.ovagames,
                     fitgirl: item.fitgirl,
+                    elamigos: item.elamigos,
                     imdb: item.imdb,
                 };
 
@@ -177,6 +182,7 @@ export default function AdminDetailsAutomation() {
                 setResults([]);
                 setOvagamesUrls('');
                 setFitgirlUrls('');
+                setElamigosUrls('');
                 setImdbUrls('');
                 setSaveSuccess('');
             }, 3000);
@@ -216,10 +222,14 @@ export default function AdminDetailsAutomation() {
                                 <Textarea value={fitgirlUrls} onChange={(e) => setFitgirlUrls(e.target.value)} placeholder="https://fitgirl-repacks.site/game-url" className="min-h-[100px] bg-gray-800 text-white" disabled={isLoading} />
                             </div>
                             <div>
+                                <label className="block text-sm font-medium mb-2">ElAmigos URLs (one per line)</label>
+                                <Textarea value={elamigosUrls} onChange={(e) => setElamigosUrls(e.target.value)} placeholder="https://www.elamigosgamez.com/games/game-url" className="min-h-[100px] bg-gray-800 text-white" disabled={isLoading} />
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium mb-2">IMDB URLs (one per line)</label>
                                 <Textarea value={imdbUrls} onChange={(e) => setImdbUrls(e.target.value)} placeholder="https://www.imdb.com/title/tt123456/" className="min-h-[100px] bg-gray-800 text-white" disabled={isLoading} />
                             </div>
-                            <Button onClick={handleStartAutomation} disabled={isLoading || (!ovagamesUrls && !fitgirlUrls && !imdbUrls)} className="w-full">
+                            <Button onClick={handleStartAutomation} disabled={isLoading || (!ovagamesUrls && !fitgirlUrls && !elamigosUrls && !imdbUrls)} className="w-full">
                                 {isLoading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Scraping data...</>) : 'Start Automation'}
                             </Button>
                         </div>
@@ -253,6 +263,9 @@ export default function AdminDetailsAutomation() {
                                             <Badge variant={result.fitgirl ? "default" : "destructive"} className="mr-1">FitGirl: {result.fitgirl ? "OK" : "No Data"}</Badge>
                                         </TooltipTrigger><TooltipContent><p>Raw Status: {result.fitgirl ? "Success" : "Failed/Empty"}</p></TooltipContent></Tooltip></TooltipProvider>
                                         <TooltipProvider><Tooltip><TooltipTrigger>
+                                            <Badge variant={result.elamigos ? "default" : "destructive"} className="mr-1">ElAmigos: {result.elamigos ? "OK" : "No Data"}</Badge>
+                                        </TooltipTrigger><TooltipContent><p>Raw Status: {result.elamigos ? "Success" : "Failed/Empty"}</p></TooltipContent></Tooltip></TooltipProvider>
+                                        <TooltipProvider><Tooltip><TooltipTrigger>
                                             <Badge variant={result.imdb ? "default" : "destructive"}>IMDB: {result.imdb ? "OK" : "No Data"}</Badge>
                                         </TooltipTrigger><TooltipContent><p>Raw Status: {result.imdb ? "Success" : "Failed/Empty"}</p></TooltipContent></Tooltip></TooltipProvider>
                                     </div>
@@ -267,22 +280,23 @@ export default function AdminDetailsAutomation() {
                                                 <TableHead className="w-[150px] text-gray-300">Field</TableHead>
                                                 <TableHead className="text-blue-400 font-bold">OvaGames</TableHead>
                                                 <TableHead className="text-green-400 font-bold">FitGirl</TableHead>
+                                                <TableHead className="text-orange-400 font-bold">ElAmigos</TableHead>
                                                 <TableHead className="text-purple-400 font-bold">IMDB</TableHead>
                                                 <TableHead className="w-[250px] text-white font-bold bg-gray-900">Merged Result</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            <ComparisonRow label="Title" field="title" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.title, fitgirl: result.fitgirl?.title ? cleanFitGirlTitle(result.fitgirl.title) : null, imdb: result.imdb?.title }} mergedValue={result.merged.title} />
-                                            <ComparisonRow label="Developer" field="developer" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.developer, fitgirl: result.fitgirl?.companies, imdb: result.imdb?.developer }} mergedValue={result.merged.developer} />
-                                            <ComparisonRow label="File Size" field="fileSize" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.file_size ? extractFileSize(result.ovagames.file_size) : null, fitgirl: result.fitgirl?.repack_size, imdb: null }} mergedValue={result.merged.fileSize} />
-                                            <ComparisonRow label="Rating" field="rating" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.rating, fitgirl: null, imdb: result.imdb?.rating }} mergedValue={result.merged.rating} />
-                                            <ComparisonRow label="Short Description" field="shortDescription" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.short_description?.substring(0, 50) + '...', fitgirl: null, imdb: result.imdb?.short_description?.substring(0, 50) + '...' }} mergedValue={result.merged.shortDescription?.substring(0, 50) + '...'} />
-                                            <ComparisonRow label="Long Description" field="longDescription" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.long_description?.substring(0, 50) + '...', fitgirl: null, imdb: result.imdb?.long_description?.substring(0, 50) + '...' }} mergedValue={result.merged.longDescription?.substring(0, 50) + '...'} />
-                                            <ComparisonRow label="Screenshots" field="screenshots" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.screenshots ? `${result.ovagames.screenshots.length} images` : null, fitgirl: result.fitgirl?.screenshots ? `${result.fitgirl.screenshots.length} images` : null, imdb: result.imdb?.screenshots ? `${result.imdb.screenshots.length} images` : null }} mergedValue={`${Math.min(result.merged.screenshots?.length || 0, 6)} images (max 6)`} />
-                                            <ComparisonRow label="Genres" field="genres" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.category, fitgirl: result.fitgirl?.genres?.join(', '), imdb: result.imdb?.category?.join(', ') }} mergedValue={result.merged.genres?.join(', ')} />
-                                            <ComparisonRow label="Languages" field="languages" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: null, fitgirl: result.fitgirl?.languages, imdb: null }} mergedValue={result.merged.languages} />
-                                            <ComparisonRow label="System Req" field="systemRequirements" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.system_requirements ? 'Available' : null, fitgirl: null, imdb: null }} mergedValue={result.merged.systemRequirements?.os ? 'Available' : 'N/A'} />
-                                            <ComparisonRow label="Download Links" field="downloadLinks" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: null, fitgirl: result.fitgirl?.download_links ? 'Available' : null, imdb: null }} mergedValue={result.merged.downloadLinks?.length ? result.merged.downloadLinks.map(p => p.cloudName).join(', ') : 'N/A'} />
+                                            <ComparisonRow label="Title" field="title" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.title, fitgirl: result.fitgirl?.title ? cleanFitGirlTitle(result.fitgirl.title) : null, elamigos: result.elamigos?.title, imdb: result.imdb?.title }} mergedValue={result.merged.title} />
+                                            <ComparisonRow label="Developer" field="developer" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.developer, fitgirl: result.fitgirl?.companies, elamigos: result.elamigos?.developer, imdb: result.imdb?.developer }} mergedValue={result.merged.developer} />
+                                            <ComparisonRow label="File Size" field="fileSize" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.file_size ? extractFileSize(result.ovagames.file_size) : null, fitgirl: result.fitgirl?.repack_size, elamigos: result.elamigos?.repack_size, imdb: null }} mergedValue={result.merged.fileSize} />
+                                            <ComparisonRow label="Rating" field="rating" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.rating, fitgirl: null, elamigos: null, imdb: result.imdb?.rating }} mergedValue={result.merged.rating} />
+                                            <ComparisonRow label="Short Description" field="shortDescription" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.short_description?.substring(0, 50) + '...', fitgirl: null, elamigos: null, imdb: result.imdb?.short_description?.substring(0, 50) + '...' }} mergedValue={result.merged.shortDescription?.substring(0, 50) + '...'} />
+                                            <ComparisonRow label="Long Description" field="longDescription" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.long_description?.substring(0, 50) + '...', fitgirl: null, elamigos: result.elamigos?.description?.substring(0, 50) + '...', imdb: result.imdb?.long_description?.substring(0, 50) + '...' }} mergedValue={result.merged.longDescription?.substring(0, 50) + '...'} />
+                                            <ComparisonRow label="Screenshots" field="screenshots" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.screenshots ? `${result.ovagames.screenshots.length} images` : null, fitgirl: result.fitgirl?.screenshots ? `${result.fitgirl.screenshots.length} images` : null, elamigos: result.elamigos?.screenshots ? `${result.elamigos.screenshots.length} images` : null, imdb: result.imdb?.screenshots ? `${result.imdb.screenshots.length} images` : null }} mergedValue={`${Math.min(result.merged.screenshots?.length || 0, 6)} images (max 6)`} />
+                                            <ComparisonRow label="Genres" field="genres" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.category, fitgirl: result.fitgirl?.genres?.join(', '), elamigos: null, imdb: result.imdb?.category?.join(', ') }} mergedValue={result.merged.genres?.join(', ')} />
+                                            <ComparisonRow label="Languages" field="languages" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: null, fitgirl: result.fitgirl?.languages, elamigos: result.elamigos?.languages, imdb: null }} mergedValue={result.merged.languages} />
+                                            <ComparisonRow label="System Req" field="systemRequirements" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.system_requirements ? 'Available' : null, fitgirl: null, elamigos: result.elamigos?.system_requirements ? 'Available' : null, imdb: null }} mergedValue={result.merged.systemRequirements?.os ? 'Available' : 'N/A'} />
+                                            <ComparisonRow label="Download Links" field="downloadLinks" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: null, fitgirl: result.fitgirl?.download_links ? 'Available' : null, elamigos: null, imdb: null }} mergedValue={result.merged.downloadLinks?.length ? result.merged.downloadLinks.map(p => p.cloudName).join(', ') : 'N/A'} />
                                         </TableBody>
                                     </Table>
                                 </div>
@@ -308,7 +322,7 @@ interface ComparisonRowProps {
     gameIndex: number;
     result: GameResult;
     onSelect: (index: number, field: keyof MergePreferences, source: FieldSource) => void;
-    values: { ovagames: string | null | undefined; fitgirl: string | null | undefined; imdb: string | null | undefined; };
+    values: { ovagames: string | null | undefined; fitgirl: string | null | undefined; elamigos: string | null | undefined; imdb: string | null | undefined; };
     mergedValue: string | null | undefined;
 }
 
@@ -332,6 +346,10 @@ function ComparisonRow({ label, field, gameIndex, result, onSelect, values, merg
             <TableCell className={`p-3 relative ${getCellClass('fitgirl')}`} onClick={() => values.fitgirl && onSelect(gameIndex, field, 'fitgirl')}>
                 {selectedSource === 'fitgirl' && <Check className="absolute top-1 right-1 h-3 w-3 text-green-400" />}
                 <span className="line-clamp-2" title={values.fitgirl || ''}>{values.fitgirl || '-'}</span>
+            </TableCell>
+            <TableCell className={`p-3 relative ${getCellClass('elamigos')}`} onClick={() => values.elamigos && onSelect(gameIndex, field, 'elamigos')}>
+                {selectedSource === 'elamigos' && <Check className="absolute top-1 right-1 h-3 w-3 text-orange-400" />}
+                <span className="line-clamp-2" title={values.elamigos || ''}>{values.elamigos || '-'}</span>
             </TableCell>
             <TableCell className={`p-3 relative ${getCellClass('imdb')}`} onClick={() => values.imdb && onSelect(gameIndex, field, 'imdb')}>
                 {selectedSource === 'imdb' && <Check className="absolute top-1 right-1 h-3 w-3 text-purple-400" />}

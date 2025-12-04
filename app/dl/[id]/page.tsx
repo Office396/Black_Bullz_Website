@@ -29,7 +29,7 @@ function getDownloadIdFromPath(path: string): string | null {
 
 export default function DownloadPage() {
   const router = useRouter()
-  const [downloadItem, setDownloadItem] = useState&lt;DownloadItem | null>(null)
+  const [downloadItem, setDownloadItem] = useState<DownloadItem | null>(null)
   const [countDown, setCountDown] = useState(15)
   const [verificationCompleted, setVerificationCompleted] = useState(false)
   const [linkExpired, setLinkExpired] = useState(false)

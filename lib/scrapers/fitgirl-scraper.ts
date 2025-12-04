@@ -22,6 +22,7 @@ interface RequirementDetails {
   storage?: string;
   directx?: string;
   sound_card?: string;
+  network?: string;
 }
 
 class GameDataExtractor {
@@ -64,10 +65,20 @@ class GameDataExtractor {
       console.log(`[FitGirl] Screenshots: ${gameData.screenshots?.length || 0}`);
 
       // Extract system requirements
-      gameData.system_requirements = this._extractSystemRequirements($);
+      const sysReq = this._extractSystemRequirements($);
+      gameData.system_requirements = {
+        os: sysReq.os || '',
+        processor: sysReq.processor || '',
+        memory: sysReq.memory || '',
+        graphics: sysReq.graphics || '',
+        storage: sysReq.storage || '',
+        directx: sysReq.directx || '',
+        sound_card: sysReq.sound_card || '',
+        network: sysReq.network || ''
+      };
 
       // Extract download links
-      gameData.download_links = this._extractDownloadLinks($, url);
+      gameData.download_links = await this._extractDownloadLinks($, url);
 
       const totalGroups = Object.values(gameData.download_links).reduce((sum, provider) => {
         return sum + Object.keys(provider).length;
@@ -387,10 +398,10 @@ class GameDataExtractor {
     return requirements;
   }
 
-  private _extractDownloadLinks(
+  private async _extractDownloadLinks(
     $: cheerio.CheerioAPI,
     baseUrl: string
-  ): Record<string, any> {
+  ): Promise<Record<string, any>> {
     const downloadLinks: Record<string, any> = {
       data_nodes: {},
       fucking_fast: {},
@@ -406,11 +417,11 @@ class GameDataExtractor {
       console.log(`[FitGirl]   H3 ${i + 1}: "${$(el).text().trim()}"`);
     });
 
-    // Find h3 with "Download Mirrors" text
+    // Find h3 with "Download Mirror" or "Download Mirrors" text
     const mirrorsHeading = $('h3')
       .filter((_i, el) => {
         const text = $(el).text();
-        return /Download Mirrors/i.test(text);
+        return /Download Mirror/i.test(text);
       })
       .first();
 
@@ -444,26 +455,54 @@ class GameDataExtractor {
       console.log(`[FitGirl]   LI ${i + 1}: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"`);
     });
 
-    // Process each LI
-    listItems.each((_i, li) => {
-      const text = $(li).text();
+    // Process each LI (using regular for loop to support async operations)
+    for (let i = 0; i < listItems.length; i++) {
+      const li = listItems[i];
+      const $li = $(li);
+      const text = $li.text();
 
-      if (text.includes('DataNodes')) {
-        console.log('[FitGirl] → Processing DataNodes');
-        downloadLinks.data_nodes = this._extractFilehosterLinks($(li), $);
-        console.log(`[FitGirl] → DataNodes: ${Object.keys(downloadLinks.data_nodes).length} groups`);
-      } else if (text.includes('FuckingFast')) {
-        console.log('[FitGirl] → Processing FuckingFast');
-        downloadLinks.fucking_fast = this._extractFilehosterLinks($(li), $);
-        console.log(`[FitGirl] → FuckingFast: ${Object.keys(downloadLinks.fucking_fast).length} groups`);
-      } else if (text.includes('MultiUpload')) {
-        const link = $(li).find('a').first().attr('href');
-        if (link) {
-          console.log(`[FitGirl] → MultiUpload paste: ${link}`);
-          downloadLinks.multi_up = this._extractMultupLinks(link);
+      // Look for "Filehoster:" pattern to identify filehosters
+      const filehosterMatch = text.match(/Filehoster:\s*([^(\n]+)/i);
+      if (filehosterMatch) {
+        const filehosterName = filehosterMatch[1].trim().toLowerCase().replace(/\s+/g, '_');
+        console.log(`[FitGirl] → Processing filehoster: ${filehosterName}`);
+
+        // Check if this LI has a spoiler (direct links) or just a paste link
+        const spoilerDiv = $li.find('div.su-spoiler');
+        if (spoilerDiv.length > 0) {
+          // Has spoiler with direct links
+          const linksData = this._extractFilehosterLinks($li, $);
+          if (filehosterName.includes('fuckingfast') || filehosterName.includes('fucking_fast')) {
+            downloadLinks.fucking_fast = linksData;
+          } else if (filehosterName.includes('datanodes') || filehosterName.includes('data_nodes')) {
+            downloadLinks.data_nodes = linksData;
+          } else if (filehosterName.includes('multiup') || filehosterName.includes('multi_up')) {
+            downloadLinks.multi_up = linksData;
+          } else {
+            // Generic handling for other filehosters
+            downloadLinks[filehosterName] = linksData;
+          }
+          console.log(`[FitGirl] → ${filehosterName}: ${Object.keys(linksData).length} groups`);
+        } else {
+          // Check for direct paste link
+          const pasteLink = $li.find('a').first().attr('href');
+          if (pasteLink && pasteLink.includes('paste.')) {
+            console.log(`[FitGirl] → ${filehosterName} paste link: ${pasteLink}`);
+            try {
+              if (filehosterName.includes('datanodes') || filehosterName.includes('data_nodes')) {
+                downloadLinks.data_nodes = await this._extractPasteLinks(pasteLink);
+              } else if (filehosterName.includes('multiup') || filehosterName.includes('multi_up')) {
+                downloadLinks.multi_up = await this._extractMultupLinks(pasteLink);
+              } else {
+                downloadLinks[filehosterName] = await this._extractPasteLinks(pasteLink);
+              }
+            } catch (error) {
+              console.error(`[FitGirl] Error extracting paste links for ${filehosterName}: ${error}`);
+            }
+          }
         }
       }
-    });
+    }
 
     return downloadLinks;
   }
@@ -594,8 +633,81 @@ class GameDataExtractor {
     return linksData;
   }
 
-  private _extractMultupLinks(pasteUrl: string): Record<string, any> {
+  private async _extractMultupLinks(pasteUrl: string): Promise<Record<string, any>> {
+    // TODO: Implement MultiUp paste link extraction
     return {};
+  }
+
+  private async _extractPasteLinks(pasteUrl: string): Promise<Record<string, any>> {
+    const linksData: Record<string, any> = {};
+
+    try {
+      console.log(`[FitGirl] Fetching paste content from: ${pasteUrl}`);
+      const response = await this.session.get(pasteUrl);
+      const pasteContent = response.data;
+
+      // Extract links from paste content (this is a simplified implementation)
+      // In a real implementation, you'd need to parse the specific paste site format
+      const linkRegex = /https?:\/\/[^\s<>"']+/g;
+      const links = pasteContent.match(linkRegex) || [];
+
+      console.log(`[FitGirl] Found ${links.length} links in paste`);
+
+      let currentGroup: string | null = null;
+      let currentLinks: any[] = [];
+
+      links.forEach((link: string) => {
+        // Extract filename from URL
+        const urlParts = link.split('/');
+        let filename = urlParts[urlParts.length - 1];
+
+        if (filename) {
+          // Clean filename
+          const cleanFilename = filename
+            .replace(/_fitgirl-repacks\.site_/g, '')
+            .replace(/_fitgirl-repacks_/g, '')
+            .replace(/–/g, '-')
+            .replace(/—/g, '-');
+
+          // Extract base name
+          let baseName = cleanFilename;
+          const partMatch = cleanFilename.match(/^(.+?)(?:part\s*\d+)\.(?:rar|zip|7z|exe|bin)$/i);
+          if (partMatch) {
+            baseName = partMatch[1];
+          } else {
+            const extMatch = cleanFilename.match(/^(.+)\.(?:rar|zip|7z|exe|bin)$/i);
+            if (extMatch) {
+              baseName = extMatch[1];
+            }
+          }
+
+          // Group by base name
+          if (baseName !== currentGroup) {
+            if (currentGroup && currentLinks.length > 0) {
+              linksData[currentGroup] = [...currentLinks];
+            }
+            currentGroup = baseName;
+            currentLinks = [];
+          }
+
+          currentLinks.push({
+            filename: cleanFilename,
+            url: link,
+          });
+        }
+      });
+
+      // Save final group
+      if (currentGroup && currentLinks.length > 0) {
+        linksData[currentGroup] = currentLinks;
+      }
+
+      console.log(`[FitGirl] Extracted ${Object.keys(linksData).length} file groups from paste`);
+    } catch (error) {
+      console.error(`[FitGirl] Error fetching paste content: ${error}`);
+    }
+
+    return linksData;
   }
 }
 

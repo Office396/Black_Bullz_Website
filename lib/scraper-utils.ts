@@ -6,6 +6,7 @@
 export interface ScrapedGameData {
   ovagames?: OvaGamesData;
   fitgirl?: FitGirlData;
+  elamigos?: ElAmigosData;
   imdb?: IMDBData;
 }
 
@@ -36,6 +37,16 @@ export interface FitGirlData {
     fucking_fast?: Record<string, Array<{ filename: string; url: string }>>;
     multi_up?: Record<string, Array<{ filename: string; url: string }>>;
   };
+}
+
+export interface ElAmigosData {
+  title: string;
+  developer?: string;
+  languages: string;
+  repack_size: string;
+  screenshots: string[];
+  system_requirements: any;
+  description: string;
 }
 
 export interface IMDBData {
@@ -217,51 +228,54 @@ export function reverseScreenshots(screenshots: string[]): string[] {
  * Merge data from all three sources with intelligent defaults
  */
 export interface MergePreferences {
-  title?: 'ovagames' | 'fitgirl' | 'imdb';
-  developer?: 'ovagames' | 'fitgirl' | 'imdb';
-  fileSize?: 'ovagames' | 'fitgirl' | 'imdb';
-  rating?: 'ovagames' | 'fitgirl' | 'imdb';
-  shortDescription?: 'ovagames' | 'fitgirl' | 'imdb';
-  longDescription?: 'ovagames' | 'fitgirl' | 'imdb';
-  screenshots?: 'ovagames' | 'fitgirl' | 'imdb';
-  genres?: 'ovagames' | 'fitgirl' | 'imdb';
-  languages?: 'ovagames' | 'fitgirl' | 'imdb';
-  systemRequirements?: 'ovagames' | 'fitgirl' | 'imdb';
-  downloadLinks?: 'ovagames' | 'fitgirl' | 'imdb';
-  originalSize?: 'ovagames' | 'fitgirl' | 'imdb';
-  repackSize?: 'ovagames' | 'fitgirl' | 'imdb';
+  title?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  developer?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  fileSize?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  rating?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  shortDescription?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  longDescription?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  screenshots?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  genres?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  languages?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  systemRequirements?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  downloadLinks?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  originalSize?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
+  repackSize?: 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
 }
 
 /**
  * Merge data from all three sources with intelligent defaults and user preferences
  */
 export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): MergedGameData {
-  const { ovagames, fitgirl, imdb } = data;
+  const { ovagames, fitgirl, elamigos, imdb } = data;
 
   // Helper to get title based on preference
   const getTitle = () => {
     if (prefs?.title === 'ovagames' && ovagames?.title) return ovagames.title;
     if (prefs?.title === 'fitgirl' && fitgirl?.title) return cleanFitGirlTitle(fitgirl.title);
+    if (prefs?.title === 'elamigos' && elamigos?.title) return elamigos.title;
     if (prefs?.title === 'imdb' && imdb?.title) return imdb.title;
     // Default priority
-    return fitgirl?.title ? cleanFitGirlTitle(fitgirl.title) : imdb?.title || ovagames?.title || '';
+    return fitgirl?.title ? cleanFitGirlTitle(fitgirl.title) : elamigos?.title || imdb?.title || ovagames?.title || '';
   };
 
   // Helper to get developer
   const getDeveloper = () => {
     if (prefs?.developer === 'ovagames' && ovagames?.developer) return ovagames.developer;
     if (prefs?.developer === 'fitgirl' && fitgirl?.companies) return fitgirl.companies;
+    if (prefs?.developer === 'elamigos' && elamigos?.developer) return elamigos.developer;
     if (prefs?.developer === 'imdb' && imdb?.developer) return imdb.developer;
     // Default priority
-    return imdb?.developer || ovagames?.developer || fitgirl?.companies || '';
+    return imdb?.developer || ovagames?.developer || fitgirl?.companies || elamigos?.developer || '';
   };
 
   // Helper to get file size
   const getFileSize = () => {
     if (prefs?.fileSize === 'ovagames' && ovagames?.file_size) return extractFileSize(ovagames.file_size);
     if (prefs?.fileSize === 'fitgirl' && fitgirl?.repack_size) return fitgirl.repack_size;
+    if (prefs?.fileSize === 'elamigos' && elamigos?.repack_size) return elamigos.repack_size;
     // Default priority
-    return ovagames?.file_size ? extractFileSize(ovagames.file_size) : fitgirl?.repack_size || '';
+    return ovagames?.file_size ? extractFileSize(ovagames.file_size) : fitgirl?.repack_size || elamigos?.repack_size || '';
   };
 
   // Helper to get rating
@@ -276,30 +290,34 @@ export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): 
   const getShortDescription = () => {
     if (prefs?.shortDescription === 'ovagames' && ovagames?.short_description) return ovagames.short_description;
     if (prefs?.shortDescription === 'imdb' && imdb?.short_description) return imdb.short_description;
-    // Default priority
+    // Default priority (ElAmigos doesn't have short description)
     return imdb?.short_description || ovagames?.short_description || '';
   };
 
   // Helper to get long description
   const getLongDescription = () => {
     if (prefs?.longDescription === 'ovagames' && ovagames?.long_description) return ovagames.long_description;
+    if (prefs?.longDescription === 'elamigos' && elamigos?.description) return elamigos.description;
     if (prefs?.longDescription === 'imdb' && imdb?.long_description) return imdb.long_description;
     // Default priority
-    return ovagames?.long_description || imdb?.long_description || '';
+    return ovagames?.long_description || elamigos?.description || imdb?.long_description || '';
   };
 
   // Helper to get screenshots
   const getScreenshots = () => {
     if (prefs?.screenshots === 'ovagames' && ovagames?.screenshots) return ovagames.screenshots;
     if (prefs?.screenshots === 'fitgirl' && fitgirl?.screenshots) return reverseScreenshots(fitgirl.screenshots);
+    if (prefs?.screenshots === 'elamigos' && elamigos?.screenshots) return elamigos.screenshots;
     if (prefs?.screenshots === 'imdb' && imdb?.screenshots) return reverseScreenshots(imdb.screenshots);
 
     // Default priority
     return fitgirl?.screenshots?.length
       ? reverseScreenshots(fitgirl.screenshots)
-      : imdb?.screenshots?.length
-        ? reverseScreenshots(imdb.screenshots)
-        : ovagames?.screenshots || [];
+      : elamigos?.screenshots?.length
+        ? elamigos.screenshots
+        : imdb?.screenshots?.length
+          ? reverseScreenshots(imdb.screenshots)
+          : ovagames?.screenshots || [];
   };
 
   // Helper to get genres
@@ -319,8 +337,9 @@ export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): 
   // Helper to get languages
   const getLanguages = () => {
     if (prefs?.languages === 'fitgirl' && fitgirl?.languages) return fitgirl.languages;
+    if (prefs?.languages === 'elamigos' && elamigos?.languages) return elamigos.languages;
     // Default priority
-    return fitgirl?.languages || '';
+    return fitgirl?.languages || elamigos?.languages || '';
   };
 
   // Helper to get system requirements
@@ -328,10 +347,13 @@ export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): 
     if (prefs?.systemRequirements === 'ovagames' && ovagames?.system_requirements) {
       return parseSystemRequirements(ovagames.system_requirements);
     }
-    // Default priority (OvaGames is best for this)
+    if (prefs?.systemRequirements === 'elamigos' && elamigos?.system_requirements) {
+      return elamigos.system_requirements;
+    }
+    // Default priority (OvaGames is best, then ElAmigos)
     return ovagames?.system_requirements
       ? parseSystemRequirements(ovagames.system_requirements)
-      : { os: '', processor: '', memory: '', graphics: '', storage: '', directx: '', sound_card: '' };
+      : elamigos?.system_requirements || { os: '', processor: '', memory: '', graphics: '', storage: '', directx: '', sound_card: '' };
   };
 
   // Helper to get download links with multiple providers
@@ -372,8 +394,9 @@ export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): 
   // Helper to get repack size
   const getRepackSize = () => {
     if (prefs?.repackSize === 'fitgirl' && fitgirl?.repack_size) return fitgirl.repack_size;
+    if (prefs?.repackSize === 'elamigos' && elamigos?.repack_size) return elamigos.repack_size;
     // Default priority
-    return fitgirl?.repack_size || '';
+    return fitgirl?.repack_size || elamigos?.repack_size || '';
   };
 
   return {
@@ -381,7 +404,7 @@ export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): 
     developer: getDeveloper(),
     fileSize: getFileSize(),
     rating: getRating(),
-    profileImage: imdb?.profile_pic_url || fitgirl?.screenshots?.[0] || ovagames?.profile_pic || '',
+    profileImage: imdb?.profile_pic_url || fitgirl?.screenshots?.[0] || elamigos?.screenshots?.[0] || ovagames?.profile_pic || '',
     shortDescription: getShortDescription(),
     longDescription: getLongDescription(),
     screenshots: getScreenshots(),

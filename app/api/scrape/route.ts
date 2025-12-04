@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GameDetailsScraper } from '@/lib/scrapers/ova-scraper';
 import { IMDbGameScraper } from '@/lib/scrapers/imdb-scraper';
 import { GameDataExtractor } from '@/lib/scrapers/fitgirl-scraper';
+import { ElAmigosDataExtractor } from '@/lib/scrapers/elamigos-scraper';
 
 // Set runtime to nodejs for web scraping on Vercel
 export const runtime = 'nodejs';
@@ -10,7 +11,7 @@ export const maxDuration = 60; // Maximum execution time for Vercel serverless f
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { ovagamesUrls = [], fitgirlUrls = [], imdbUrls = [] } = body;
+        const { ovagamesUrls = [], fitgirlUrls = [], elamigosUrls = [], imdbUrls = [] } = body;
 
         // Validate input
         if (!Array.isArray(ovagamesUrls) || !Array.isArray(fitgirlUrls) || !Array.isArray(imdbUrls)) {
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const maxUrls = Math.max(ovagamesUrls.length, fitgirlUrls.length, imdbUrls.length);
+        const maxUrls = Math.max(ovagamesUrls.length, fitgirlUrls.length, elamigosUrls.length, imdbUrls.length);
 
         if (maxUrls === 0) {
             return NextResponse.json(
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
         const ovaScraper = new GameDetailsScraper();
         const imdbScraper = new IMDbGameScraper();
         const fitgirlScraper = new GameDataExtractor();
+        const elamigosScraper = new ElAmigosDataExtractor();
 
         // Scrape data from all sources with timeout handling
         const results = [];
@@ -42,6 +44,7 @@ export async function POST(request: NextRequest) {
                 index: i,
                 ovagames: null,
                 fitgirl: null,
+                elamigos: null,
                 imdb: null
             };
 
@@ -74,6 +77,22 @@ export async function POST(request: NextRequest) {
                 } catch (error) {
                     console.error(`Error scraping FitGirl URL ${i}:`, error);
                     gameData.fitgirl = null;
+                }
+            }
+
+            // Scrape ElAmigos with timeout
+            if (elamigosUrls[i]) {
+                try {
+                    console.log(`Scraping ElAmigos: ${elamigosUrls[i]}`);
+                    gameData.elamigos = await Promise.race([
+                        elamigosScraper.extractElAmigosData(elamigosUrls[i]),
+                        new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Timeout')), 30000)
+                        )
+                    ]);
+                } catch (error) {
+                    console.error(`Error scraping ElAmigos URL ${i}:`, error);
+                    gameData.elamigos = null;
                 }
             }
 

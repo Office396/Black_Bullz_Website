@@ -72,6 +72,8 @@ interface FormData {
       memory: string
       graphics: string
       storage: string
+      directx: string
+      sound_card: string
     }
   }
   androidRequirements: {
@@ -110,7 +112,7 @@ const initialFormData: FormData = {
   screenshots: [], // Added empty screenshots array
   note: "",
   systemRequirements: {
-    recommended: { os: "", processor: "", memory: "", graphics: "", storage: "" }, // Only recommended
+    recommended: { os: "", processor: "", memory: "", graphics: "", storage: "", directx: "", sound_card: "" }, // Only recommended
   },
   androidRequirements: {
     recommended: { os: "Android 12", ram: "8 GB", storage: "350 MB", processor: "Snapdragon / MediaTek (Average Processors)" }, // Only recommended
