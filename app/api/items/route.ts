@@ -16,9 +16,14 @@ export async function POST(request: Request) {
   try {
     const itemData = await request.json()
 
-    // Validate required fields
-    if (!itemData.title || !itemData.category || !itemData.description) {
-      return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 })
+    // Validate required fields (allow empty descriptions for scraped items)
+    if (!itemData.title || !itemData.category) {
+      return NextResponse.json({ success: false, error: 'Title and category are required' }, { status: 400 })
+    }
+
+    // Provide default description if empty
+    if (!itemData.description) {
+      itemData.description = itemData.longDescription || 'No description available';
     }
 
     const newItem = await addItem(itemData)

@@ -8,6 +8,22 @@ import { Loader2, Check } from 'lucide-react';
 import { mergeGameData, type ScrapedGameData, type MergedGameData, type MergePreferences, cleanFitGirlTitle, extractFileSize } from '@/lib/scraper-utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+
+// Default preferences as requested by user
+const DEFAULT_PREFERENCES: MergePreferences = {
+  title: 'fitgirl',
+  developer: 'ovagames',
+  fileSize: 'ovagames',
+  longDescription: 'ovagames',
+  shortDescription: 'imdb',
+  screenshots: 'fitgirl',
+  genres: 'fitgirl',
+  languages: 'fitgirl',
+  systemRequirements: 'ovagames',
+  downloadLinks: 'fitgirl',
+  rating: 'imdb',
+  originalSize: 'fitgirl'
+};
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type FieldSource = 'ovagames' | 'fitgirl' | 'elamigos' | 'imdb';
@@ -79,7 +95,7 @@ export default function AdminDetailsAutomation() {
                     console.log('Merged downloadLinks:', JSON.stringify(merged.downloadLinks, null, 2));
                 }
 
-                return { ...item, merged, preferences: {} };
+                return { ...item, merged, preferences: { ...DEFAULT_PREFERENCES } };
             });
 
             setResults(processedResults);
@@ -97,6 +113,7 @@ export default function AdminDetailsAutomation() {
             const scraped: ScrapedGameData = {
                 ovagames: game.ovagames,
                 fitgirl: game.fitgirl,
+                elamigos: game.elamigos,
                 imdb: game.imdb,
             };
             return {
@@ -295,7 +312,12 @@ export default function AdminDetailsAutomation() {
                                             <ComparisonRow label="Screenshots" field="screenshots" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.screenshots ? `${result.ovagames.screenshots.length} images` : null, fitgirl: result.fitgirl?.screenshots ? `${result.fitgirl.screenshots.length} images` : null, elamigos: result.elamigos?.screenshots ? `${result.elamigos.screenshots.length} images` : null, imdb: result.imdb?.screenshots ? `${result.imdb.screenshots.length} images` : null }} mergedValue={`${Math.min(result.merged.screenshots?.length || 0, 6)} images (max 6)`} />
                                             <ComparisonRow label="Genres" field="genres" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.category, fitgirl: result.fitgirl?.genres?.join(', '), elamigos: null, imdb: result.imdb?.category?.join(', ') }} mergedValue={result.merged.genres?.join(', ')} />
                                             <ComparisonRow label="Languages" field="languages" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: null, fitgirl: result.fitgirl?.languages, elamigos: result.elamigos?.languages, imdb: null }} mergedValue={result.merged.languages} />
-                                            <ComparisonRow label="System Req" field="systemRequirements" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.system_requirements ? 'Available' : null, fitgirl: null, elamigos: result.elamigos?.system_requirements ? 'Available' : null, imdb: null }} mergedValue={result.merged.systemRequirements?.os ? 'Available' : 'N/A'} />
+                                            <ComparisonRow label="System Req" field="systemRequirements" gameIndex={index} result={result} onSelect={updatePreference} values={{
+                                                ovagames: result.ovagames?.system_requirements && (result.ovagames.system_requirements.os || result.ovagames.system_requirements.processor) ? 'Available' : null,
+                                                fitgirl: null,
+                                                elamigos: result.elamigos?.system_requirements && (result.elamigos.system_requirements.os || result.elamigos.system_requirements.processor) ? 'Available' : null,
+                                                imdb: null
+                                            }} mergedValue={result.merged.systemRequirements && (result.merged.systemRequirements.os || result.merged.systemRequirements.processor) ? 'Available' : 'N/A'} />
                                             <ComparisonRow label="Download Links" field="downloadLinks" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: null, fitgirl: result.fitgirl?.download_links ? 'Available' : null, elamigos: null, imdb: null }} mergedValue={result.merged.downloadLinks?.length ? result.merged.downloadLinks.map(p => p.cloudName).join(', ') : 'N/A'} />
                                         </TableBody>
                                     </Table>
@@ -328,12 +350,41 @@ interface ComparisonRowProps {
 
 function ComparisonRow({ label, field, gameIndex, result, onSelect, values, mergedValue }: ComparisonRowProps) {
     const selectedSource = result.preferences[field];
+
+    // Determine which source is actually being used for the merged value
+    const getActualSource = (): FieldSource | null => {
+        if (selectedSource) return selectedSource;
+
+        // If no manual selection, determine which source provided the merged data
+        const sources: FieldSource[] = ['ovagames', 'fitgirl', 'elamigos', 'imdb'];
+        for (const source of sources) {
+            if (values[source] === mergedValue && mergedValue && mergedValue !== '-') {
+                return source;
+            }
+        }
+        return null;
+    };
+
+    const actualSource = getActualSource();
+
     const getCellClass = (source: FieldSource) => {
         const isSelected = selectedSource === source;
+        const isActualSource = actualSource === source;
         const hasData = !!values[source];
         if (isSelected) return "bg-blue-900/40 border-2 border-blue-500 cursor-pointer hover:bg-blue-900/50 transition-colors";
+        if (isActualSource && !isSelected) return "bg-green-900/20 border border-green-500 cursor-pointer hover:bg-green-800 transition-colors";
         if (!hasData) return "bg-gray-900/20 text-gray-600 cursor-not-allowed";
         return "cursor-pointer hover:bg-gray-800 transition-colors border border-transparent hover:border-gray-600";
+    };
+
+    const getSourceIndicator = (source: FieldSource) => {
+        const colors = {
+            ovagames: 'text-blue-400',
+            fitgirl: 'text-green-400',
+            elamigos: 'text-orange-400',
+            imdb: 'text-purple-400'
+        };
+        return colors[source] || 'text-gray-400';
     };
 
     return (
@@ -341,22 +392,36 @@ function ComparisonRow({ label, field, gameIndex, result, onSelect, values, merg
             <TableCell className="font-medium text-gray-300 bg-gray-900/30">{label}</TableCell>
             <TableCell className={`p-3 relative ${getCellClass('ovagames')}`} onClick={() => values.ovagames && onSelect(gameIndex, field, 'ovagames')}>
                 {selectedSource === 'ovagames' && <Check className="absolute top-1 right-1 h-3 w-3 text-blue-400" />}
+                {actualSource === 'ovagames' && selectedSource !== 'ovagames' && <div className="absolute top-1 right-1 h-2 w-2 bg-blue-400 rounded-full"></div>}
                 <span className="line-clamp-2" title={values.ovagames || ''}>{values.ovagames || '-'}</span>
             </TableCell>
             <TableCell className={`p-3 relative ${getCellClass('fitgirl')}`} onClick={() => values.fitgirl && onSelect(gameIndex, field, 'fitgirl')}>
                 {selectedSource === 'fitgirl' && <Check className="absolute top-1 right-1 h-3 w-3 text-green-400" />}
+                {actualSource === 'fitgirl' && selectedSource !== 'fitgirl' && <div className="absolute top-1 right-1 h-2 w-2 bg-green-400 rounded-full"></div>}
                 <span className="line-clamp-2" title={values.fitgirl || ''}>{values.fitgirl || '-'}</span>
             </TableCell>
             <TableCell className={`p-3 relative ${getCellClass('elamigos')}`} onClick={() => values.elamigos && onSelect(gameIndex, field, 'elamigos')}>
                 {selectedSource === 'elamigos' && <Check className="absolute top-1 right-1 h-3 w-3 text-orange-400" />}
+                {actualSource === 'elamigos' && selectedSource !== 'elamigos' && <div className="absolute top-1 right-1 h-2 w-2 bg-orange-400 rounded-full"></div>}
                 <span className="line-clamp-2" title={values.elamigos || ''}>{values.elamigos || '-'}</span>
             </TableCell>
             <TableCell className={`p-3 relative ${getCellClass('imdb')}`} onClick={() => values.imdb && onSelect(gameIndex, field, 'imdb')}>
                 {selectedSource === 'imdb' && <Check className="absolute top-1 right-1 h-3 w-3 text-purple-400" />}
+                {actualSource === 'imdb' && selectedSource !== 'imdb' && <div className="absolute top-1 right-1 h-2 w-2 bg-purple-400 rounded-full"></div>}
                 <span className="line-clamp-2" title={values.imdb || ''}>{values.imdb || '-'}</span>
             </TableCell>
             <TableCell className="bg-gray-900/50 font-medium text-white border-l border-gray-700">
-                <span className="line-clamp-2" title={mergedValue || ''}>{mergedValue || '-'}</span>
+                <div className="flex items-center justify-between">
+                    <span className="line-clamp-2 flex-1" title={mergedValue || ''}>{mergedValue || '-'}</span>
+                    {actualSource && (
+                        <span className={`text-xs ml-2 px-1 py-0.5 rounded ${getSourceIndicator(actualSource)} bg-gray-800/50`}>
+                            {actualSource === 'ovagames' ? 'OVA' :
+                             actualSource === 'fitgirl' ? 'FG' :
+                             actualSource === 'elamigos' ? 'EL' :
+                             actualSource === 'imdb' ? 'IMDB' : actualSource}
+                        </span>
+                    )}
+                </div>
             </TableCell>
         </TableRow>
     );

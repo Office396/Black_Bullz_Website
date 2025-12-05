@@ -246,36 +246,84 @@ export interface MergePreferences {
 /**
  * Merge data from all three sources with intelligent defaults and user preferences
  */
+// Default preferences as requested by user
+const DEFAULT_PREFERENCES: MergePreferences = {
+  title: 'fitgirl',
+  developer: 'ovagames',
+  fileSize: 'ovagames',
+  longDescription: 'ovagames',
+  shortDescription: 'imdb',
+  screenshots: 'fitgirl',
+  genres: 'fitgirl',
+  languages: 'fitgirl',
+  systemRequirements: 'ovagames',
+  downloadLinks: 'fitgirl',
+  rating: 'imdb',
+  originalSize: 'fitgirl'
+};
+
 export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): MergedGameData {
   const { ovagames, fitgirl, elamigos, imdb } = data;
 
-  // Helper to get title based on preference
+  // Use provided preferences or defaults
+  const effectivePrefs = { ...DEFAULT_PREFERENCES, ...prefs };
+
+  // Helper to get title with automatic fallback
   const getTitle = () => {
-    if (prefs?.title === 'ovagames' && ovagames?.title) return ovagames.title;
-    if (prefs?.title === 'fitgirl' && fitgirl?.title) return cleanFitGirlTitle(fitgirl.title);
-    if (prefs?.title === 'elamigos' && elamigos?.title) return elamigos.title;
-    if (prefs?.title === 'imdb' && imdb?.title) return imdb.title;
-    // Default priority
-    return fitgirl?.title ? cleanFitGirlTitle(fitgirl.title) : elamigos?.title || imdb?.title || ovagames?.title || '';
+    const preferredSources = ['fitgirl', 'elamigos', 'imdb', 'ovagames'];
+    for (const source of preferredSources) {
+      if (effectivePrefs.title === source) {
+        const value = source === 'fitgirl' ? cleanFitGirlTitle(fitgirl?.title) :
+                    source === 'elamigos' ? elamigos?.title :
+                    source === 'imdb' ? imdb?.title :
+                    ovagames?.title;
+        if (value) return value;
+      }
+    }
+    // Auto-fallback: try all sources in priority order
+    if (fitgirl?.title) return cleanFitGirlTitle(fitgirl.title);
+    if (elamigos?.title) return elamigos.title;
+    if (imdb?.title) return imdb.title;
+    if (ovagames?.title) return ovagames.title;
+    return '';
   };
 
-  // Helper to get developer
+  // Helper to get developer with automatic fallback
   const getDeveloper = () => {
-    if (prefs?.developer === 'ovagames' && ovagames?.developer) return ovagames.developer;
-    if (prefs?.developer === 'fitgirl' && fitgirl?.companies) return fitgirl.companies;
-    if (prefs?.developer === 'elamigos' && elamigos?.developer) return elamigos.developer;
-    if (prefs?.developer === 'imdb' && imdb?.developer) return imdb.developer;
-    // Default priority
-    return imdb?.developer || ovagames?.developer || fitgirl?.companies || elamigos?.developer || '';
+    const preferredSources = ['ovagames', 'fitgirl', 'elamigos', 'imdb'];
+    for (const source of preferredSources) {
+      if (effectivePrefs.developer === source) {
+        const value = source === 'ovagames' ? ovagames?.developer :
+                    source === 'fitgirl' ? fitgirl?.companies :
+                    source === 'elamigos' ? elamigos?.developer :
+                    imdb?.developer;
+        if (value) return value;
+      }
+    }
+    // Auto-fallback: try all sources in priority order
+    if (ovagames?.developer) return ovagames.developer;
+    if (fitgirl?.companies) return fitgirl.companies;
+    if (elamigos?.developer) return elamigos.developer;
+    if (imdb?.developer) return imdb.developer;
+    return '';
   };
 
-  // Helper to get file size
+  // Helper to get file size with automatic fallback
   const getFileSize = () => {
-    if (prefs?.fileSize === 'ovagames' && ovagames?.file_size) return extractFileSize(ovagames.file_size);
-    if (prefs?.fileSize === 'fitgirl' && fitgirl?.repack_size) return fitgirl.repack_size;
-    if (prefs?.fileSize === 'elamigos' && elamigos?.repack_size) return elamigos.repack_size;
-    // Default priority
-    return ovagames?.file_size ? extractFileSize(ovagames.file_size) : fitgirl?.repack_size || elamigos?.repack_size || '';
+    const preferredSources = ['ovagames', 'fitgirl', 'elamigos'];
+    for (const source of preferredSources) {
+      if (effectivePrefs.fileSize === source) {
+        const value = source === 'ovagames' ? (ovagames?.file_size ? extractFileSize(ovagames.file_size) : null) :
+                    source === 'fitgirl' ? fitgirl?.repack_size :
+                    elamigos?.repack_size;
+        if (value) return value;
+      }
+    }
+    // Auto-fallback: try all sources in priority order
+    if (ovagames?.file_size) return extractFileSize(ovagames.file_size);
+    if (fitgirl?.repack_size) return fitgirl.repack_size;
+    if (elamigos?.repack_size) return elamigos.repack_size;
+    return '';
   };
 
   // Helper to get rating
@@ -286,74 +334,108 @@ export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): 
     return imdb?.rating || ovagames?.rating || '';
   };
 
-  // Helper to get short description
+  // Helper to get short description with automatic fallback
   const getShortDescription = () => {
-    if (prefs?.shortDescription === 'ovagames' && ovagames?.short_description) return ovagames.short_description;
-    if (prefs?.shortDescription === 'imdb' && imdb?.short_description) return imdb.short_description;
-    // Default priority (ElAmigos doesn't have short description)
-    return imdb?.short_description || ovagames?.short_description || '';
+    const preferredSources = ['imdb', 'ovagames'];
+    for (const source of preferredSources) {
+      if (effectivePrefs.shortDescription === source) {
+        const value = source === 'imdb' ? imdb?.short_description :
+                    ovagames?.short_description;
+        if (value) return value;
+      }
+    }
+    // Auto-fallback: try all sources in priority order
+    if (imdb?.short_description) return imdb.short_description;
+    if (ovagames?.short_description) return ovagames.short_description;
+    return '';
   };
 
-  // Helper to get long description
+  // Helper to get long description with automatic fallback
   const getLongDescription = () => {
-    if (prefs?.longDescription === 'ovagames' && ovagames?.long_description) return ovagames.long_description;
-    if (prefs?.longDescription === 'elamigos' && elamigos?.description) return elamigos.description;
-    if (prefs?.longDescription === 'imdb' && imdb?.long_description) return imdb.long_description;
-    // Default priority
-    return ovagames?.long_description || elamigos?.description || imdb?.long_description || '';
+    const preferredSources = ['ovagames', 'elamigos', 'imdb'];
+    for (const source of preferredSources) {
+      if (effectivePrefs.longDescription === source) {
+        const value = source === 'ovagames' ? ovagames?.long_description :
+                    source === 'elamigos' ? elamigos?.description :
+                    imdb?.long_description;
+        if (value) return value;
+      }
+    }
+    // Auto-fallback: try all sources in priority order
+    if (ovagames?.long_description) return ovagames.long_description;
+    if (elamigos?.description) return elamigos.description;
+    if (imdb?.long_description) return imdb.long_description;
+    return '';
   };
 
-  // Helper to get screenshots
+  // Helper to get screenshots with automatic fallback
   const getScreenshots = () => {
-    if (prefs?.screenshots === 'ovagames' && ovagames?.screenshots) return ovagames.screenshots;
-    if (prefs?.screenshots === 'fitgirl' && fitgirl?.screenshots) return reverseScreenshots(fitgirl.screenshots);
-    if (prefs?.screenshots === 'elamigos' && elamigos?.screenshots) return elamigos.screenshots;
-    if (prefs?.screenshots === 'imdb' && imdb?.screenshots) return reverseScreenshots(imdb.screenshots);
-
-    // Default priority
-    return fitgirl?.screenshots?.length
-      ? reverseScreenshots(fitgirl.screenshots)
-      : elamigos?.screenshots?.length
-        ? elamigos.screenshots
-        : imdb?.screenshots?.length
-          ? reverseScreenshots(imdb.screenshots)
-          : ovagames?.screenshots || [];
+    const preferredSources = ['fitgirl', 'ovagames', 'elamigos', 'imdb'];
+    for (const source of preferredSources) {
+      if (effectivePrefs.screenshots === source) {
+        const value = source === 'fitgirl' ? (fitgirl?.screenshots ? reverseScreenshots(fitgirl.screenshots) : null) :
+                    source === 'ovagames' ? ovagames?.screenshots :
+                    source === 'elamigos' ? elamigos?.screenshots :
+                    (imdb?.screenshots ? reverseScreenshots(imdb.screenshots) : null);
+        if (value && value.length > 0) return value;
+      }
+    }
+    // Auto-fallback: try all sources in priority order
+    if (fitgirl?.screenshots?.length) return reverseScreenshots(fitgirl.screenshots);
+    if (ovagames?.screenshots?.length) return ovagames.screenshots;
+    if (elamigos?.screenshots?.length) return elamigos.screenshots;
+    if (imdb?.screenshots?.length) return reverseScreenshots(imdb.screenshots);
+    return [];
   };
 
-  // Helper to get genres
+  // Helper to get genres with automatic fallback
   const getGenres = () => {
-    if (prefs?.genres === 'ovagames' && ovagames?.category) return [ovagames.category];
-    if (prefs?.genres === 'fitgirl' && fitgirl?.genres) return fitgirl.genres;
-    if (prefs?.genres === 'imdb' && imdb?.category) return imdb.category;
-    // Default priority
-    // Combine FitGirl genres and OvaGames category if available, or fallback
-    const genres = fitgirl?.genres || [];
-    if (ovagames?.category && !genres.includes(ovagames.category)) {
-      genres.push(ovagames.category);
+    const preferredSources = ['fitgirl', 'ovagames', 'imdb'];
+    for (const source of preferredSources) {
+      if (effectivePrefs.genres === source) {
+        const value = source === 'fitgirl' ? fitgirl?.genres :
+                    source === 'ovagames' ? (ovagames?.category ? [ovagames.category] : null) :
+                    (imdb?.category ? imdb.category : null);
+        if (value && value.length > 0) return value;
+      }
     }
-    return genres.length > 0 ? genres : imdb?.category || [];
+    // Auto-fallback: try all sources in priority order
+    if (fitgirl?.genres?.length) return fitgirl.genres;
+    if (ovagames?.category) return [ovagames.category];
+    if (imdb?.category?.length) return imdb.category;
+    return [];
   };
 
-  // Helper to get languages
+  // Helper to get languages with automatic fallback
   const getLanguages = () => {
-    if (prefs?.languages === 'fitgirl' && fitgirl?.languages) return fitgirl.languages;
-    if (prefs?.languages === 'elamigos' && elamigos?.languages) return elamigos.languages;
-    // Default priority
-    return fitgirl?.languages || elamigos?.languages || '';
+    const preferredSources = ['fitgirl', 'elamigos'];
+    for (const source of preferredSources) {
+      if (effectivePrefs.languages === source) {
+        const value = source === 'fitgirl' ? fitgirl?.languages :
+                    elamigos?.languages;
+        if (value) return value;
+      }
+    }
+    // Auto-fallback: try all sources in priority order
+    if (fitgirl?.languages) return fitgirl.languages;
+    if (elamigos?.languages) return elamigos.languages;
+    return '';
   };
 
-  // Helper to get system requirements
+  // Helper to get system requirements with automatic fallback (OvaGames preferred, ElAmigos fallback)
   const getSystemRequirements = () => {
-    if (prefs?.systemRequirements === 'ovagames' && ovagames?.system_requirements) {
-      return parseSystemRequirements(ovagames.system_requirements);
+    const preferredSources = ['ovagames', 'elamigos'];
+    for (const source of preferredSources) {
+      if (effectivePrefs.systemRequirements === source) {
+        const value = source === 'ovagames' ? (ovagames?.system_requirements ? parseSystemRequirements(ovagames.system_requirements) : null) :
+                    elamigos?.system_requirements;
+        if (value && (value.os || value.processor || value.memory || value.graphics || value.storage)) return value;
+      }
     }
-    if (prefs?.systemRequirements === 'elamigos' && elamigos?.system_requirements) {
-      return elamigos.system_requirements;
-    }
-    // Default priority (OvaGames is best, then ElAmigos)
-    return ovagames?.system_requirements
-      ? parseSystemRequirements(ovagames.system_requirements)
-      : elamigos?.system_requirements || { os: '', processor: '', memory: '', graphics: '', storage: '', directx: '', sound_card: '' };
+    // Auto-fallback: try all sources in priority order (OvaGames first, then ElAmigos)
+    if (ovagames?.system_requirements) return parseSystemRequirements(ovagames.system_requirements);
+    if (elamigos?.system_requirements) return elamigos.system_requirements;
+    return { os: '', processor: '', memory: '', graphics: '', storage: '', directx: '', sound_card: '' };
   };
 
   // Helper to get download links with multiple providers
