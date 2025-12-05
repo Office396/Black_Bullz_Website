@@ -215,40 +215,75 @@ class ElAmigosDataExtractor {
     console.log('[ElAmigos] Looking for screenshots...');
     const screenshots: string[] = [];
 
-    // Look for Images section
-    const imagesHeading = $('h3').filter((i, el) => {
-      return $(el).text().includes('Images') || $(el).text().includes('Screenshots');
+    // Look for Images section - try multiple approaches
+    let imagesHeading = $('h3').filter((i, el) => {
+      const text = $(el).text().trim();
+      return text.includes('Images') || text.includes('Screenshots');
     }).first();
 
     console.log(`[ElAmigos] Images heading found: ${imagesHeading.length}`);
     if (imagesHeading.length) {
       console.log(`[ElAmigos] Images heading text: "${imagesHeading.text().trim()}"`);
-      const imagesRow = imagesHeading.next('.row');
-      console.log(`[ElAmigos] Images row found: ${imagesRow.length}`);
-      if (imagesRow.length) {
-        const imageLinks = imagesRow.find('a[href]');
-        console.log(`[ElAmigos] Image links found: ${imageLinks.length}`);
-      }
+    }
+
+    // If not found, try looking for any h3 with class my-4 containing Images
+    if (!imagesHeading.length) {
+      imagesHeading = $('h3.my-4').filter((i, el) => {
+        return $(el).text().includes('Images');
+      }).first();
+      console.log(`[ElAmigos] Alternative Images heading found: ${imagesHeading.length}`);
+    }
+
+    // If still not found, try looking for any element containing "Images"
+    if (!imagesHeading.length) {
+      imagesHeading = $('*').filter((i, el) => {
+        return $(el).text().includes('Images');
+      }).first();
+      console.log(`[ElAmigos] Any Images element found: ${imagesHeading.length}`);
     }
 
     if (imagesHeading.length) {
-      const imagesRow = imagesHeading.next('.row');
+      // Look for .row after the heading
+      let imagesRow = imagesHeading.next('.row');
+      console.log(`[ElAmigos] Images row after heading found: ${imagesRow.length}`);
+
+      // If not found, look for any .row in the document that contains image links
+      if (!imagesRow.length) {
+        $('div.row').each((i, el) => {
+          const row = $(el);
+          const hasImageLinks = row.find('a[href*="webp"]').length > 0;
+          if (hasImageLinks) {
+            imagesRow = row;
+            console.log(`[ElAmigos] Found row with webp links: ${hasImageLinks}`);
+            return false; // Stop searching
+          }
+        });
+      }
+
       if (imagesRow.length) {
-        imagesRow.find('a[href]').each((i, el) => {
+        const imageLinks = imagesRow.find('a[href]');
+        console.log(`[ElAmigos] Total image links found: ${imageLinks.length}`);
+
+        imageLinks.each((i, el) => {
           const href = $(el).attr('href') || '';
-          if (href && href.includes('.webp') && this._isValidScreenshotUrl(href)) {
+          console.log(`[ElAmigos] Checking link ${i + 1}: ${href}`);
+
+          if (href && href.includes('.webp')) {
             screenshots.push(href);
+            console.log(`[ElAmigos] Added screenshot ${screenshots.length}: ${href}`);
             if (screenshots.length >= 6) return false; // Max 6 screenshots
           }
         });
       }
     }
 
+    console.log(`[ElAmigos] Total screenshots extracted: ${screenshots.length}`);
     return screenshots;
   }
 
   private _isValidScreenshotUrl(url: string): boolean {
-    return url.includes('elamigosgamez.com') && url.includes('games_tumbl');
+    // More permissive validation - just check it's a valid URL with .webp extension
+    return url.startsWith('http') && url.includes('.webp');
   }
 
   private _extractSystemRequirements($: cheerio.CheerioAPI): RequirementDetails {
