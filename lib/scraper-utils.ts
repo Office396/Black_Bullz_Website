@@ -21,6 +21,7 @@ export interface OvaGamesData {
   long_description: string;
   screenshots: string[];
   system_requirements: string;
+  languages: string;
 }
 
 export interface FitGirlData {
@@ -183,6 +184,16 @@ export function parseSystemRequirements(reqText: string): {
       requirements.directx = trimmed.replace(/^DirectX:\s*/i, '').trim();
     } else if (/^Sound Card:/i.test(trimmed)) {
       requirements.sound_card = trimmed.replace(/^Sound Card:\s*/i, '').trim();
+    } else if (/^Sound:/i.test(trimmed)) {
+      requirements.sound_card = trimmed.replace(/^Sound:\s*/i, '').trim();
+    } else if (/^Hard Drive:/i.test(trimmed)) {
+      requirements.storage = trimmed.replace(/^Hard Drive:\s*/i, '').trim();
+    } else if (/^Other Requirements:/i.test(trimmed)) {
+      const otherReq = trimmed.replace(/^Other Requirements:\s*/i, '').trim();
+      // Check if it's network related
+      if (otherReq.toLowerCase().includes('internet') || otherReq.toLowerCase().includes('broadband')) {
+        requirements.network = otherReq;
+      }
     }
   }
 
@@ -273,7 +284,7 @@ export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): 
     const preferredSources = ['fitgirl', 'elamigos', 'imdb', 'ovagames'];
     for (const source of preferredSources) {
       if (effectivePrefs.title === source) {
-        const value = source === 'fitgirl' ? cleanFitGirlTitle(fitgirl?.title) :
+        const value = source === 'fitgirl' ? (fitgirl?.title ? cleanFitGirlTitle(fitgirl.title) : undefined) :
                     source === 'elamigos' ? elamigos?.title :
                     source === 'imdb' ? imdb?.title :
                     ovagames?.title;
@@ -408,38 +419,60 @@ export function mergeGameData(data: ScrapedGameData, prefs?: MergePreferences): 
 
   // Helper to get languages with automatic fallback
   const getLanguages = () => {
-    const preferredSources = ['fitgirl', 'elamigos'];
+    const preferredSources = ['fitgirl', 'elamigos', 'ovagames'];
     for (const source of preferredSources) {
       if (effectivePrefs.languages === source) {
         const value = source === 'fitgirl' ? fitgirl?.languages :
-                    elamigos?.languages;
+                    source === 'elamigos' ? elamigos?.languages :
+                    ovagames?.languages;
         if (value) return value;
       }
     }
     // Auto-fallback: try all sources in priority order
     if (fitgirl?.languages) return fitgirl.languages;
     if (elamigos?.languages) return elamigos.languages;
+    if (ovagames?.languages) return ovagames.languages;
     return '';
   };
 
   // Helper to get system requirements with automatic fallback (OvaGames preferred, ElAmigos fallback)
   const getSystemRequirements = () => {
+    console.log('[Merge] System requirements - OvaGames:', ovagames?.system_requirements?.substring(0, 100));
+    console.log('[Merge] System requirements - ElAmigos:', elamigos?.system_requirements);
+
     const preferredSources = ['ovagames', 'elamigos'];
     for (const source of preferredSources) {
       if (effectivePrefs.systemRequirements === source) {
         const value = source === 'ovagames' ? (ovagames?.system_requirements ? parseSystemRequirements(ovagames.system_requirements) : null) :
                     elamigos?.system_requirements;
-        if (value && (value.os || value.processor || value.memory || value.graphics || value.storage)) return value;
+        console.log(`[Merge] Preferred source ${source}:`, value);
+        if (value && (value.os || value.processor || value.memory || value.graphics || value.storage)) {
+          console.log(`[Merge] Returning ${source} system requirements`);
+          return value;
+        }
       }
     }
     // Auto-fallback: try all sources in priority order (OvaGames first, then ElAmigos)
-    if (ovagames?.system_requirements) return parseSystemRequirements(ovagames.system_requirements);
-    if (elamigos?.system_requirements) return elamigos.system_requirements;
+    if (ovagames?.system_requirements) {
+      const parsed = parseSystemRequirements(ovagames.system_requirements);
+      console.log('[Merge] OvaGames fallback parsed:', parsed);
+      return parsed;
+    }
+    if (elamigos?.system_requirements) {
+      console.log('[Merge] ElAmigos fallback:', elamigos.system_requirements);
+      return elamigos.system_requirements;
+    }
+    console.log('[Merge] No system requirements found');
     return { os: '', processor: '', memory: '', graphics: '', storage: '', directx: '', sound_card: '' };
   };
 
   // Helper to get download links with multiple providers
   const getDownloadLinks = () => {
+    console.log('[Merge] Download links - FitGirl available:', !!fitgirl?.download_links);
+    if (fitgirl?.download_links) {
+      console.log('[Merge] Download links - FitGirl keys:', Object.keys(fitgirl.download_links));
+    }
+
     const cloudProviders: Array<{
       cloudName: string;
       links: Array<{ name: string; url: string; size: string }>;

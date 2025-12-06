@@ -313,11 +313,11 @@ export default function AdminDetailsAutomation() {
                                             <ComparisonRow label="Genres" field="genres" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: result.ovagames?.category, fitgirl: result.fitgirl?.genres?.join(', '), elamigos: null, imdb: result.imdb?.category?.join(', ') }} mergedValue={result.merged.genres?.join(', ')} />
                                             <ComparisonRow label="Languages" field="languages" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: null, fitgirl: result.fitgirl?.languages, elamigos: result.elamigos?.languages, imdb: null }} mergedValue={result.merged.languages} />
                                             <ComparisonRow label="System Req" field="systemRequirements" gameIndex={index} result={result} onSelect={updatePreference} values={{
-                                                ovagames: result.ovagames?.system_requirements && (result.ovagames.system_requirements.os || result.ovagames.system_requirements.processor) ? 'Available' : null,
+                                                ovagames: result.ovagames?.system_requirements && typeof result.ovagames.system_requirements === 'string' && result.ovagames.system_requirements.length > 10 ? 'Available' : null,
                                                 fitgirl: null,
-                                                elamigos: result.elamigos?.system_requirements && (result.elamigos.system_requirements.os || result.elamigos.system_requirements.processor) ? 'Available' : null,
+                                                elamigos: result.elamigos?.system_requirements && (result.elamigos.system_requirements.os || result.elamigos.system_requirements.processor || result.elamigos.system_requirements.memory || result.elamigos.system_requirements.graphics) ? 'Available' : null,
                                                 imdb: null
-                                            }} mergedValue={result.merged.systemRequirements && (result.merged.systemRequirements.os || result.merged.systemRequirements.processor) ? 'Available' : 'N/A'} />
+                                            }} mergedValue={result.merged.systemRequirements && (result.merged.systemRequirements.os || result.merged.systemRequirements.processor || result.merged.systemRequirements.memory || result.merged.systemRequirements.graphics) ? 'Available' : 'N/A'} />
                                             <ComparisonRow label="Download Links" field="downloadLinks" gameIndex={index} result={result} onSelect={updatePreference} values={{ ovagames: null, fitgirl: result.fitgirl?.download_links ? 'Available' : null, elamigos: null, imdb: null }} mergedValue={result.merged.downloadLinks?.length ? result.merged.downloadLinks.map(p => p.cloudName).join(', ') : 'N/A'} />
                                         </TableBody>
                                     </Table>
@@ -353,16 +353,47 @@ function ComparisonRow({ label, field, gameIndex, result, onSelect, values, merg
 
     // Determine which source is actually being used for the merged value
     const getActualSource = (): FieldSource | null => {
-        if (selectedSource) return selectedSource;
+        // Debug logging
+        if (field === 'languages' || field === 'screenshots') {
+            console.log(`[SourceDetection] Field: ${field}, selectedSource: ${selectedSource}`);
+            console.log(`[SourceDetection] Values:`, values);
+            console.log(`[SourceDetection] Merged: "${mergedValue}"`);
+        }
 
-        // If no manual selection, determine which source provided the merged data
+        // First priority: if manually selected and has data, use it
+        if (selectedSource && values[selectedSource] && values[selectedSource] !== '-') {
+            return selectedSource;
+        }
+
+        // Second priority: find source with data that matches merged value
         const sources: FieldSource[] = ['ovagames', 'fitgirl', 'elamigos', 'imdb'];
         for (const source of sources) {
-            if (values[source] === mergedValue && mergedValue && mergedValue !== '-') {
+            if (values[source] && values[source] !== '-') {
+                // For exact match
+                if (values[source] === mergedValue) {
+                    return source;
+                }
+                // For screenshots (count strings)
+                if (field === 'screenshots' && mergedValue?.includes(values[source])) {
+                    return source;
+                }
+                // For languages (partial match)
+                if (field === 'languages' && mergedValue && values[source] &&
+                    (mergedValue.includes(values[source]) || values[source].includes(mergedValue.substring(0, 20)))) {
+                    return source;
+                }
+            }
+        }
+
+        // Third priority: return first source that has any data
+        for (const source of sources) {
+            if (values[source] && values[source] !== '-') {
                 return source;
             }
         }
-        return null;
+
+        // Last resort: return selected source if it exists
+        return selectedSource || null;
     };
 
     const actualSource = getActualSource();

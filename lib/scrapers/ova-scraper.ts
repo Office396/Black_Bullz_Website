@@ -14,6 +14,7 @@ interface GameData {
   long_description: string;
   screenshots: string[];
   system_requirements: string;
+  languages: string;
 }
 
 class GameDetailsScraper {
@@ -44,6 +45,7 @@ class GameDetailsScraper {
         long_description: this.extractLongDescription($),
         screenshots: this.extractScreenshots($),
         system_requirements: this.extractSystemRequirements($),
+        languages: this.extractLanguages($),
       };
 
       return gameData;
@@ -260,22 +262,54 @@ class GameDetailsScraper {
               const wrapper = contentDiv.find('div.wp-tab-content-wrapper');
               if (wrapper.length) {
                 const fullText = wrapper.text();
+
+                // Try to get recommended requirements first
+                let requirementsText = '';
                 if (fullText.includes('Recommended:')) {
                   const parts = fullText.split('Recommended:');
                   if (parts.length > 1) {
-                    const recommendedText = parts[1];
-                    const lines = recommendedText
-                      .split('\n')
-                      .map((line: string) => {
-                        line = line.trim();
-                        line = line.replace(/^[•\-\*]\s*/, '');
-                        return line;
-                      })
-                      .filter((line: string) => line);
-
-                    const result = lines.join('\n');
-                    return result || 'N/A';
+                    requirementsText = parts[1];
+                    console.log('[OvaGames] Using recommended requirements, extracted text length:', requirementsText.length);
+                    console.log('[OvaGames] Recommended text preview:', requirementsText.substring(0, 200));
                   }
+                }
+
+                // If no recommended, try minimum requirements
+                if (!requirementsText && fullText.includes('Minimum:')) {
+                  const parts = fullText.split('Minimum:');
+                  if (parts.length > 1) {
+                    requirementsText = parts[1];
+                    // If there's also recommended after minimum, get only the minimum part
+                    if (requirementsText.includes('Recommended:')) {
+                      requirementsText = requirementsText.split('Recommended:')[0];
+                    }
+                    console.log('[OvaGames] Using minimum requirements, extracted text length:', requirementsText.length);
+                    console.log('[OvaGames] Minimum text preview:', requirementsText.substring(0, 200));
+                  }
+                }
+
+                if (requirementsText) {
+                  // Clean up bullet points and format for parseSystemRequirements
+                  const cleanedText = requirementsText
+                    .replace(/^[•\-\*]\s*/gm, '') // Remove bullet points
+                    .replace(/^Additional:\s*\*\s*/gm, '') // Remove additional prefixes
+                    .split('\n')
+                    .filter((line: string) => {
+                      const trimmed = line.trim();
+                      return trimmed &&
+                             !trimmed.includes('Additional:') &&
+                             !trimmed.includes('Supported Video Cards') &&
+                             !trimmed.includes('Laptop versions') &&
+                             !trimmed.includes('For the most up-to-date') &&
+                             !trimmed.includes('visit the FAQ') &&
+                             !trimmed.includes('Requires a UPlay account');
+                    })
+                    .join('\n');
+
+                  console.log('[OvaGames] Raw requirements text:', requirementsText.substring(0, 300));
+                  console.log('[OvaGames] Cleaned requirements length:', cleanedText.length);
+                  console.log('[OvaGames] Cleaned requirements preview:', cleanedText.substring(0, 200));
+                  return cleanedText || 'N/A';
                 }
               }
             }
@@ -286,6 +320,57 @@ class GameDetailsScraper {
       console.error(`Error extracting system requirements: ${error}`);
     }
     return 'N/A';
+  }
+
+  private extractLanguages($: cheerio.CheerioAPI): string {
+    try {
+      console.log('[OvaGames] Extracting languages...');
+
+      // Look for the install notes section that contains languages
+      const installNotesElements = $('p').filter((i, el) => {
+        return $(el).text().includes('Full List of Supported Languages');
+      });
+
+      console.log(`[OvaGames] Install notes elements found: ${installNotesElements.length}`);
+
+      if (installNotesElements.length) {
+        const installNotesText = installNotesElements.first().text();
+        console.log('[OvaGames] Install notes text:', installNotesText.substring(0, 200));
+
+        const languagesMatch = installNotesText.match(/Full List of Supported Languages:\s*([^<\n]+(?:\s*,\s*[^<\n]+)*)/i);
+        if (languagesMatch) {
+          const languages = languagesMatch[1].trim();
+          console.log('[OvaGames] Found languages in install notes:', languages);
+          return languages;
+        } else {
+          console.log('[OvaGames] No languages match found in install notes');
+        }
+      }
+
+      // Fallback: search in paragraphs containing language keywords
+      console.log('[OvaGames] Searching in paragraphs for languages...');
+      const paragraphs = $('p');
+      console.log(`[OvaGames] Found ${paragraphs.length} paragraphs`);
+      for (let i = 0; i < paragraphs.length; i++) {
+        const text = $(paragraphs[i]).text();
+        if (text.includes('English') && text.includes('French')) {
+          console.log(`[OvaGames] Found paragraph ${i} with languages: "${text.substring(0, 200)}"`);
+          // Try to extract just the language list
+          const lines = text.split('\n');
+          for (const line of lines) {
+            if (line.includes('English') && line.includes('French')) {
+              console.log('[OvaGames] Language line found:', line.trim());
+              return line.trim();
+            }
+          }
+        }
+      }
+
+      console.log('[OvaGames] No languages found');
+    } catch (error) {
+      console.error(`Error extracting languages: ${error}`);
+    }
+    return '';
   }
 }
 
