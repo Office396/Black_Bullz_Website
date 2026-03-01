@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({
-  
+
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -24,7 +24,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-gray-900`}>
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-[#0a1628]`}>
         {/* PageLoader handles client-side route changes with a controlled delay */}
         <PageLoader />
         {/* Suspense ensures client components that suspend show a fallback immediately */}
