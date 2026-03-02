@@ -1,13 +1,10 @@
 'use client'
 
 import { Header } from "@/components/header"
-import { Sidebar } from "@/components/sidebar"
+import { SiteFooter } from "@/components/site-footer"
 import { GameDetails } from "@/components/game-details"
-import { Comments } from "@/components/comments"
-import { PageLoader } from "@/components/page-loader"
 import { useEffect, useState } from "react"
 
-// Helper function to get game data
 async function getGameData(gameId: number) {
   try {
     const response = await fetch("/api/items")
@@ -21,11 +18,9 @@ async function getGameData(gameId: number) {
     console.error("Error fetching items:", error)
   }
 
-  // If not found in admin items, check static games
   return staticGames.find(game => game.id === gameId) || null
 }
 
-// Static games data - in real app this would come from database
 const staticGames = [
   {
     id: 1,
@@ -35,36 +30,22 @@ const staticGames = [
     rating: 4.8,
     size: "65 GB",
     releaseDate: "2015-04-14",
-    description:
-      "Grand Theft Auto V is an action-adventure game played from either a third-person or first-person perspective. Players complete missions—linear scenarios with set objectives—to progress through the story. Outside of the missions, players may freely roam the open world.",
-    longDescription:
-      "When a young street hustler, a retired bank robber and a terrifying psychopath find themselves entangled with some of the most frightening and deranged elements of the criminal underworld, the U.S. government and the entertainment industry, they must pull off a series of dangerous heists to survive in a ruthless city in which they can trust nobody, least of all each other.",
+    description: "Grand Theft Auto V is an action-adventure game played from either a third-person or first-person perspective.",
+    longDescription: "When a young street hustler, a retired bank robber and a terrifying psychopath find themselves entangled with some of the most frightening and deranged elements of the criminal underworld, the U.S. government and the entertainment industry, they must pull off a series of dangerous heists to survive in a ruthless city in which they can trust nobody, least of all each other.",
     developer: "Rockstar Games",
     publisher: "Rockstar Games",
-    genre: "Action, Adventure, Open World",
-    screenshots: ["/gta-v-screenshot-1.jpg", "/gta-v-screenshot-2.jpg", "/gta-v-screenshot-3.jpg"],
+    genres: ["Action", "Adventure", "Open World", "RPG"],
+    features: ["Open world exploration", "Story-driven campaign", "Multiple characters", "Online multiplayer"],
+    screenshots: ["/gta-v-game-cover.jpg", "/gta-v-game-cover.jpg", "/gta-v-game-cover.jpg"],
     systemRequirements: {
-      minimum: {
-        os: "Windows 10 64 Bit, Windows 8.1 64 Bit, Windows 8 64 Bit, Windows 7 64 Bit Service Pack 1",
-        processor:
-          "Intel Core 2 Quad CPU Q6600 @ 2.40GHz (4 CPUs) / AMD Phenom 9850 Quad-Core Processor (4 CPUs) @ 2.5GHz",
-        memory: "4 GB RAM",
-        graphics: "NVIDIA 9800 GT 1GB / AMD HD 4870 1GB (DX 10, 10.1, 11)",
-        storage: "65 GB available space",
-      },
       recommended: {
-        os: "Windows 10 64 Bit, Windows 8.1 64 Bit, Windows 8 64 Bit, Windows 7 64 Bit Service Pack 1",
-        processor: "Intel Core i5 3470 @ 3.2GHz (4 CPUs) / AMD X8 FX-8350 @ 4GHz (8 CPUs)",
+        os: "Windows 10 64 Bit",
+        processor: "Intel Core i5 3470 @ 3.2GHz / AMD X8 FX-8350 @ 4GHz",
         memory: "8 GB RAM",
         graphics: "NVIDIA GTX 660 2GB / AMD HD 7870 2GB",
-        storage: "65 GB available space",
-      },
+        storage: "65 GB available space"
+      }
     },
-    downloadLinks: [
-      { name: "Direct Download", url: "#", size: "65 GB" },
-      { name: "Torrent Download", url: "#", size: "65 GB" },
-      { name: "Mirror 1", url: "#", size: "65 GB" },
-    ],
     tab: "pc-games",
   },
   {
@@ -75,43 +56,22 @@ const staticGames = [
     rating: 4.9,
     size: "3.2 GB",
     releaseDate: "2023-10-10",
-    description:
-      "Adobe Photoshop is a raster graphics editor developed and published by Adobe Inc. for Windows and macOS.",
-    longDescription:
-      "Adobe Photoshop 2024 brings new AI-powered features, enhanced performance, and improved workflows for creative professionals. With advanced selection tools, neural filters, and cloud integration, it's the industry standard for digital image editing and graphic design.",
+    description: "Adobe Photoshop is a raster graphics editor developed and published by Adobe Inc.",
+    longDescription: "Adobe Photoshop 2024 brings new AI-powered features, enhanced performance, and improved workflows for creative professionals. With advanced selection tools, neural filters, and cloud integration, it's the industry standard for digital image editing and graphic design.",
     developer: "Adobe Inc.",
     publisher: "Adobe Inc.",
-    genre: "Graphics, Design, Photo Editing",
-    screenshots: ["/photoshop-screenshot-1.jpg", "/photoshop-screenshot-2.jpg", "/photoshop-screenshot-3.jpg"],
-    keyFeatures: [
-      "AI-powered Neural Filters",
-      "Advanced selection tools",
-      "Cloud document sync",
-      "3D design capabilities",
-      "Video editing support",
-      "Extensive plugin ecosystem",
-    ],
+    genres: ["Graphics", "Design", "Photo Editing"],
+    features: ["AI-powered Neural Filters", "Advanced selection tools", "Cloud document sync", "3D design capabilities"],
+    screenshots: ["/adobe-photoshop-icon.jpg", "/adobe-photoshop-icon.jpg"],
     systemRequirements: {
-      minimum: {
-        os: "Windows 10 64-bit (version 1903) or later",
-        processor: "Intel or AMD processor with 64-bit support; 2 GHz or faster",
-        memory: "8 GB RAM",
-        graphics: "GPU with DirectX 12 support and 2 GB GPU memory",
-        storage: "4 GB available space",
-      },
       recommended: {
-        os: "Windows 11 64-bit (version 21H2) or later",
+        os: "Windows 11 64-bit",
         processor: "Intel or AMD processor with 64-bit support; 3 GHz or faster",
-        memory: "16 GB RAM or more",
+        memory: "16 GB RAM",
         graphics: "GPU with DirectX 12 support and 4 GB GPU memory",
-        storage: "10 GB available space on SSD",
-      },
+        storage: "10 GB available space on SSD"
+      }
     },
-    downloadLinks: [
-      { name: "Official Installer", url: "#", size: "3.2 GB" },
-      { name: "Portable Version", url: "#", size: "2.8 GB" },
-      { name: "Mirror Download", url: "#", size: "3.2 GB" },
-    ],
     tab: "software",
   },
   {
@@ -123,31 +83,21 @@ const staticGames = [
     size: "2.1 GB",
     releaseDate: "2018-03-19",
     description: "PUBG Mobile is a free-to-play battle royale video game developed by LightSpeed & Quantum Studio.",
-    longDescription:
-      "Experience the thrill of the world's most beloved battle royale game on mobile. Drop into massive battlegrounds with up to 100 players, scavenge for weapons and supplies, and fight to be the last one standing. With multiple game modes, maps, and constant updates, PUBG Mobile delivers console-quality gaming on your phone.",
+    longDescription: "Experience the thrill of the world's most beloved battle royale game on mobile. Drop into massive battlegrounds with up to 100 players, scavenge for weapons and supplies, and fight to be the last one standing.",
     developer: "LightSpeed & Quantum Studio",
     publisher: "Tencent Games",
-    genre: "Battle Royale, Action, Multiplayer",
-    screenshots: ["/pubg-screenshot-1.jpg", "/pubg-screenshot-2.jpg", "/pubg-screenshot-3.jpg"],
-    androidRequirements: {
-      minimum: {
-        os: "Android 5.1.1 or above",
-        ram: "3 GB RAM",
-        storage: "2.5 GB available space",
-        processor: "Snapdragon 660 / Exynos 8895 or equivalent",
-      },
+    genres: ["Battle Royale", "Action", "Multiplayer"],
+    features: ["100-player battles", "Multiple game modes", "Voice chat", "Seasonal updates"],
+    screenshots: ["/pubg-mobile-game-cover.jpg", "/pubg-mobile-game-cover.jpg"],
+    systemRequirements: {
       recommended: {
         os: "Android 8.0 or above",
-        ram: "6 GB RAM or more",
-        storage: "4 GB available space",
         processor: "Snapdragon 855 / Exynos 9820 or better",
-      },
+        memory: "6 GB RAM or more",
+        storage: "4 GB available space",
+        graphics: "Adreno 640 or better"
+      }
     },
-    downloadLinks: [
-      { name: "Google Play Store", url: "#", size: "2.1 GB" },
-      { name: "APK Direct Download", url: "#", size: "2.1 GB" },
-      { name: "OBB + APK", url: "#", size: "2.1 GB" },
-    ],
     tab: "android-games",
   },
 ]
@@ -155,6 +105,7 @@ const staticGames = [
 interface GamePageProps {
   params: { id: string }
 }
+
 export default function GamePage({ params }: GamePageProps) {
   const [game, setGame] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -171,40 +122,49 @@ export default function GamePage({ params }: GamePageProps) {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative w-48 h-48 mx-auto mb-4">
-            <video autoPlay loop muted className="w-full h-full object-contain">
-              <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/700_F_669683156_9EPE8bLAvgoRhMnBfGOSQF6CGLKhsEEe_ST%20%28online-video-cutter.com%29-9p0CdowwI5OwXM4iOSRhEsn6F3lxo3.mp4" type="video/mp4" />
-            </video>
+      <div className="min-h-screen bg-[#0a1628]">
+        <Header />
+        <div className="pt-16">
+          <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+            <div className="animate-pulse space-y-6">
+              <div className="h-6 w-48 bg-[#1a2a44] rounded" />
+              <div className="h-96 bg-[#1a2a44] rounded-xl" />
+            </div>
           </div>
-          <p className="text-white text-lg font-semibold">Loading...</p>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gray-900 relative" style={{
-        backgroundImage: 'url("https://wallpapers.com/images/hd/cool-dark-red-sky-es4t2jelpx91h04m.jpg")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}>
-      <Header />
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex gap-6">
-          <main className="flex-1">
-            <GameDetails game={game} />
-            <div className="mt-8">
-              <Comments gameId={gameId} itemName={game?.title || "Game"} />
+  if (!game) {
+    return (
+      <div className="min-h-screen bg-[#0a1628]">
+        <Header />
+        <div className="pt-16">
+          <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-">
+            <div className="text-center py-20">
+              <h1 className="text-2xl font-bold text-white mb-4">Game Not Found</h1>
+              <p className="text-gray-400 mb-6">The game you're looking for doesn't exist or has been removed.</p>
+              <a href="/games" className="inline-flex items-center gap-2 px-6 py-3 bg-[#00bcd4] hover:bg-[#0097a7] text-white font-medium rounded-lg">
+                Browse All Games
+              </a>
             </div>
-          </main>
-          <aside className="w-80 hidden lg:block">
-            <Sidebar />
-          </aside>
+          </div>
+        </div>
+        <SiteFooter />
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0a1628]">
+      <Header />
+      <div className="pt-16">
+        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+          <GameDetails game={game} />
         </div>
       </div>
+      <SiteFooter />
     </div>
   )
 }
