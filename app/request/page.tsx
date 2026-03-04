@@ -13,7 +13,7 @@ export default function RequestPage() {
       <Header />
 
       <div className="pt-16">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="max-w-2xl mx-auto text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#00bcd4]/20 mb-4">
               <MessageSquarePlus className="w-8 h-8 text-[#00bcd4]" />

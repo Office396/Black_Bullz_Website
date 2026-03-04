@@ -53,7 +53,7 @@ export default function TopGamesPage() {
       <div className="min-h-screen bg-[#0a1628]">
         <Header />
         <div className="pt-16">
-          <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+          <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
             <div className="h-10 w-48 bg-[#1a2a44] rounded animate-pulse mb-6" />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 h-96 bg-[#1a2a44] rounded-xl animate-pulse" />
@@ -70,7 +70,7 @@ export default function TopGamesPage() {
       <Header />
 
       <div className="pt-16">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
               <Trophy className="w-8 h-8 text-yellow-500" />

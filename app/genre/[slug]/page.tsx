@@ -58,7 +58,7 @@ export default function GenrePage() {
       <div className="min-h-screen bg-[#0a1628]">
         <Header />
         <div className="pt-16">
-          <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+          <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
             <div className="h-10 w-48 bg-[#1a2a44] rounded animate-pulse mb-6" />
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -76,7 +76,7 @@ export default function GenrePage() {
       <Header />
 
       <div className="pt-16">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
               <Gamepad2 className="w-8 h-8 text-[#00bcd4]" />

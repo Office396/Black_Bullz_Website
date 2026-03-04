@@ -64,7 +64,7 @@ export default function RecentUpdatesPage() {
       <div className="min-h-screen bg-[#0a1628]">
         <Header />
         <div className="pt-16">
-          <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+          <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
             <div className="h-10 w-64 bg-[#1a2a44] rounded animate-pulse mb-6" />
             <div className="space-y-6">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -82,7 +82,7 @@ export default function RecentUpdatesPage() {
       <Header />
 
       <div className="pt-16">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-white mb-2">Recent Updates</h1>
             <p className="text-gray-400">Your Daily Dose of Wait, They Updated AGAIN?!</p>

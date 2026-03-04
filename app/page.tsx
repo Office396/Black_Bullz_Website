@@ -60,10 +60,10 @@ export default function HomePage() {
       <div className="min-h-screen bg-[#0a1628]">
         <Header />
         <div className="pt-16">
-          <div className="max-w-[1400px] mx-auto px-4 lg:px-6 pt-6">
+          <div className="max-w-full mx-auto px-4 lg:px-6 pt-6">
             <div className="w-full h-[420px] bg-[#0f1d32] rounded-xl animate-pulse" />
           </div>
-          <div className="max-w-[1400px] mx-auto px-4 lg:px-6 pt-8 space-y-8">
+          <div className="max-w-full mx-auto px-4 lg:px-6 pt-8 space-y-8">
             <div className="h-6 w-40 bg-[#1a2a44] rounded animate-pulse" />
             <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
               {Array.from({ length: 9 }).map((_, i) => (
@@ -87,35 +87,35 @@ export default function HomePage() {
       <Header />
 
       <div className="pt-16">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 pt-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6 pt-6">
           <HeroCarousel games={items} />
         </div>
 
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6">
           <SocialBar />
         </div>
 
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6">
           <TrendingSection games={trendingGames.length > 0 ? trendingGames : items} />
         </div>
 
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6">
           <UpcomingGames games={items} />
         </div>
 
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6">
           <LatestSection games={items} />
         </div>
 
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6">
           <FeaturedGame game={featuredGame} />
         </div>
 
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6">
           <EpicCollections />
         </div>
 
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6">
           <CategoriesSection games={items} />
         </div>
 

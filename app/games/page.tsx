@@ -138,7 +138,7 @@ export default function AllGamesPage() {
       <div className="min-h-screen bg-[#0a1628]">
         <Header />
         <div className="pt-16">
-          <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+          <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
             <div className="h-10 w-48 bg-[#1a2a44] rounded animate-pulse mb-6" />
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
               {Array.from({ length: 12 }).map((_, i) => (
@@ -156,10 +156,10 @@ export default function AllGamesPage() {
       <Header />
 
       <div className="pt-16">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white mb-2">All Games</h1>
-            <p className="text-gray-400">Browse our collection of {totalGames.toLocaleString()} games</p>
+            <h1 className="text-3xl font-bold text-center text-white mb-2">All Games</h1>
+            <p className="text-gray-400 text-center">Browse our collection of {totalGames.toLocaleString()} games</p>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-4 mb-6">
@@ -189,15 +189,15 @@ export default function AllGamesPage() {
             </Button>
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
             {quickFilters.map((filter) => (
               <button
                 key={filter.value}
                 onClick={() => handleFilterClick(filter.value)}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                  "px-3 py-1.5 rounded-lg text-center text-sm font-medium transition-all",
                   selectedFilter === filter.value
-                    ? "bg-[#00bcd4] text-white"
+                    ? "bg-[#00bcd4] text-white "
                     : "bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white"
                 )}
               >
@@ -207,18 +207,18 @@ export default function AllGamesPage() {
           </div>
 
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center mb-2">
               <h3 className="text-sm font-medium text-gray-400">Browse by Letter</h3>
             </div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-3 justify-center">
               {alphabet.map((letter) => (
                 <button
                   key={letter}
                   onClick={() => handleLetterClick(letter)}
                   className={cn(
-                    "w-8 h-8 rounded-lg text-xs font-medium transition-all",
+                    "w-11 h-8 rounded-lg text-xs hover:bg-[#00BCD4] text-center font-medium transition-all",
                     selectedLetter === letter
-                      ? "bg-[#00bcd4] text-white"
+                      ? "bg-[#00bcd4] text-white "
                       : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
                   )}
                 >

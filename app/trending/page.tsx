@@ -46,7 +46,7 @@ export default function TrendingGamesPage() {
       <div className="min-h-screen bg-[#0a1628]">
         <Header />
         <div className="pt-16">
-          <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+          <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
             <div className="h-10 w-48 bg-[#1a2a44] rounded animate-pulse mb-6" />
             <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
               {Array.from({ length: 18 }).map((_, i) => (
@@ -64,7 +64,7 @@ export default function TrendingGamesPage() {
       <Header />
 
       <div className="pt-16">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+        <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="w-8 h-8 text-[#00bcd4]" />

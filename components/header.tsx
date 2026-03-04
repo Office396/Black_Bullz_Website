@@ -4,9 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { 
-  Search, Menu, X, ChevronDown, Sun, Moon, Globe, User, LogIn, 
-  TrendingUp, Clock, FolderHeart, Heart, Building2, MessageSquarePlus,
-  Gamepad2, MoreHorizontal
+  Search, Menu, X, ChevronDown, Sun, Moon, LogIn, 
+  Heart, MoreHorizontal, Shuffle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,6 +67,8 @@ export function Header() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [theme, setTheme] = useState<"dark" | "light">("dark")
+  const [isSpinning, setIsSpinning] = useState(false)
+  const [allGames, setAllGames] = useState<SearchResult[]>([])
   const searchRef = useRef<HTMLDivElement>(null)
   const genreRef = useRef<HTMLDivElement>(null)
   const moreRef = useRef<HTMLDivElement>(null)
@@ -139,7 +140,33 @@ export function Header() {
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark"
     setTheme(newTheme)
-    document.documentElement.classList.toggle("light", newTheme === "light")
+    if (newTheme === "light") {
+      document.documentElement.classList.add("light")
+      document.body.style.backgroundColor = "#f5f5f5"
+    } else {
+      document.documentElement.classList.remove("light")
+      document.body.style.backgroundColor = "#0a1628"
+    }
+  }
+
+  const handleRandomGame = async () => {
+    setIsSpinning(true)
+    try {
+      const response = await fetch("/api/items")
+      const result = await response.json()
+      if (result.success && result.data.length > 0) {
+        const randomIndex = Math.floor(Math.random() * result.data.length)
+        setTimeout(() => {
+          setIsSpinning(false)
+          router.push(`/game/${result.data[randomIndex].id}`)
+        }, 600)
+      } else {
+        setIsSpinning(false)
+      }
+    } catch (error) {
+      setIsSpinning(false)
+      console.error("Error fetching random game:", error)
+    }
   }
 
   const isActive = (href: string) => pathname === href
@@ -153,7 +180,7 @@ export function Header() {
           : "bg-[#0a1628]/80 backdrop-blur-sm"
       )}
     >
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
+      <div className="max-w-full mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center space-x-2.5 hover:scale-105 transition-transform duration-200 flex-shrink-0">
             <div className="w-10 h-10 rounded-full flex items-center justify-center relative overflow-hidden ring-2 ring-[#00bcd4]/30">
@@ -323,6 +350,15 @@ export function Header() {
                 </button>
               )}
             </div>
+
+            <button
+              onClick={handleRandomGame}
+              disabled={isSpinning}
+              className={`p-2 text-gray-400 hover:text-[#00bcd4] transition-all rounded-full hover:bg-white/5 ${isSpinning ? 'opacity-50' : ''}`}
+              title="Random Game"
+            >
+              <Shuffle className={`h-5 w-5 ${isSpinning ? 'animate-spin' : ''}`} />
+            </button>
 
             <button
               onClick={toggleTheme}
