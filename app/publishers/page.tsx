@@ -63,14 +63,14 @@ export default function PublishersPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
 
       <div className="pt-16">
         <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <Building2 className="w-8 h-8 text-[#00bcd4]" />
+              <Building2 className="w-8 h-8 text-[#9d4edd]" />
               <h1 className="text-3xl font-bold text-white">Publishers</h1>
             </div>
             <p className="text-gray-400">
@@ -86,7 +86,7 @@ export default function PublishersPage() {
                 placeholder="Search publishers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#1a2a44] border border-[#1e3050] rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:border-[#00bcd4] focus:outline-none"
+                className="w-full bg-[#1a103c] border border-[#2d1b54] rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:border-[#9d4edd] focus:outline-none"
               />
               {searchQuery && (
                 <button
@@ -106,7 +106,7 @@ export default function PublishersPage() {
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
                   !selectedLetter
-                    ? "bg-[#00bcd4] text-white"
+                    ? "bg-[#9d4edd] text-white"
                     : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
                 )}
               >
@@ -119,7 +119,7 @@ export default function PublishersPage() {
                   className={cn(
                     "w-8 h-8 rounded-lg text-xs font-medium transition-all",
                     selectedLetter === letter
-                      ? "bg-[#00bcd4] text-white"
+                      ? "bg-[#9d4edd] text-white"
                       : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
                   )}
                 >
@@ -136,13 +136,13 @@ export default function PublishersPage() {
                 href={`/publishers/${publisher.slug}`}
                 className="group"
               >
-                <div className="bg-[#0f1d32] border border-[#1e3050] rounded-xl p-4 hover:border-[#00bcd4]/50 transition-all text-center">
-                  <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-[#00bcd4]/20 to-[#0f1d32] flex items-center justify-center">
+                <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4 hover:border-[#9d4edd]/50 transition-all text-center">
+                  <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-[#9d4edd]/20 to-[#120b22] flex items-center justify-center">
                     <span className="text-xl font-bold text-white">
                       {publisher.name.charAt(0)}
                     </span>
                   </div>
-                  <h3 className="text-white text-sm font-medium line-clamp-2 group-hover:text-[#00bcd4] transition-colors mb-1">
+                  <h3 className="text-white text-sm font-medium line-clamp-2 group-hover:text-[#9d4edd] transition-colors mb-1">
                     {publisher.name}
                   </h3>
                   <p className="text-gray-500 text-xs">{publisher.games} Games</p>

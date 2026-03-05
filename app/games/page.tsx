@@ -35,7 +35,7 @@ export default function AllGamesPage() {
   const searchParams = useSearchParams()
   const initialLetter = searchParams.get("letter") || ""
   const initialFilter = searchParams.get("filter") || ""
-  
+
   const [items, setItems] = useState<GameItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -135,14 +135,14 @@ export default function AllGamesPage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-[#0a1628]">
+      <div className="min-h-screen bg-[#090514]">
         <Header />
         <div className="pt-16">
           <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
-            <div className="h-10 w-48 bg-[#1a2a44] rounded animate-pulse mb-6" />
+            <div className="h-10 w-48 bg-[#1a103c] rounded animate-pulse mb-6" />
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
               {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="aspect-[3/4] bg-[#1a2a44] rounded-xl animate-pulse" />
+                <div key={i} className="aspect-[3/4] bg-[#1a103c] rounded-xl animate-pulse" />
               ))}
             </div>
           </div>
@@ -152,7 +152,7 @@ export default function AllGamesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
 
       <div className="pt-16">
@@ -172,7 +172,7 @@ export default function AllGamesPage() {
                   setSearchQuery(e.target.value)
                   setCurrentPage(1)
                 }}
-                className="w-full bg-[#1a2a44] border-[#1e3050] text-white placeholder-gray-500 focus:border-[#00bcd4] focus:ring-[#00bcd4]/20 h-11 pl-4 pr-10"
+                className="w-full bg-[#1a103c] border-[#2d1b54] text-white placeholder-gray-500 focus:border-[#9d4edd] focus:ring-[#9d4edd]/20 h-11 pl-4 pr-10"
               />
               {searchQuery && (
                 <button
@@ -197,7 +197,7 @@ export default function AllGamesPage() {
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-center text-sm font-medium transition-all",
                   selectedFilter === filter.value
-                    ? "bg-[#00bcd4] text-white "
+                    ? "bg-[#9d4edd] text-white "
                     : "bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white"
                 )}
               >
@@ -216,9 +216,9 @@ export default function AllGamesPage() {
                   key={letter}
                   onClick={() => handleLetterClick(letter)}
                   className={cn(
-                    "w-11 h-8 rounded-lg text-xs hover:bg-[#00BCD4] text-center font-medium transition-all",
+                    "w-11 h-8 rounded-lg text-xs hover:bg-[#9d4edd] text-center font-medium transition-all",
                     selectedLetter === letter
-                      ? "bg-[#00bcd4] text-white "
+                      ? "bg-[#9d4edd] text-white "
                       : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
                   )}
                 >
@@ -246,7 +246,7 @@ export default function AllGamesPage() {
                     onClick={() => setViewMode("grid")}
                     className={cn(
                       "p-2 rounded-lg transition-colors",
-                      viewMode === "grid" ? "bg-[#00bcd4] text-white" : "bg-white/5 text-gray-400 hover:text-white"
+                      viewMode === "grid" ? "bg-[#9d4edd] text-white" : "bg-white/5 text-gray-400 hover:text-white"
                     )}
                   >
                     <Grid className="w-4 h-4" />
@@ -255,7 +255,7 @@ export default function AllGamesPage() {
                     onClick={() => setViewMode("list")}
                     className={cn(
                       "p-2 rounded-lg transition-colors",
-                      viewMode === "list" ? "bg-[#00bcd4] text-white" : "bg-white/5 text-gray-400 hover:text-white"
+                      viewMode === "list" ? "bg-[#9d4edd] text-white" : "bg-white/5 text-gray-400 hover:text-white"
                     )}
                   >
                     <List className="w-4 h-4" />
@@ -267,12 +267,15 @@ export default function AllGamesPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {displayedGames.map((game) => (
                     <Link key={game.id} href={`/game/${game.id}`} className="group">
-                      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a2a44]">
+                      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
                         <img
                           src={game.image || "/placeholder.svg"}
                           alt={game.title}
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                         />
+                        <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                          {game.category === "Android Games" ? "ANDROID" : "PC"}
+                        </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <p className="text-white text-sm font-medium line-clamp-2">{game.title}</p>
@@ -285,12 +288,15 @@ export default function AllGamesPage() {
               ) : (
                 <div className="space-y-3">
                   {displayedGames.map((game) => (
-                    <Link key={game.id} href={`/game/${game.id}`} className="group flex items-center gap-4 p-4 bg-[#0f1d32] border border-[#1e3050] rounded-xl hover:border-[#00bcd4]/50 transition-all">
+                    <Link key={game.id} href={`/game/${game.id}`} className="group flex items-center gap-4 p-4 bg-[#120b22] border border-[#2d1b54] rounded-xl hover:border-[#9d4edd]/50 transition-all">
                       <div className="relative w-20 h-28 flex-shrink-0 rounded-lg overflow-hidden">
                         <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover" />
+                        <div className={`absolute top-1 left-1 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                          {game.category === "Android Games" ? "APK" : "PC"}
+                        </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-white font-medium group-hover:text-[#00bcd4] transition-colors line-clamp-1">{game.title}</h3>
+                        <h3 className="text-white font-medium group-hover:text-[#9d4edd] transition-colors line-clamp-1">{game.title}</h3>
                         <p className="text-gray-500 text-sm">{game.category}</p>
                         {game.size && <p className="text-gray-400 text-xs mt-1">{game.size}</p>}
                       </div>
@@ -328,7 +334,7 @@ export default function AllGamesPage() {
                           className={cn(
                             "w-10 h-10 rounded-lg text-sm font-medium transition-all",
                             currentPage === pageNum
-                              ? "bg-[#00bcd4] text-white"
+                              ? "bg-[#9d4edd] text-white"
                               : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
                           )}
                         >

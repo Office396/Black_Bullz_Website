@@ -164,6 +164,14 @@ export default function AdminSystemStatus() {
               <div className="text-sm text-gray-600">Active Downloads</div>
             </div>
           </div>
+
+          <div className="pt-4 border-t mt-4 flex justify-between items-center">
+            <span className="text-sm text-gray-400">Export your entire game library database</span>
+            <Button onClick={() => window.open('/api/export-games', '_blank')} className="bg-[#9d4edd] hover:bg-[#7b2cbf] text-white">
+              <Database className="w-4 h-4 mr-2" />
+              Export All Games Details to Text File
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

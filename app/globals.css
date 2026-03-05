@@ -40,38 +40,38 @@
 }
 
 .dark {
-  --background: #0a1628;
+  --background: #090514;
   --foreground: oklch(0.985 0 0);
-  --card: #0f1d32;
+  --card: #120b22;
   --card-foreground: oklch(0.985 0 0);
-  --popover: #0f1d32;
+  --popover: #120b22;
   --popover-foreground: oklch(0.985 0 0);
-  --primary: #00bcd4;
-  --primary-foreground: #0a1628;
-  --secondary: #1a2a44;
+  --primary: #9d4edd;
+  --primary-foreground: #090514;
+  --secondary: #1a103c;
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: #1a2a44;
+  --muted: #1a103c;
   --muted-foreground: #8899aa;
-  --accent: #1a2a44;
+  --accent: #1a103c;
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: #1e3050;
-  --input: #1e3050;
-  --ring: #00bcd4;
+  --border: #2d1b54;
+  --input: #2d1b54;
+  --ring: #9d4edd;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: #0f1d32;
+  --sidebar: #120b22;
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: #00bcd4;
+  --sidebar-primary: #9d4edd;
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: #1a2a44;
+  --sidebar-accent: #1a103c;
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: #1e3050;
-  --sidebar-ring: #00bcd4;
+  --sidebar-border: #2d1b54;
+  --sidebar-ring: #9d4edd;
 }
 
 @theme inline {
@@ -113,25 +113,27 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-navy-900: #0a1628;
-  --color-navy-800: #0f1d32;
-  --color-navy-700: #1a2a44;
-  --color-navy-600: #1e3050;
-  --color-cyan-500: #00bcd4;
-  --color-cyan-400: #26c6da;
-  --color-cyan-600: #0097a7;
+  --color-navy-900: #090514;
+  --color-navy-800: #120b22;
+  --color-navy-700: #1a103c;
+  --color-navy-600: #2d1b54;
+  --color-cyan-500: #9d4edd;
+  --color-cyan-400: #c77dff;
+  --color-cyan-600: #7b2cbf;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   html {
     width: 100%;
     height: 100%;
     margin: 0;
     padding: 0;
   }
+
   body {
     @apply bg-background text-foreground;
     width: 100%;
@@ -144,18 +146,33 @@
 
 /* Hero carousel animations */
 @keyframes heroFadeIn {
-  from { opacity: 0; transform: translateX(40px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes heroSlideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-text-anim {
   animation: heroFadeIn 0.6s ease-out forwards;
 }
+
 .hero-slide-up {
   animation: heroSlideUp 0.5s ease-out forwards;
 }
@@ -163,26 +180,31 @@
 /* Smooth horizontal scrolling containers */
 .scroll-container {
   scrollbar-width: thin;
-  scrollbar-color: #1e3050 transparent;
+  scrollbar-color: #2d1b54 transparent;
 }
+
 .scroll-container::-webkit-scrollbar {
   height: 6px;
 }
+
 .scroll-container::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .scroll-container::-webkit-scrollbar-thumb {
-  background: #1e3050;
+  background: #2d1b54;
   border-radius: 3px;
 }
+
 .scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #00bcd4;
+  background: #9d4edd;
 }
 
 /* Game card hover effects */
 .game-card-hover {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 .game-card-hover:hover {
   transform: translateY(-6px) scale(1.03);
   box-shadow: 0 12px 40px rgba(0, 188, 212, 0.15);
@@ -197,7 +219,8 @@
 }
 
 /* Fix for horizontal scrollbar */
-html, body {
+html,
+body {
   overflow-x: hidden;
   width: 100%;
 }
@@ -209,6 +232,95 @@ body {
 }
 
 /* Ensure full height */
-html, body, #__next {
+html,
+body,
+#__next {
   min-height: 100vh;
+}
+
+/* ====== LIGHT MODE OVERRIDES ====== */
+/* When .dark class is removed, switch all hardcoded dark bg/text */
+html:not(.dark) {
+  --background: #f0f0f5;
+  --foreground: #1a1a2e;
+  --card: #ffffff;
+  --card-foreground: #1a1a2e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a2e;
+  --border: #e0e0e8;
+  --input: #e0e0e8;
+  --ring: #9d4edd;
+  --primary: #9d4edd;
+  --primary-foreground: #ffffff;
+}
+
+html:not(.dark) body {
+  background-color: #f0f0f5 !important;
+  color: #1a1a2e !important;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* Override all hardcoded deep dark backgrounds */
+html:not(.dark) [class*="bg-[#090514]"] {
+  background-color: #f0f0f5 !important;
+}
+
+html:not(.dark) [class*="bg-[#120b22]"] {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) [class*="bg-[#1a103c]"] {
+  background-color: #f5f5fa !important;
+}
+
+/* Override hardcoded border colors */
+html:not(.dark) [class*="border-[#2d1b54]"] {
+  border-color: #e0e0e8 !important;
+}
+
+/* Override white text to dark in light mode */
+html:not(.dark) .text-white {
+  color: #1a1a2e !important;
+}
+
+html:not(.dark) .text-gray-300 {
+  color: #555 !important;
+}
+
+html:not(.dark) .text-gray-400 {
+  color: #777 !important;
+}
+
+html:not(.dark) .text-gray-500 {
+  color: #999 !important;
+}
+
+/* Header/Footer special handling */
+html:not(.dark) header {
+  background-color: rgba(240, 240, 245, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+html:not(.dark) footer {
+  background-color: #e8e8f0 !important;
+}
+
+/* Card styling in light mode */
+html:not(.dark) [class*="bg-gray-800"] {
+  background-color: #ffffff !important;
+}
+
+html:not(.dark) [class*="border-gray-700"] {
+  border-color: #e0e0e8 !important;
+}
+
+/* Smooth transitions for theme change */
+html,
+body,
+header,
+footer,
+main,
+section,
+div {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

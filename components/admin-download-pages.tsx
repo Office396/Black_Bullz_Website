@@ -45,7 +45,7 @@ export function AdminDownloadPages() {
       .replace(/[^a-z0-9]/g, "-")
       .replace(/-+/g, "-")
     const randomId = Math.random().toString(36).substring(2, 8)
-    return `https://dl-${slug}-${randomId}.blackbullz.app`
+    return `https://dl-${slug}-${randomId}.bullzgamez.app`
   }
 
   const addDownloadLink = () => {

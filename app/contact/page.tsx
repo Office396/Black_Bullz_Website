@@ -85,13 +85,13 @@ export default function ContactPage() {
   }
   const copyEmailToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText("blackbullzweb@gmail.com")
+      await navigator.clipboard.writeText("bullzgamezweb@gmail.com")
       setCopiedEmail(true)
       setTimeout(() => setCopiedEmail(false), 2000)
     } catch (err) {
       // Fallback for older browsers
       const textArea = document.createElement("textarea")
-      textArea.value = "blackbullzweb@gmail.com"
+      textArea.value = "bullzgamezweb@gmail.com"
       document.body.appendChild(textArea)
       textArea.focus()
       textArea.select()
@@ -197,13 +197,13 @@ export default function ContactPage() {
 
   const copyYoutubeToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText("@blackbullz-games")
+      await navigator.clipboard.writeText("@bullzgamez-games")
       setCopiedYoutube(true)
       setTimeout(() => setCopiedYoutube(false), 2000)
     } catch (err) {
       // Fallback for older browsers
       const textArea = document.createElement("textarea")
-      textArea.value = "@blackbullz-games"
+      textArea.value = "@bullzgamez-games"
       document.body.appendChild(textArea)
       textArea.focus()
       textArea.select()
@@ -310,12 +310,12 @@ export default function ContactPage() {
                           <Mail className="h-6 w-6 md:h-7 md:w-7 text-red-400 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-white font-medium text-sm md:text-base">Email</p>
-                            <p className="text-gray-400 text-xs md:text-sm break-all">blackbullzweb@gmail.com</p>
+                            <p className="text-gray-400 text-xs md:text-sm break-all">bullzgamezweb@gmail.com</p>
                           </div>
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
                           <Button
-                            onClick={() => window.open("https://mail.google.com/mail/?view=cm&fs=1&to=blackbullzweb@gmail.com&su=Problem%20With%20BlackBullz&body=I%20got%20problem%20with%20BlackBullz", "_blank")}
+                            onClick={() => window.open("https://mail.google.com/mail/?view=cm&fs=1&to=bullzgamezweb@gmail.com&su=Problem%20With%20BullzGamez&body=I%20got%20problem%20with%20BullzGamez", "_blank")}
                             size="sm"
                             className="bg-red-600 hover:bg-red-700 text-white px-2 md:px-3"
                           >
@@ -380,7 +380,7 @@ export default function ContactPage() {
                           <Youtube className="h-6 w-6 md:h-7 md:w-7 text-red-400 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-white font-medium text-sm md:text-base">YouTube</p>
-                            <p className="text-gray-400 text-xs md:text-sm break-all">@blackbullz-games</p>
+                            <p className="text-gray-400 text-xs md:text-sm break-all">@bullzgamez-games</p>
                           </div>
                         </div>
                         <div className="flex gap-2 flex-shrink-0">

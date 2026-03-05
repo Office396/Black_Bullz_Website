@@ -177,25 +177,25 @@ export function AdminSettings() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-             <div className="text-center">
-               <div className="text-2xl font-bold text-red-400">
-                 {stats.total}
-               </div>
-               <div className="text-gray-400 text-sm">Total Items</div>
-             </div>
-             <div className="text-center">
-               <div className="text-2xl font-bold text-blue-400">
-                 {stats.pcGames}
-               </div>
-               <div className="text-gray-400 text-sm">PC Games</div>
-             </div>
-             <div className="text-center">
-               <div className="text-2xl font-bold text-green-400">
-                 {stats.software}
-               </div>
-               <div className="text-gray-400 text-sm">Software</div>
-             </div>
-           </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-400">
+                {stats.total}
+              </div>
+              <div className="text-gray-400 text-sm">Total Items</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-400">
+                {stats.pcGames}
+              </div>
+              <div className="text-gray-400 text-sm">PC Games</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-400">
+                {stats.software}
+              </div>
+              <div className="text-gray-400 text-sm">Software</div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

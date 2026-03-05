@@ -112,7 +112,7 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
           </div>
           <CardTitle className="text-2xl font-bold text-white">Admin Portal</CardTitle>
           <p className="text-gray-400">
-            {isUpdateMode ? "Update Admin Credentials" : "Sign in to manage BlackBullz content"}
+            {isUpdateMode ? "Update Admin Credentials" : "Sign in to manage BullzGamez content"}
           </p>
         </CardHeader>
         <CardContent>
@@ -173,8 +173,8 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
               <Button type="submit" className="w-full bg-red-600 hover:bg-red-700">
                 Sign In
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={() => setIsUpdateMode(true)}
                 className="w-full bg-gray-700 hover:bg-gray-600 mt-2"
               >
@@ -244,8 +244,8 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
                   <Save className="h-4 w-4 mr-2" />
                   Update
                 </Button>
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   onClick={() => {
                     setIsUpdateMode(false)
                     setCredentials({ username: "", password: "" })

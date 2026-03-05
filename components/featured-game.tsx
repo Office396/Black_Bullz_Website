@@ -27,7 +27,7 @@ export function FeaturedGame({ game }: { game: GameItem | null }) {
 
     return (
         <section className="py-6">
-            <div className="relative bg-[#0f1d32] border border-[#1e3050] rounded-2xl overflow-hidden">
+            <div className="relative bg-[#120b22] border border-[#2d1b54] rounded-2xl overflow-hidden">
                 {/* Background blur */}
                 <div className="absolute top-0 right-0 w-1/2 h-full opacity-20">
                     <Image
@@ -51,8 +51,12 @@ export function FeaturedGame({ game }: { game: GameItem | null }) {
                                 sizes="224px"
                             />
                             {/* Star badge */}
-                            <div className="absolute top-2 right-2 w-8 h-8 bg-[#00bcd4] rounded-full flex items-center justify-center">
+                            <div className="absolute top-2 right-2 w-8 h-8 bg-[#9d4edd] rounded-full flex items-center justify-center shadow-lg z-10">
                                 <Star className="w-4 h-4 text-white fill-white" />
+                            </div>
+                            {/* Platform badge */}
+                            <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                                {game.category === "Android Games" ? "ANDROID" : "PC"}
                             </div>
                         </div>
                     </div>
@@ -60,7 +64,7 @@ export function FeaturedGame({ game }: { game: GameItem | null }) {
                     {/* Details */}
                     <div className="flex-1 flex flex-col justify-center">
                         <div className="flex flex-wrap items-center gap-2 mb-3">
-                            <span className="px-3 py-1 bg-[#00bcd4] text-white text-xs font-bold rounded uppercase tracking-wider">
+                            <span className="px-3 py-1 bg-[#9d4edd] text-white text-xs font-bold rounded uppercase tracking-wider">
                                 Game of the Day
                             </span>
                             <span className="text-gray-400 text-sm">{today}</span>
@@ -71,11 +75,11 @@ export function FeaturedGame({ game }: { game: GameItem | null }) {
                         </h3>
 
                         <div className="flex flex-wrap items-center gap-2 mb-4">
-                            <span className="px-2.5 py-0.5 bg-[#1a2a44] text-gray-300 text-xs rounded border border-[#1e3050]">
+                            <span className="px-2.5 py-0.5 bg-[#1a103c] text-gray-300 text-xs rounded border border-[#2d1b54]">
                                 PC
                             </span>
                             <span className="text-gray-500 text-xs">—</span>
-                            <span className="text-[#00bcd4] text-xs font-medium">{game.category}</span>
+                            <span className="text-[#9d4edd] text-xs font-medium">{game.category}</span>
                         </div>
 
                         <p className="text-gray-400 text-sm md:text-base mb-5 line-clamp-3 max-w-xl">

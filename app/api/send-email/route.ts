@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
 
-const ADMIN_EMAIL = "admin@blackbullz.com" // Your admin email
-const SUPPORT_EMAIL = "support@blackbullz.com" // Your support email
+const ADMIN_EMAIL = "admin@bullzgamez.com" // Your admin email
+const SUPPORT_EMAIL = "support@bullzgamez.com" // Your support email
 
 export async function POST(request: Request) {
   try {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BlackBullz Support Response</title>
+  <title>BullzGamez Support Response</title>
 </head>
 <body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
   <table role="presentation" style="width:100%;border-collapse:collapse;background:#f4f4f4;">
@@ -35,8 +35,8 @@ export async function POST(request: Request) {
           <!-- Header -->
           <tr>
             <td style="background:#1a1a2e;padding:30px 40px;text-align:center;border-bottom:3px solid #16213e;">
-              <img src="https://blackbullz.com/bull-logo.png" alt="BlackBullz" style="width:60px;height:60px;margin-bottom:15px;">
-              <h1 style="margin:0;color:#ffd700;font-size:24px;font-weight:bold;">BlackBullz Support</h1>
+              <img src="https://bullzgamez.com/bull-logo.png" alt="BullzGamez" style="width:60px;height:60px;margin-bottom:15px;">
+              <h1 style="margin:0;color:#ffd700;font-size:24px;font-weight:bold;">BullzGamez Support</h1>
               <p style="margin:5px 0 0 0;color:#cccccc;font-size:14px;">Professional Gaming Solutions</p>
             </td>
           </tr>
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
                   Need more help? Contact us anytime at <a href="mailto:${SUPPORT_EMAIL}" style="color:#ffd700;text-decoration:none;">${SUPPORT_EMAIL}</a>
                 </p>
                 <p style="margin:0;color:#999;font-size:12px;">
-                  Visit our website: <a href="https://blackbullz.com" style="color:#ffd700;text-decoration:none;">blackbullz.com</a>
+                  Visit our website: <a href="https://bullzgamez.com" style="color:#ffd700;text-decoration:none;">bullzgamez.com</a>
                 </p>
               </div>
             </td>
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
           <tr>
             <td style="background:#16213e;padding:20px 40px;text-align:center;">
               <p style="margin:0;color:#cccccc;font-size:12px;">
-                © 2024 BlackBullz. All rights reserved.<br>
+                © 2024 BullzGamez. All rights reserved.<br>
                 This email was sent to ${to}
               </p>
             </td>
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 </html>`
 
     const data = await resend.emails.send({
-      from: `BlackBullz Support <${SUPPORT_EMAIL}>`,
+      from: `BullzGamez Support <${SUPPORT_EMAIL}>`,
       to: [to],
       subject: subject || `Re: ${originalMessage.substring(0, 50)}...`,
       html: htmlContent,

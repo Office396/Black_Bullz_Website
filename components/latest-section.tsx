@@ -28,12 +28,12 @@ export function LatestSection({ games }: { games: GameItem[] }) {
         <section className="py-6">
             <div className="flex items-center justify-between mb-5">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <span className="w-1 h-6 bg-[#00bcd4] rounded-full"></span>
+                    <span className="w-1 h-6 bg-[#9d4edd] rounded-full"></span>
                     Latest Games
                 </h2>
                 <Link
                     href="/latest"
-                    className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#00bcd4] hover:bg-[#0097a7] text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:scale-105"
                 >
                     View All
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,17 +49,21 @@ export function LatestSection({ games }: { games: GameItem[] }) {
                         href={`/game/${game.id}`}
                         className="group game-card-hover"
                     >
-                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a2a44]">
+                        <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
                             <Image
                                 src={game.image || "/placeholder.svg"}
                                 alt={game.title}
                                 fill
-                                className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                className="object-cover transition-transform duration-300 hover:scale-110"
                                 sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 11vw"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <p className="text-white text-xs font-medium truncate">{game.title}</p>
+                            {/* Platform badge */}
+                            <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[9px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                                {game.category === "Android Games" ? "ANDROID" : "PC"}
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex justify-center">
+                                <p className="text-white text-xs font-medium truncate hover:text-[#9d4edd] hover:scale-105 transition-all cursor-pointer pointer-events-auto origin-bottom">{game.title}</p>
                             </div>
                         </div>
                     </Link>

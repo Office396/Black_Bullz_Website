@@ -35,7 +35,7 @@ const getRankInfo = (rankName: string) => {
 
 export default function LeaderboardPage() {
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
 
       <div className="pt-16">
@@ -65,7 +65,7 @@ export default function LeaderboardPage() {
           </div>
 
           {leaderboard[0] && (
-            <div className="bg-gradient-to-br from-yellow-500/20 to-[#0f1d32] border border-yellow-500/30 rounded-2xl p-6 mb-8">
+            <div className="bg-gradient-to-br from-yellow-500/20 to-[#120b22] border border-yellow-500/30 rounded-2xl p-6 mb-8">
               <div className="flex items-center gap-3 mb-4">
                 <Crown className="w-8 h-8 text-yellow-500" />
                 <div>
@@ -78,7 +78,7 @@ export default function LeaderboardPage() {
                   <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center text-black text-3xl font-bold">
                     #{leaderboard[0].rank}
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#0a1628] border-2 border-yellow-500 flex items-center justify-center">
+                  <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#090514] border-2 border-yellow-500 flex items-center justify-center">
                     <Trophy className="w-4 h-4 text-yellow-500" />
                   </div>
                 </div>
@@ -114,14 +114,14 @@ export default function LeaderboardPage() {
             </div>
           )}
 
-          <div className="bg-[#0f1d32] border border-[#1e3050] rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-[#1e3050]">
+          <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-[#2d1b54]">
               <h3 className="text-lg font-bold text-white">Top Contributors</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[#1e3050]">
+                  <tr className="border-b border-[#2d1b54]">
                     <th className="text-left p-4 text-gray-400 font-medium text-sm">Rank</th>
                     <th className="text-left p-4 text-gray-400 font-medium text-sm">User</th>
                     <th className="text-left p-4 text-gray-400 font-medium text-sm">Points</th>
@@ -135,7 +135,7 @@ export default function LeaderboardPage() {
                   {leaderboard.map((user) => {
                     const rankInfo = getRankInfo(user.rankName)
                     return (
-                      <tr key={user.rank} className="border-b border-[#1e3050] hover:bg-white/5 transition-colors">
+                      <tr key={user.rank} className="border-b border-[#2d1b54] hover:bg-white/5 transition-colors">
                         <td className="p-4">
                           <div className={cn(
                             "w-8 h-8 rounded-full flex items-center justify-center font-bold",

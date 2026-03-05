@@ -116,106 +116,106 @@ export function SearchResults({ query }: SearchResultsProps) {
 
   const filteredGames = query
     ? combinedGames
-        .filter((game) => {
-          const searchTerm = query.toLowerCase().trim()
-          const searchWords = searchTerm.split(' ').filter(word => word.length > 0)
+      .filter((game) => {
+        const searchTerm = query.toLowerCase().trim()
+        const searchWords = searchTerm.split(' ').filter(word => word.length > 0)
 
-          // Enhanced search logic with multiple matching strategies
-          const matchesSearch = (() => {
-            // Exact title match (highest priority)
-            if (game.title.toLowerCase().includes(searchTerm)) return true
+        // Enhanced search logic with multiple matching strategies
+        const matchesSearch = (() => {
+          // Exact title match (highest priority)
+          if (game.title.toLowerCase().includes(searchTerm)) return true
 
-            // Partial title word matches
-            if (game.title.toLowerCase().split(' ').some((word: string) => searchWords.some((searchWord: string) => word.includes(searchWord)))) return true
+          // Partial title word matches
+          if (game.title.toLowerCase().split(' ').some((word: string) => searchWords.some((searchWord: string) => word.includes(searchWord)))) return true
 
-            // Exact developer match
-            if (game.developer && game.developer.toLowerCase().includes(searchTerm)) return true
+          // Exact developer match
+          if (game.developer && game.developer.toLowerCase().includes(searchTerm)) return true
 
-            // Category match
-            if (game.category.toLowerCase().includes(searchTerm)) return true
+          // Category match
+          if (game.category.toLowerCase().includes(searchTerm)) return true
 
-            // Description matches (long description has higher weight)
-            if (game.longDescription && game.longDescription.toLowerCase().includes(searchTerm)) return true
-            if (game.description.toLowerCase().includes(searchTerm)) return true
+          // Description matches (long description has higher weight)
+          if (game.longDescription && game.longDescription.toLowerCase().includes(searchTerm)) return true
+          if (game.description.toLowerCase().includes(searchTerm)) return true
 
-            // Tag matches (exact and partial)
-            if (game.tags.some((tag: string) => {
-              const tagLower = tag.toLowerCase()
-              return tagLower.includes(searchTerm) || searchWords.some((word: string) => tagLower.includes(word))
-            })) return true
+          // Tag matches (exact and partial)
+          if (game.tags.some((tag: string) => {
+            const tagLower = tag.toLowerCase()
+            return tagLower.includes(searchTerm) || searchWords.some((word: string) => tagLower.includes(word))
+          })) return true
 
-            // Key features match
-            if (game.keyFeatures && game.keyFeatures.some((feature: string) =>
-              feature.toLowerCase().includes(searchTerm)
-            )) return true
+          // Key features match
+          if (game.keyFeatures && game.keyFeatures.some((feature: string) =>
+            feature.toLowerCase().includes(searchTerm)
+          )) return true
 
-            // Size match (e.g., "2gb", "500mb")
-            if (game.size && game.size.toLowerCase().replace(/\s+/g, '').includes(searchTerm.replace(/\s+/g, ''))) return true
+          // Size match (e.g., "2gb", "500mb")
+          if (game.size && game.size.toLowerCase().replace(/\s+/g, '').includes(searchTerm.replace(/\s+/g, ''))) return true
 
-            // Acronym/Abbreviation matches (e.g., "gta" for "Grand Theft Auto")
-            const titleWords = game.title.toLowerCase().split(' ')
-            const searchChars = searchTerm.replace(/\s+/g, '')
-            if (searchChars.length >= 2 && titleWords.some((word: string) =>
-              word.startsWith(searchChars) ||
-              word.includes(searchChars) ||
-              searchChars.split('').every((char: string) => word.includes(char))
-            )) return true
+          // Acronym/Abbreviation matches (e.g., "gta" for "Grand Theft Auto")
+          const titleWords = game.title.toLowerCase().split(' ')
+          const searchChars = searchTerm.replace(/\s+/g, '')
+          if (searchChars.length >= 2 && titleWords.some((word: string) =>
+            word.startsWith(searchChars) ||
+            word.includes(searchChars) ||
+            searchChars.split('').every((char: string) => word.includes(char))
+          )) return true
 
-            // Fuzzy word matching - if search contains multiple words, check if all words appear somewhere
-            if (searchWords.length > 1) {
-              const titleText = [game.title, game.description, game.longDescription || '', game.developer || '', ...game.tags].join(' ').toLowerCase()
-              const wordMatches = searchWords.filter((word: string) =>
-                titleText.includes(word) || game.tags.some((tag: string) => tag.toLowerCase().includes(word))
-              )
-              if (wordMatches.length >= Math.ceil(searchWords.length * 0.6)) return true // 60% of search words match
-            }
+          // Fuzzy word matching - if search contains multiple words, check if all words appear somewhere
+          if (searchWords.length > 1) {
+            const titleText = [game.title, game.description, game.longDescription || '', game.developer || '', ...game.tags].join(' ').toLowerCase()
+            const wordMatches = searchWords.filter((word: string) =>
+              titleText.includes(word) || game.tags.some((tag: string) => tag.toLowerCase().includes(word))
+            )
+            if (wordMatches.length >= Math.ceil(searchWords.length * 0.6)) return true // 60% of search words match
+          }
 
-            return false
-          })()
+          return false
+        })()
 
-          const matchesFilter = activeFilter === "all" || game.tab === activeFilter
+        const matchesFilter = activeFilter === "all" || game.tab === activeFilter
 
-          return matchesSearch && matchesFilter
-        })
-        .sort((a, b) => {
-          const queryLower = query.toLowerCase()
+        return matchesSearch && matchesFilter
+      })
+      .sort((a, b) => {
+        const queryLower = query.toLowerCase()
 
-          // Priority 1: Exact title match
-          const aExactTitle = a.title.toLowerCase().includes(queryLower)
-          const bExactTitle = b.title.toLowerCase().includes(queryLower)
-          if (aExactTitle && !bExactTitle) return -1
-          if (!aExactTitle && bExactTitle) return 1
+        // Priority 1: Exact title match
+        const aExactTitle = a.title.toLowerCase().includes(queryLower)
+        const bExactTitle = b.title.toLowerCase().includes(queryLower)
+        if (aExactTitle && !bExactTitle) return -1
+        if (!aExactTitle && bExactTitle) return 1
 
-          // Priority 2: Title starts with query
-          const aTitleStarts = a.title.toLowerCase().startsWith(queryLower)
-          const bTitleStarts = b.title.toLowerCase().startsWith(queryLower)
-          if (aTitleStarts && !bTitleStarts) return -1
-          if (!aTitleStarts && bTitleStarts) return 1
+        // Priority 2: Title starts with query
+        const aTitleStarts = a.title.toLowerCase().startsWith(queryLower)
+        const bTitleStarts = b.title.toLowerCase().startsWith(queryLower)
+        if (aTitleStarts && !bTitleStarts) return -1
+        if (!aTitleStarts && bTitleStarts) return 1
 
-          // Priority 3: Word matches in title
-          const aTitleWords = a.title.toLowerCase().split(' ')
-          const bTitleWords = b.title.toLowerCase().split(' ')
-          const aWordMatches = aTitleWords.filter((word: string) => queryLower.split(' ').some((q: string) => word.includes(q))).length
-          const bWordMatches = bTitleWords.filter((word: string) => queryLower.split(' ').some((q: string) => word.includes(q))).length
-          if (aWordMatches > bWordMatches) return -1
-          if (aWordMatches < bWordMatches) return 1
+        // Priority 3: Word matches in title
+        const aTitleWords = a.title.toLowerCase().split(' ')
+        const bTitleWords = b.title.toLowerCase().split(' ')
+        const aWordMatches = aTitleWords.filter((word: string) => queryLower.split(' ').some((q: string) => word.includes(q))).length
+        const bWordMatches = bTitleWords.filter((word: string) => queryLower.split(' ').some((q: string) => word.includes(q))).length
+        if (aWordMatches > bWordMatches) return -1
+        if (aWordMatches < bWordMatches) return 1
 
-          // Priority 4: Developer match
-          const aDeveloperMatch = a.developer && a.developer.toLowerCase().includes(queryLower)
-          const bDeveloperMatch = b.developer && b.developer.toLowerCase().includes(queryLower)
-          if (aDeveloperMatch && !bDeveloperMatch) return -1
-          if (!aDeveloperMatch && bDeveloperMatch) return 1
+        // Priority 4: Developer match
+        const aDeveloperMatch = a.developer && a.developer.toLowerCase().includes(queryLower)
+        const bDeveloperMatch = b.developer && b.developer.toLowerCase().includes(queryLower)
+        if (aDeveloperMatch && !bDeveloperMatch) return -1
+        if (!aDeveloperMatch && bDeveloperMatch) return 1
 
-          // Priority 5: Rating (higher rated first)
-          const aRating = typeof a.rating === "number" && !isNaN(a.rating) ? a.rating : 4.0
-          const bRating = typeof b.rating === "number" && !isNaN(b.rating) ? b.rating : 4.0
-          if (aRating !== bRating) return bRating - aRating
+        // Priority 5: Rating (higher rated first)
+        const aRating = typeof a.rating === "number" && !isNaN(a.rating) ? a.rating : 4.0
+        const bRating = typeof b.rating === "number" && !isNaN(b.rating) ? b.rating : 4.0
+        if (aRating !== bRating) return bRating - aRating
 
-          // Priority 6: Newer items first (by upload date)
-          const aDate = new Date(a.uploadDate || a.releaseDate || 0).getTime()
-          const bDate = new Date(b.uploadDate || b.releaseDate || 0).getTime()
-          return bDate - aDate
-        })
+        // Priority 6: Newer items first (by upload date)
+        const aDate = new Date(a.uploadDate || a.releaseDate || 0).getTime()
+        const bDate = new Date(b.uploadDate || b.releaseDate || 0).getTime()
+        return bDate - aDate
+      })
     : combinedGames.filter((game) => activeFilter === "all" || game.tab === activeFilter)
 
   if (loading) {
@@ -246,11 +246,10 @@ export function SearchResults({ query }: SearchResultsProps) {
             key={tab.id}
             onClick={() => setActiveFilter(tab.id)}
             variant={activeFilter === tab.id ? "default" : "outline"}
-            className={`${
-              activeFilter === tab.id
+            className={`${activeFilter === tab.id
                 ? "bg-red-600 hover:bg-red-700 text-white"
                 : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-            }`}
+              }`}
           >
             {tab.label}
           </Button>
@@ -277,19 +276,22 @@ export function SearchResults({ query }: SearchResultsProps) {
               <Card className="bg-gray-800 border-gray-700 hover:border-red-500 transition-all duration-300 group overflow-hidden p-0 rounded-lg">
                 <div className="relative aspect-[3/3] w-full overflow-hidden bg-gray-800">
                   <Image
-                      src={game.image || "/placeholder.svg"}
-                      alt={game.title}
-                      fill
-                      className="absolute inset-0 w-full h-full object-cover object-top block group-hover:scale-105 transition-transform duration-300"
-                      sizes="(max-width: 640px) 40vw, (max-width: 768px) 33vw, 30vw"
-                    />
-                  <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[13px] px-1 py-0 z-10">
+                    src={game.image || "/placeholder.svg"}
+                    alt={game.title}
+                    fill
+                    className="absolute inset-0 w-full h-full object-cover object-top block transition-transform duration-300 hover:scale-105"
+                    sizes="(max-width: 640px) 40vw, (max-width: 768px) 33vw, 30vw"
+                  />
+                  <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[13px] px-1 py-0 z-10 pointer-events-none">
                     {game.category}
                   </Badge>
+                  <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                    {game.category === "Android Games" ? "ANDROID" : "PC"}
+                  </div>
                 </div>
-                <CardContent className="p-1.5">
-                  <div className="flex flex-col gap-1">
-                    <h3 className="text-white font-bold group-hover:text-red-400 transition-colors line-clamp-1 text-sm">
+                <CardContent className="p-1.5 pointer-events-none">
+                  <div className="flex flex-col gap-1 pointer-events-auto">
+                    <h3 className="text-white font-bold transition-all line-clamp-1 text-sm hover:text-red-400 hover:scale-105 origin-left w-fit cursor-pointer">
                       {game.title}
                     </h3>
                     <div className="flex items-center gap-0.5">

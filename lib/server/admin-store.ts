@@ -7,7 +7,7 @@ export interface AdminCredentials {
 
 const DEFAULT_CREDENTIALS: AdminCredentials = {
   username: "admin",
-  password: "blackbullz2024"
+  password: "bullzgamez2024"
 }
 
 export async function getAdminCredentials(): Promise<AdminCredentials> {

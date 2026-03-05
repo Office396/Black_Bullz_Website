@@ -20,7 +20,7 @@ const topDonors = [
 ]
 
 const faqItems = [
-  { q: "Is this site free to use?", a: "Yes! BlackBullz is completely free. We rely on donations and ads to keep the servers running." },
+  { q: "Is this site free to use?", a: "Yes! BullzGamez is completely free. We rely on donations and ads to keep the servers running." },
   { q: "Why should I donate?", a: "Your donations help us maintain servers, improve download speeds, and add new features. We're passionate about providing free games everyone." },
   { q: "What payment methods do you accept?", a: "We accept cryptocurrency (Bitcoin, Ethereum, USDT), PayPal, and major credit cards." },
   { q: "Do I get any benefits for donating?", a: "Yes! Donors get priority support, ad-free browsing, and special recognition on our leaderboard." },
@@ -38,7 +38,7 @@ export default function DonatePage() {
   const goalPercentage = (currentAmount / monthlyGoal) * 100
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
 
       <div className="pt-16">
@@ -52,7 +52,7 @@ export default function DonatePage() {
               <p className="text-gray-400 text-lg">Help us fight against restrictive DRM and corporate monopolies.</p>
             </div>
 
-            <div className="bg-gradient-to-br from-[#1a2a44] to-[#0f1d32] border border-[#1e3050] rounded-2xl p-6 mb-8">
+            <div className="bg-gradient-to-br from-[#1a103c] to-[#120b22] border border-[#2d1b54] rounded-2xl p-6 mb-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-white/5 rounded-xl p-4 text-center">
                   <div className="flex items-center justify-center gap-2 mb-2">
@@ -63,7 +63,7 @@ export default function DonatePage() {
                 </div>
                 <div className="bg-white/5 rounded-xl p-4 text-center">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <Target className="w-5 h-5 text-[#00bcd4]" />
+                    <Target className="w-5 h-5 text-[#9d4edd]" />
                     <span className="text-gray-400 text-sm">Raised So Far</span>
                   </div>
                   <p className="text-2xl font-bold text-white">${currentAmount}</p>
@@ -80,11 +80,11 @@ export default function DonatePage() {
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-400 text-sm">Progress</span>
-                  <span className="text-[#00bcd4] text-sm font-medium">{goalPercentage.toFixed(0)}%</span>
+                  <span className="text-[#9d4edd] text-sm font-medium">{goalPercentage.toFixed(0)}%</span>
                 </div>
                 <div className="h-3 bg-white/5 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-[#00bcd4] to-[#00e5ff] rounded-full transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-[#9d4edd] to-[#00e5ff] rounded-full transition-all duration-500"
                     style={{ width: `${goalPercentage}%` }}
                   />
                 </div>
@@ -99,7 +99,7 @@ export default function DonatePage() {
                     className={cn(
                       "px-6 py-3 rounded-lg font-medium transition-all",
                       amount === a
-                        ? "bg-[#00bcd4] text-white"
+                        ? "bg-[#9d4edd] text-white"
                         : "bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white"
                     )}
                   >
@@ -113,7 +113,7 @@ export default function DonatePage() {
                     placeholder="Custom"
                     value={customAmount}
                     onChange={(e) => { setCustomAmount(e.target.value); setAmount(null); }}
-                    className="w-24 bg-white/5 border border-white/10 rounded-lg px-3 py-3 text-white placeholder-gray-500 focus:border-[#00bcd4] focus:outline-none"
+                    className="w-24 bg-white/5 border border-white/10 rounded-lg px-3 py-3 text-white placeholder-gray-500 focus:border-[#9d4edd] focus:outline-none"
                   />
                 </div>
               </div>
@@ -136,13 +136,13 @@ export default function DonatePage() {
 
               <button
                 disabled={!amount && !customAmount}
-                className="w-full py-4 bg-[#00bcd4] hover:bg-[#0097a7] disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+                className="w-full py-4 bg-[#9d4edd] hover:bg-[#7b2cbf] disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
               >
                 {amount || customAmount ? `Donate $${amount || customAmount}` : "Select an amount to donate"}
               </button>
             </div>
 
-            <div className="bg-[#0f1d32] border border-[#1e3050] rounded-2xl p-6 mb-8">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-6 mb-8">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-yellow-500" />
                 Champions of Freedom
@@ -162,15 +162,15 @@ export default function DonatePage() {
                     <div className="flex-1">
                       <p className="text-white font-medium">{donor.name}</p>
                     </div>
-                    <p className="text-[#00bcd4] font-semibold">${donor.amount}</p>
+                    <p className="text-[#9d4edd] font-semibold">${donor.amount}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-[#0f1d32] border border-[#1e3050] rounded-2xl p-6">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-6">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <HelpCircle className="w-5 h-5 text-[#00bcd4]" />
+                <HelpCircle className="w-5 h-5 text-[#9d4edd]" />
                 Frequently Asked Questions
               </h3>
               <div className="space-y-3">

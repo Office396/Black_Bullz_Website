@@ -27,7 +27,7 @@ export function LoadingSpinner() {
           </div>
         </div>
         <div className="mt-2 text-center">
-          <p className="text-red-400 text-sm font-medium animate-pulse">Loading BlackBullz...</p>
+          <p className="text-red-400 text-sm font-medium animate-pulse">Loading BullzGamez...</p>
           <div className="flex justify-center mt-1">
             <div className="flex space-x-1">
               <div className="w-1 h-1 bg-red-600 rounded-full animate-bounce"></div>

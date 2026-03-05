@@ -39,14 +39,14 @@ const featuredGenres = ["Action", "Adventure", "Horror", "Indie", "Multiplayer",
 
 export default function GenresPage() {
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
 
       <div className="pt-16">
         <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <Gamepad2 className="w-8 h-8 text-[#00bcd4]" />
+              <Gamepad2 className="w-8 h-8 text-[#9d4edd]" />
               <h1 className="text-3xl font-bold text-white">All Genres</h1>
             </div>
             <p className="text-gray-400">
@@ -63,7 +63,7 @@ export default function GenresPage() {
                   href={`/genre/${genre.toLowerCase()}`}
                   className={cn(
                     "px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                    "bg-[#00bcd4] text-white hover:bg-[#0097a7]"
+                    "bg-[#9d4edd] text-white hover:bg-[#7b2cbf]"
                   )}
                 >
                   {genre}
@@ -81,8 +81,8 @@ export default function GenresPage() {
                   href={`/genre/${genre.slug}`}
                   className="group"
                 >
-                  <div className="bg-[#0f1d32] border border-[#1e3050] rounded-xl p-4 hover:border-[#00bcd4]/50 transition-all">
-                    <h3 className="text-white font-medium group-hover:text-[#00bcd4] transition-colors mb-1">
+                  <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4 hover:border-[#9d4edd]/50 transition-all">
+                    <h3 className="text-white font-medium group-hover:text-[#9d4edd] transition-colors mb-1">
                       {genre.name}
                     </h3>
                     <p className="text-gray-500 text-sm">{genre.count} games</p>

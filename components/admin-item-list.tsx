@@ -207,13 +207,13 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
           const count = tab.id === "all"
             ? itemsWithCloudCount.length
             : itemsWithCloudCount.filter((item) => {
-                const categoryMap: Record<string, string> = {
-                  "pc-games": "PC Games",
-                  "android-games": "Android Games",
-                  "software": "Software"
-                }
-                return item.category === categoryMap[tab.id]
-              }).length
+              const categoryMap: Record<string, string> = {
+                "pc-games": "PC Games",
+                "android-games": "Android Games",
+                "software": "Software"
+              }
+              return item.category === categoryMap[tab.id]
+            }).length
           return (
             <Button
               key={tab.id}
@@ -223,11 +223,10 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
               }}
               variant={activeTab === tab.id ? "default" : "outline"}
               size="sm"
-              className={`${
-                activeTab === tab.id
+              className={`${activeTab === tab.id
                   ? "bg-red-600 hover:bg-red-700 text-white"
                   : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-              } text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 flex-shrink-0`}
+                } text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 flex-shrink-0`}
             >
               <span className="hidden xs:inline">{tab.label}</span>
               <span className="xs:hidden">{tab.label.split(' ')[0]}</span>
@@ -365,9 +364,8 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
                     size="sm"
-                    className={`px-2 md:px-3 py-1 md:py-2 rounded-lg transition-colors text-xs md:text-sm ${
-                      currentPage === pageNum ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
-                    }`}
+                    className={`px-2 md:px-3 py-1 md:py-2 rounded-lg transition-colors text-xs md:text-sm ${currentPage === pageNum ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
+                      }`}
                   >
                     {pageNum}
                   </Button>

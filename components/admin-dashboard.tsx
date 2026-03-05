@@ -12,7 +12,7 @@ import { AdminFeedback } from "@/components/admin-feedback"
 import { AdminTrendingManagement } from "@/components/admin-trending-management"
 import AdminSystemStatus from "@/components/admin-system-status"
 import AdminDetailsAutomation from "@/components/admin-details-automation"
-import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, TrendingUp, Menu, Workflow } from "lucide-react"
+import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, TrendingUp, Workflow } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -21,7 +21,6 @@ interface AdminDashboardProps {
 export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState("list")
   const [searchQuery, setSearchQuery] = useState("")
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleLogout = () => {
     localStorage.removeItem("admin_token")
@@ -29,209 +28,118 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#090514] text-white">
       {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
-        <div className="container mx-auto px-3 md:px-4">
-          <div className="flex items-center justify-between h-14 md:h-16">
-            <div className="flex items-center space-x-2 md:space-x-4 min-w-0 flex-1">
-              <div className="w-7 h-7 md:w-8 md:h-8 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-xs md:text-sm">BB</span>
+      <header className="bg-[#090514]/90 backdrop-blur-md border-b border-[#2d1b54] sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center relative overflow-hidden ring-2 ring-[#9d4edd]/50 shadow-[0_0_15px_rgba(157,78,221,0.5)]">
+                <img src="/bull-logo.png" alt="Logo" className="w-full h-full object-cover rounded-full" />
               </div>
-              <h1 className="text-base md:text-xl font-bold text-white truncate">Admin Portal</h1>
+              <div className="flex flex-col">
+                <span className="text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#9d4edd] via-[#c77dff] to-[#00bcd4]">
+                  BULLZGAMEZ
+                </span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold -mt-1">ADMIN PORTAL</span>
+              </div>
             </div>
             <Button
               onClick={handleLogout}
               variant="outline"
               size="sm"
-              className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 flex-shrink-0 ml-2"
+              className="bg-red-500/10 border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300"
             >
-              <LogOut className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              <span className="hidden xs:inline">Logout</span>
+              <LogOut className="h-4 w-4 mr-2" />
+              <span>Logout</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-3 md:px-4 py-3 md:py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          {/* Mobile Tabs - Only 3 main tabs */}
-          <div className="md:hidden">
-            <TabsList className="bg-gray-800 border-gray-700 grid w-full grid-cols-3 gap-1">
-              <TabsTrigger value="list" className="data-[state=active]:bg-red-600 text-xs px-1 py-2">
-                <List className="h-3 w-3 mr-1" />
-                <span className="hidden xs:inline">Items</span>
-                <span className="xs:hidden">List</span>
+      <div className="container mx-auto px-4 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <TabsList className="bg-[#120b22] border border-[#2d1b54] p-1 h-auto flex-wrap md:flex-nowrap">
+              <TabsTrigger value="list" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <List className="h-4 w-4" />
+                Items
               </TabsTrigger>
-              <TabsTrigger value="add" className="data-[state=active]:bg-red-600 text-xs px-1 py-2">
-                <Plus className="h-3 w-3 mr-1" />
-                <span className="hidden xs:inline">Add</span>
-                <span className="xs:hidden">+</span>
+              <TabsTrigger value="add" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Plus className="h-4 w-4" />
+                Add New
               </TabsTrigger>
-              <TabsTrigger value="feedback" className="data-[state=active]:bg-red-600 text-xs px-1 py-2">
-                <MessageSquare className="h-3 w-3 mr-1" />
-                <span className="hidden xs:inline">Msgs</span>
-                <span className="xs:hidden">Msg</span>
+              <TabsTrigger value="automation" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Workflow className="h-4 w-4" />
+                Auto Scraper
+              </TabsTrigger>
+              <TabsTrigger value="trending" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <TrendingUp className="h-4 w-4" />
+                Trending
+              </TabsTrigger>
+              <TabsTrigger value="feedback" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all relative cursor-pointer">
+                <MessageSquare className="h-4 w-4" />
+                Msgs
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Settings className="h-4 w-4" />
+                Settings
+              </TabsTrigger>
+              <TabsTrigger value="system" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Activity className="h-4 w-4" />
+                System Status
               </TabsTrigger>
             </TabsList>
-            {/* Hamburger Menu for additional tabs */}
-            <div className="flex justify-center mt-2">
-              <Button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                variant="outline"
-                size="sm"
-                className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 text-xs px-3 py-1"
-              >
-                <Menu className="h-3 w-3 mr-1" />
-                More
-              </Button>
-            </div>
-            {mobileMenuOpen && (
-              <div className="mt-2 bg-gray-800 border border-gray-700 rounded-lg p-2">
-                <div className="grid grid-cols-2 gap-1">
-                  <Button
-                    onClick={() => {
-                      setActiveTab("trending")
-                      setMobileMenuOpen(false)
-                    }}
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-300 hover:bg-gray-700 justify-start text-xs px-2 py-1 h-auto"
-                  >
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    <span className="text-xs">Trending</span>
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setActiveTab("settings")
-                      setMobileMenuOpen(false)
-                    }}
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-300 hover:bg-gray-700 justify-start text-xs px-2 py-1 h-auto"
-                  >
-                    <Settings className="h-3 w-3 mr-1" />
-                    <span className="text-xs">Settings</span>
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setActiveTab("system")
-                      setMobileMenuOpen(false)
-                    }}
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-300 hover:bg-gray-700 justify-start text-xs px-2 py-1 h-auto"
-                  >
-                    <Activity className="h-3 w-3 mr-1" />
-                    <span className="text-xs">System</span>
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setActiveTab("automation")
-                      setMobileMenuOpen(false)
-                    }}
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-300 hover:bg-gray-700 justify-start text-xs px-2 py-1 h-auto"
-                  >
-                    <Workflow className="h-3 w-3 mr-1" />
-                    <span className="text-xs">Auto</span>
-                  </Button>
-                </div>
+
+            {activeTab === "list" && (
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Input
+                  placeholder="Search store inventory..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-[#120b22] border-[#2d1b54] text-white placeholder-gray-600 focus:border-[#9d4edd] focus:ring-[#9d4edd]/20 rounded-xl"
+                />
               </div>
             )}
           </div>
 
-          {/* Desktop Tabs - All tabs */}
-          <TabsList className="bg-gray-800 border-gray-700 hidden md:flex md:w-auto">
-            <TabsTrigger value="list" className="data-[state=active]:bg-red-600 text-sm">
-              <List className="h-4 w-4 mr-2" />
-              Manage Items
-            </TabsTrigger>
-            <TabsTrigger value="add" className="data-[state=active]:bg-red-600 text-sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Item
-            </TabsTrigger>
-            <TabsTrigger value="automation" className="data-[state=active]:bg-red-600 text-sm">
-              <Workflow className="h-4 w-4 mr-2" />
-              Details Automation
-            </TabsTrigger>
-            <TabsTrigger value="trending" className="data-[state=active]:bg-red-600 text-sm">
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Trending
-            </TabsTrigger>
-            <TabsTrigger value="feedback" className="data-[state=active]:bg-red-600 text-sm">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Feedback
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-red-600 text-sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </TabsTrigger>
-            <TabsTrigger value="system" className="data-[state=active]:bg-red-600 text-sm">
-              <Activity className="h-4 w-4 mr-2" />
-              System Status
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="list" className="space-y-4 md:space-y-6">
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-white text-base md:text-lg">Manage Items</CardTitle>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:space-x-4">
-                  <div className="relative flex-1 max-w-full sm:max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search items..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm h-9 md:h-10"
-                    />
-                  </div>
-                  {/* <Button
-                    onClick={() => setActiveTab("add")}
-                    size="sm"
-                    className="bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add New
-                  </Button> */}
-                </div>
-              </CardHeader>
-              <CardContent className="px-2 md:px-6">
+          <TabsContent value="list" className="mt-0 outline-none">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl overflow-hidden shadow-2xl">
+              <div className="p-6 border-b border-[#2d1b54] bg-gradient-to-r from-[#1a103c] to-[#120b22]">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <List className="h-5 w-5 text-[#9d4edd]" />
+                  Inventory Management
+                </h3>
+              </div>
+              <div className="p-0 md:p-6">
                 <AdminItemList searchQuery={searchQuery} />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
 
-          <TabsContent value="add">
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white text-lg md:text-xl">Add New Item</CardTitle>
-              </CardHeader>
-              <CardContent className="px-2 md:px-6">
-                <AdminItemForm />
-              </CardContent>
-            </Card>
+          <TabsContent value="add" className="mt-0 outline-none">
+            <AdminItemForm />
           </TabsContent>
 
-          <TabsContent value="automation">
+          <TabsContent value="automation" className="mt-0 outline-none">
             <AdminDetailsAutomation />
           </TabsContent>
 
-          <TabsContent value="trending">
+          <TabsContent value="trending" className="mt-0 outline-none">
             <AdminTrendingManagement />
           </TabsContent>
 
-          <TabsContent value="settings">
-            <AdminSettings />
-          </TabsContent>
-
-          <TabsContent value="feedback">
+          <TabsContent value="feedback" className="mt-0 outline-none">
             <AdminFeedback />
           </TabsContent>
 
-          <TabsContent value="system">
+          <TabsContent value="settings" className="mt-0 outline-none">
+            <AdminSettings />
+          </TabsContent>
+
+          <TabsContent value="system" className="mt-0 outline-none">
             <AdminSystemStatus />
           </TabsContent>
         </Tabs>

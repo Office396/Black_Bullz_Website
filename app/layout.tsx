@@ -8,9 +8,9 @@ import { PageLoader } from "@/components/page-loader"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "BlackBullz - Free PC Games, Android Apps & Software",
-  description: "Download the latest free PC games, Android apps, and software for free. No registration required.",
-  generator: "BlackBullz",
+  title: "BullzGamez - Free PC Games(Pre-Installed & Installable), Android Apps(Mode APKS)",
+  description: "Download the latest free PC games (Pre-Installed & Installable), Android apps(Mode APKS) for free. No registration required.",
+  generator: "BullzGamez",
 }
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-[#0a1628]`}>
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-[#090514]`}>
         {/* PageLoader handles client-side route changes with a controlled delay */}
         <PageLoader />
         {/* Suspense ensures client components that suspend show a fallback immediately */}

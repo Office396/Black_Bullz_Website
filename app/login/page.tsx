@@ -28,16 +28,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
       
       <div className="pt-16">
         <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
-            <div className="bg-[#0f1d32] border border-[#1e3050] rounded-2xl p-8">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-8">
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#00bcd4]/20 mb-4">
-                  <LogIn className="w-8 h-8 text-[#00bcd4]" />
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#9d4edd]/20 mb-4">
+                  <LogIn className="w-8 h-8 text-[#9d4edd]" />
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-2">Welcome Back</h1>
                 <p className="text-gray-400">Sign in to your account</p>
@@ -53,7 +53,7 @@ export default function LoginPage() {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-[#1a2a44] border-[#1e3050] text-white placeholder-gray-500 focus:border-[#00bcd4] pl-10"
+                      className="bg-[#1a103c] border-[#2d1b54] text-white placeholder-gray-500 focus:border-[#9d4edd] pl-10"
                       required
                     />
                   </div>
@@ -68,7 +68,7 @@ export default function LoginPage() {
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-[#1a2a44] border-[#1e3050] text-white placeholder-gray-500 focus:border-[#00bcd4] pl-10 pr-10"
+                      className="bg-[#1a103c] border-[#2d1b54] text-white placeholder-gray-500 focus:border-[#9d4edd] pl-10 pr-10"
                       required
                     />
                     <button
@@ -83,10 +83,10 @@ export default function LoginPage() {
 
                 <div className="flex items-center justify-between text-sm">
                   <label className="flex items-center gap-2 text-gray-400">
-                    <input type="checkbox" className="rounded border-[#1e3050] bg-[#1a2a44]" />
+                    <input type="checkbox" className="rounded border-[#2d1b54] bg-[#1a103c]" />
                     Remember me
                   </label>
-                  <Link href="/forgot-password" className="text-[#00bcd4] hover:underline">
+                  <Link href="/forgot-password" className="text-[#9d4edd] hover:underline">
                     Forgot password?
                   </Link>
                 </div>
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#00bcd4] hover:bg-[#0097a7] text-white font-semibold"
+                  className="w-full bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-semibold"
                 >
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
@@ -102,10 +102,10 @@ export default function LoginPage() {
 
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#1e3050]"></div>
+                  <div className="w-full border-t border-[#2d1b54]"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-[#0f1d32] text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-[#120b22] text-gray-500">Or continue with</span>
                 </div>
               </div>
 
@@ -122,7 +122,7 @@ export default function LoginPage() {
 
               <p className="text-center text-gray-500 text-sm mt-6">
                 Don't have an account?{" "}
-                <Link href="/signup" className="text-[#00bcd4] hover:underline">
+                <Link href="/signup" className="text-[#9d4edd] hover:underline">
                   Sign up
                 </Link>
               </p>

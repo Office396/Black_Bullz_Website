@@ -219,7 +219,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <span className="text-white font-medium">{comment.author}</span>
-                          {comment.author === "BlackBullz-Admin" && (
+                          {comment.author === "BullzGamez-Admin" && (
                             <div className="flex items-center gap-1">
                               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" version="1.1" width="256" height="256" viewBox="0 0 256 256" xmlSpace="preserve">
                                 <g style={{stroke: 'none', strokeWidth: 0, strokeDasharray: 'none', strokeLinecap: 'butt', strokeLinejoin: 'miter', strokeMiterlimit: 10, fill: 'none', fillRule: 'nonzero', opacity: 1}} transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
@@ -330,7 +330,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                               <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-2">
                                   <span className="text-white font-medium text-sm">{reply.author}</span>
-                                  {reply.author === "BlackBullz-Admin ✔️" && (
+                                  {reply.author === "BullzGamez-Admin ✔️" && (
                                     <div className="flex items-center gap-1">
                                     </div>
                                   )}

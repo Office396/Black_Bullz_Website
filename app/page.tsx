@@ -57,23 +57,23 @@ export default function HomePage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-[#0a1628]">
+      <div className="min-h-screen bg-[#090514]">
         <Header />
         <div className="pt-16">
           <div className="max-w-full mx-auto px-4 lg:px-6 pt-6">
-            <div className="w-full h-[420px] bg-[#0f1d32] rounded-xl animate-pulse" />
+            <div className="w-full h-[420px] bg-[#120b22] rounded-xl animate-pulse" />
           </div>
           <div className="max-w-full mx-auto px-4 lg:px-6 pt-8 space-y-8">
-            <div className="h-6 w-40 bg-[#1a2a44] rounded animate-pulse" />
+            <div className="h-6 w-40 bg-[#1a103c] rounded animate-pulse" />
             <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
               {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="aspect-[3/4] bg-[#1a2a44] rounded-xl animate-pulse" />
+                <div key={i} className="aspect-[3/4] bg-[#1a103c] rounded-xl animate-pulse" />
               ))}
             </div>
-            <div className="h-6 w-40 bg-[#1a2a44] rounded animate-pulse" />
+            <div className="h-6 w-40 bg-[#1a103c] rounded animate-pulse" />
             <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
               {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="aspect-[3/4] bg-[#1a2a44] rounded-xl animate-pulse" />
+                <div key={i} className="aspect-[3/4] bg-[#1a103c] rounded-xl animate-pulse" />
               ))}
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
 
       <div className="pt-16">

@@ -61,14 +61,14 @@ export default function RecentUpdatesPage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-[#0a1628]">
+      <div className="min-h-screen bg-[#090514]">
         <Header />
         <div className="pt-16">
           <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
-            <div className="h-10 w-64 bg-[#1a2a44] rounded animate-pulse mb-6" />
+            <div className="h-10 w-64 bg-[#1a103c] rounded animate-pulse mb-6" />
             <div className="space-y-6">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-48 bg-[#1a2a44] rounded-xl animate-pulse" />
+                <div key={i} className="h-48 bg-[#1a103c] rounded-xl animate-pulse" />
               ))}
             </div>
           </div>
@@ -78,7 +78,7 @@ export default function RecentUpdatesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
 
       <div className="pt-16">
@@ -89,21 +89,21 @@ export default function RecentUpdatesPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-[#0f1d32] border border-[#1e3050] rounded-xl p-4">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
-                <Download className="w-5 h-5 text-[#00bcd4]" />
+                <Download className="w-5 h-5 text-[#9d4edd]" />
                 <span className="text-gray-400 text-sm">Total Games</span>
               </div>
               <p className="text-2xl font-bold text-white">{totalGames.toLocaleString()}</p>
             </div>
-            <div className="bg-[#0f1d32] border border-[#1e3050] rounded-xl p-4">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <TrendingUp className="w-5 h-5 text-green-500" />
                 <span className="text-gray-400 text-sm">Updates This Week</span>
               </div>
               <p className="text-2xl font-bold text-white">{updatesThisWeek}</p>
             </div>
-            <div className="bg-[#0f1d32] border border-[#1e3050] rounded-xl p-4">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <Calendar className="w-5 h-5 text-yellow-500" />
                 <span className="text-gray-400 text-sm">Days Active</span>
@@ -115,20 +115,28 @@ export default function RecentUpdatesPage() {
           {Object.entries(groupedByDate).map(([date, games]) => (
             <div key={date} className="mb-8">
               <div className="flex items-center gap-3 mb-4">
-                <Clock className="w-5 h-5 text-[#00bcd4]" />
+                <Clock className="w-5 h-5 text-[#9d4edd]" />
                 <h2 className="text-lg font-bold text-white">{date}</h2>
                 <span className="text-gray-500 text-sm">({games.length} updates)</span>
               </div>
               <div className="space-y-3">
                 {games.map((game) => (
-                  <Link key={game.id} href={`/game/${game.id}`} className="flex items-center gap-4 p-4 bg-[#0f1d32] border border-[#1e3050] rounded-xl hover:border-[#00bcd4]/50 transition-all group">
+                  <Link key={game.id} href={`/game/${game.id}`} className="flex items-center gap-4 p-4 bg-[#120b22] border border-[#2d1b54] rounded-xl hover:border-[#9d4edd]/50 transition-all group">
                     <div className="relative w-16 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                       <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover" />
+                      <div className={`absolute top-1 left-1 px-1 py-0.5 rounded text-white text-[7px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                        {game.category === "Android Games" ? "APK" : "PC"}
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-medium group-hover:text-[#00bcd4] transition-colors line-clamp-1">
-                        {game.title}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-white font-medium group-hover:text-[#9d4edd] transition-colors line-clamp-1">
+                          {game.title}
+                        </h3>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase flex-shrink-0 ${game.category === "Android Games" ? "bg-green-500/20 text-green-400" : "bg-blue-500/20 text-blue-400"}`}>
+                          {game.category === "Android Games" ? "ANDROID" : "PC"}
+                        </span>
+                      </div>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-gray-500 text-sm">{game.category}</span>
                         {game.size && <span className="text-gray-600 text-xs">•</span>}

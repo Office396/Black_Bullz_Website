@@ -122,13 +122,13 @@ export default function GamePage({ params }: GamePageProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a1628]">
+      <div className="min-h-screen bg-[#090514]">
         <Header />
         <div className="pt-16">
           <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
             <div className="animate-pulse space-y-6">
-              <div className="h-6 w-48 bg-[#1a2a44] rounded" />
-              <div className="h-96 bg-[#1a2a44] rounded-xl" />
+              <div className="h-6 w-48 bg-[#1a103c] rounded" />
+              <div className="h-96 bg-[#1a103c] rounded-xl" />
             </div>
           </div>
         </div>
@@ -138,14 +138,14 @@ export default function GamePage({ params }: GamePageProps) {
 
   if (!game) {
     return (
-      <div className="min-h-screen bg-[#0a1628]">
+      <div className="min-h-screen bg-[#090514]">
         <Header />
         <div className="pt-16">
           <div className="max-w-full mx-auto px-4 lg:px-6 py-">
             <div className="text-center py-20">
               <h1 className="text-2xl font-bold text-white mb-4">Game Not Found</h1>
               <p className="text-gray-400 mb-6">The game you're looking for doesn't exist or has been removed.</p>
-              <a href="/games" className="inline-flex items-center gap-2 px-6 py-3 bg-[#00bcd4] hover:bg-[#0097a7] text-white font-medium rounded-lg">
+              <a href="/games" className="inline-flex items-center gap-2 px-6 py-3 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-medium rounded-lg">
                 Browse All Games
               </a>
             </div>
@@ -157,7 +157,7 @@ export default function GamePage({ params }: GamePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
       <div className="pt-16">
         <div className="max-w-full mx-auto px-4 lg:px-6 py-6">

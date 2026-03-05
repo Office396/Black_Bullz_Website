@@ -42,14 +42,14 @@ export default function CollectionsPage() {
   const totalGames = collections.reduce((sum, c) => sum + c.count, 0)
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
 
       <div className="pt-16">
         <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <FolderHeart className="w-8 h-8 text-[#00bcd4]" />
+              <FolderHeart className="w-8 h-8 text-[#9d4edd]" />
               <h1 className="text-3xl font-bold text-white">Game Collections</h1>
             </div>
             <p className="text-gray-400">
@@ -58,21 +58,21 @@ export default function CollectionsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-[#0f1d32] border border-[#1e3050] rounded-xl p-4">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
-                <FolderHeart className="w-5 h-5 text-[#00bcd4]" />
+                <FolderHeart className="w-5 h-5 text-[#9d4edd]" />
                 <span className="text-gray-400 text-sm">Total Collections</span>
               </div>
               <p className="text-2xl font-bold text-white">{totalCollections}</p>
             </div>
-            <div className="bg-[#0f1d32] border border-[#1e3050] rounded-xl p-4">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <Gamepad2 className="w-5 h-5 text-green-500" />
                 <span className="text-gray-400 text-sm">Total Games</span>
               </div>
               <p className="text-2xl font-bold text-white">{totalGames}+</p>
             </div>
-            <div className="bg-[#0f1d32] border border-[#1e3050] rounded-xl p-4">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <ChevronRight className="w-5 h-5 text-yellow-500" />
                 <span className="text-gray-400 text-sm">New This Month</span>
@@ -88,16 +88,19 @@ export default function CollectionsPage() {
                 href={`/collections/${collection.slug}`}
                 className="group"
               >
-                <div className="relative bg-gradient-to-br from-[#1a2a44] to-[#0f1d32] border border-[#1e3050] rounded-xl overflow-hidden hover:border-[#00bcd4]/50 transition-all duration-300 hover:scale-[1.02]">
+                <div className="relative bg-gradient-to-br from-[#1a103c] to-[#120b22] border border-[#2d1b54] rounded-xl overflow-hidden hover:border-[#9d4edd]/50 transition-all duration-300 hover:scale-[1.02]">
                   <div className="relative aspect-video">
                     <img
                       src={collection.image}
                       alt={collection.name}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
+                    <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-[#9d4edd]/90 text-white text-[10px] font-bold uppercase rounded shadow-lg z-10 pointer-events-none">
+                      COLLECTION
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <h3 className="text-white font-medium text-base line-clamp-2 group-hover:text-[#00bcd4] transition-colors">
+                      <h3 className="text-white font-medium text-base line-clamp-2 group-hover:text-[#9d4edd] transition-colors">
                         {collection.name}
                       </h3>
                       <p className="text-gray-400 text-sm mt-1">

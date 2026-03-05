@@ -29,7 +29,7 @@ export function UpcomingGames({ games }: { games: GameItem[] }) {
         <section className="py-6">
             <div className="flex items-center justify-between mb-5">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-[#00bcd4]" />
+                    <Calendar className="w-5 h-5 text-[#9d4edd]" />
                     Upcoming Games
                 </h2>
                 <Link
@@ -50,7 +50,7 @@ export function UpcomingGames({ games }: { games: GameItem[] }) {
                         href={`/game/${game.id}`}
                         className="group"
                     >
-                        <div className="relative bg-[#0f1d32] border border-[#1e3050] rounded-xl overflow-hidden hover:border-[#00bcd4]/50 transition-all duration-300">
+                        <div className="relative bg-[#120b22] border border-[#2d1b54] rounded-xl overflow-hidden hover:border-[#9d4edd]/50 transition-all duration-300">
                             <div className="relative aspect-[3/4]">
                                 <img
                                     src={game.image || "/placeholder.svg"}
@@ -58,13 +58,16 @@ export function UpcomingGames({ games }: { games: GameItem[] }) {
                                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                <div className="absolute top-2 left-2 px-2 py-0.5 bg-yellow-500/90 text-black text-xs font-bold rounded flex items-center gap-1">
+                                <div className="absolute top-2 left-2 px-2 py-0.5 bg-yellow-500/90 text-black text-xs font-bold rounded flex items-center gap-1 shadow-lg z-10">
                                     <Clock className="w-3 h-3" />
                                     UPCOMING
                                 </div>
+                                <div className={`absolute top-2 right-2 px-2 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                                    {game.category === "Android Games" ? "ANDROID" : "PC"}
+                                </div>
                             </div>
                             <div className="p-3">
-                                <h3 className="text-white font-medium text-sm line-clamp-2 group-hover:text-[#00bcd4] transition-colors">
+                                <h3 className="text-white font-medium text-sm line-clamp-2 group-hover:text-[#9d4edd] transition-colors">
                                     {game.title}
                                 </h3>
                                 <p className="text-gray-500 text-xs mt-1">

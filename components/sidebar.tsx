@@ -143,9 +143,9 @@ export function Sidebar() {
               <Link
                 key={game.id}
                 href={`/game/${game.id}`}
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-700 transition-colors group"
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-[#120b22] transition-colors group"
               >
-                <div className="w-12 h-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-700">
+                <div className="w-12 h-12 flex-shrink-0 overflow-hidden rounded-lg bg-[#1a103c] relative">
                   <Image
                     src={game.image || "/placeholder.svg"}
                     alt={game.title}
@@ -179,9 +179,12 @@ export function Sidebar() {
                       }
                     }}
                   />
+                  <div className={`absolute top-0.5 left-0.5 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                    {game.category === "Android Games" ? "AND" : "PC"}
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-white text-sm font-medium truncate group-hover:text-red-400">{game.title}</h4>
+                  <h4 className="text-white text-sm font-medium truncate hover:text-[#9d4edd] hover:scale-105 transition-all origin-left origin-center inline-block">{game.title}</h4>
                   <p className="text-gray-400 text-xs">{game.category}</p>
                   <p className="text-gray-500 text-xs">{game.downloads}</p>
                 </div>
@@ -194,7 +197,7 @@ export function Sidebar() {
           )}
         </CardContent>
       </Card>
-            {/* How to downlaod games and softwares video */}
+      {/* How to downlaod games and softwares video */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-white text-lg">How to Download games and softwares</CardTitle>

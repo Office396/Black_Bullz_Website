@@ -30,16 +30,16 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628]">
+    <div className="min-h-screen bg-[#090514]">
       <Header />
       
       <div className="pt-16">
         <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
-            <div className="bg-[#0f1d32] border border-[#1e3050] rounded-2xl p-8">
+            <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-8">
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#00bcd4]/20 mb-4">
-                  <UserPlus className="w-8 h-8 text-[#00bcd4]" />
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#9d4edd]/20 mb-4">
+                  <UserPlus className="w-8 h-8 text-[#9d4edd]" />
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-2">Create Account</h1>
                 <p className="text-gray-400">Join the community and start downloading</p>
@@ -55,7 +55,7 @@ export default function SignUpPage() {
                       placeholder="Enter your name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="bg-[#1a2a44] border-[#1e3050] text-white placeholder-gray-500 focus:border-[#00bcd4] pl-10"
+                      className="bg-[#1a103c] border-[#2d1b54] text-white placeholder-gray-500 focus:border-[#9d4edd] pl-10"
                       required
                     />
                   </div>
@@ -70,7 +70,7 @@ export default function SignUpPage() {
                       placeholder="Choose a username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="bg-[#1a2a44] border-[#1e3050] text-white placeholder-gray-500 focus:border-[#00bcd4] pl-10"
+                      className="bg-[#1a103c] border-[#2d1b54] text-white placeholder-gray-500 focus:border-[#9d4edd] pl-10"
                       required
                     />
                   </div>
@@ -85,7 +85,7 @@ export default function SignUpPage() {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-[#1a2a44] border-[#1e3050] text-white placeholder-gray-500 focus:border-[#00bcd4] pl-10"
+                      className="bg-[#1a103c] border-[#2d1b54] text-white placeholder-gray-500 focus:border-[#9d4edd] pl-10"
                       required
                     />
                   </div>
@@ -100,7 +100,7 @@ export default function SignUpPage() {
                       placeholder="Create a password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-[#1a2a44] border-[#1e3050] text-white placeholder-gray-500 focus:border-[#00bcd4] pl-10 pr-10"
+                      className="bg-[#1a103c] border-[#2d1b54] text-white placeholder-gray-500 focus:border-[#9d4edd] pl-10 pr-10"
                       required
                     />
                     <button
@@ -114,14 +114,14 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="flex items-start gap-2 text-sm">
-                  <input type="checkbox" className="mt-1 rounded border-[#1e3050] bg-[#1a2a44]" required />
+                  <input type="checkbox" className="mt-1 rounded border-[#2d1b54] bg-[#1a103c]" required />
                   <span className="text-gray-400">
                     I agree to the{" "}
-                    <Link href="/terms" className="text-[#00bcd4] hover:underline">
+                    <Link href="/terms" className="text-[#9d4edd] hover:underline">
                       Terms of Service
                     </Link>{" "}
                     and{" "}
-                    <Link href="/privacy" className="text-[#00bcd4] hover:underline">
+                    <Link href="/privacy" className="text-[#9d4edd] hover:underline">
                       Privacy Policy
                     </Link>
                   </span>
@@ -130,7 +130,7 @@ export default function SignUpPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#00bcd4] hover:bg-[#0097a7] text-white font-semibold"
+                  className="w-full bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-semibold"
                 >
                   {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
@@ -138,10 +138,10 @@ export default function SignUpPage() {
 
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#1e3050]"></div>
+                  <div className="w-full border-t border-[#2d1b54]"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-[#0f1d32] text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-[#120b22] text-gray-500">Or continue with</span>
                 </div>
               </div>
 
@@ -158,7 +158,7 @@ export default function SignUpPage() {
 
               <p className="text-center text-gray-500 text-sm mt-6">
                 Already have an account?{" "}
-                <Link href="/login" className="text-[#00bcd4] hover:underline">
+                <Link href="/login" className="text-[#9d4edd] hover:underline">
                   Sign in
                 </Link>
               </p>

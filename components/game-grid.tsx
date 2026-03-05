@@ -8,64 +8,64 @@ import Image from "next/image"
 
 // ImageSkeleton component
 const ImageSkeleton = ({ src, alt, className = "", fill = true, width, height, priority }: { src: string; alt: string; className?: string; fill?: boolean; width?: number; height?: number; priority?: boolean }) => {
-   const [isLoaded, setIsLoaded] = useState(false)
-   const [hasError, setHasError] = useState(false)
-   const [isLoading, setIsLoading] = useState(true)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-   useEffect(() => {
-     if (src) {
-       setIsLoading(true)
-       setHasError(false)
-       setIsLoaded(false)
+  useEffect(() => {
+    if (src) {
+      setIsLoading(true)
+      setHasError(false)
+      setIsLoaded(false)
 
-       // Set a timeout to show error after 8 seconds of loading
-       const timeoutId = setTimeout(() => {
-         if (!isLoaded) {
-           setHasError(true)
-           setIsLoading(false)
-         }
-       }, 8000) // 8 seconds timeout
+      // Set a timeout to show error after 8 seconds of loading
+      const timeoutId = setTimeout(() => {
+        if (!isLoaded) {
+          setHasError(true)
+          setIsLoading(false)
+        }
+      }, 8000) // 8 seconds timeout
 
-       return () => clearTimeout(timeoutId)
-     }
-   }, [src, isLoaded])
+      return () => clearTimeout(timeoutId)
+    }
+  }, [src, isLoaded])
 
-   return (
-     <div className={`relative overflow-hidden ${isLoading && !hasError ? 'bg-gray-700 animate-pulse rounded-lg' : ''} ${className}`}>
-       {!hasError && (
-         <Image
-           src={src}
-           alt={alt}
-           fill={fill}
-           width={fill ? undefined : width}
-           height={fill ? undefined : height}
-           className="object-cover transition-all duration-300 rounded-lg"
-           onLoad={() => {
-             setIsLoaded(true)
-             setIsLoading(false)
-           }}
-           onError={() => {
-             // Don't immediately set error, let the timeout handle it
-             setIsLoading(false)
-           }}
-           priority={priority}
-         />
-       )}
-       {hasError && (
-         <div className={`w-full h-full flex items-center justify-center bg-gray-700 rounded-lg ${fill ? 'absolute inset-0' : ''}`}>
-           <div className="text-center text-gray-400">
-             <div className="w-8 h-8 mx-auto mb-2 opacity-50">
-               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-               </svg>
-             </div>
-             <p className="text-xs">Failed to load</p>
-           </div>
-         </div>
-       )}
-     </div>
-   )
- }
+  return (
+    <div className={`relative overflow-hidden ${isLoading && !hasError ? 'bg-gray-700 animate-pulse rounded-lg' : ''} ${className}`}>
+      {!hasError && (
+        <Image
+          src={src}
+          alt={alt}
+          fill={fill}
+          width={fill ? undefined : width}
+          height={fill ? undefined : height}
+          className="object-cover transition-all duration-300 rounded-lg"
+          onLoad={() => {
+            setIsLoaded(true)
+            setIsLoading(false)
+          }}
+          onError={() => {
+            // Don't immediately set error, let the timeout handle it
+            setIsLoading(false)
+          }}
+          priority={priority}
+        />
+      )}
+      {hasError && (
+        <div className={`w-full h-full flex items-center justify-center bg-gray-700 rounded-lg ${fill ? 'absolute inset-0' : ''}`}>
+          <div className="text-center text-gray-400">
+            <div className="w-8 h-8 mx-auto mb-2 opacity-50">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-xs">Failed to load</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 import { Star } from "lucide-react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useState, useEffect, useMemo } from "react"
@@ -132,7 +132,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
     }
   }, [isInitialLoad])
 
-  const allGames = useMemo(() => 
+  const allGames = useMemo(() =>
     adminItems.map((item) => ({
       ...item,
       tab: item.category === "PC Games" ? "pc-games" : item.category === "Android Games" ? "android-games" : "software",
@@ -244,19 +244,18 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
       {!filterLatest && (
         <div className="flex flex-wrap gap-2 mb-6">
           {tabs.map((tab) => {
-            const count = tab.id === "all" 
-              ? allGames.length 
+            const count = tab.id === "all"
+              ? allGames.length
               : allGames.filter((g) => g.tab === tab.id).length
             return (
               <Button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 variant={activeTab === tab.id ? "default" : "outline"}
-                className={`${
-                  activeTab === tab.id
+                className={`${activeTab === tab.id
                     ? "bg-red-600 hover:bg-red-700 text-white"
                     : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 {tab.label} ({count})
               </Button>
@@ -280,11 +279,10 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
       </div>
 
       <div
-        className={`grid gap-2 sm:gap-3 ${
-          activeTab === "android-games"
+        className={`grid gap-2 sm:gap-3 ${activeTab === "android-games"
             ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5"
             : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4"
-        } max-w-[1400px] mx-auto`}
+          } max-w-[1400px] mx-auto`}
       >
         {paginatedGames.map((game) => (
           <Link key={game.id} href={`/game/${game.id}`}>
@@ -329,13 +327,15 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
                 <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[13px] px-1 py-0 z-10">
                   {game.category}
                 </Badge>
+                <div className={`absolute top-2 left-2 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                  {game.category === "Android Games" ? "ANDROID" : "PC"}
+                </div>
               </div>
               <CardContent className="p-1.5">
                 <div className="flex flex-col gap-1">
                   <h3
-                    className={`text-white font-bold group-hover:text-red-400 transition-colors line-clamp-1 ${
-                      activeTab === "android-games" ? "text-xs" : "text-sm"
-                    }`}
+                    className={`text-white font-bold group-hover:text-red-400 transition-colors line-clamp-1 ${activeTab === "android-games" ? "text-xs" : "text-sm"
+                      }`}
                   >
                     {game.title}
                   </h3>
@@ -414,9 +414,8 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
                   <Button
                     key={page}
                     onClick={() => handlePageChange(page)}
-                    className={`px-2 md:px-3 py-2 text-sm rounded-lg transition-colors min-w-[40px] md:min-w-auto ${
-                      currentPage === page ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
-                    }`}
+                    className={`px-2 md:px-3 py-2 text-sm rounded-lg transition-colors min-w-[40px] md:min-w-auto ${currentPage === page ? "bg-red-600 text-white" : "bg-gray-700 text-white hover:bg-gray-600"
+                      }`}
                   >
                     {page}
                   </Button>
