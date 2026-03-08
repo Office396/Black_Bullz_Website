@@ -58,7 +58,7 @@ export function HeroCarousel({ games }: { games: GameItem[] }) {
             Change these pixel numbers (e.g., h-[600px]) to instantly resize the slideshow.
         */}
 
-            <section className="relative w-full h-[600px] sm:h-[600px] md:h-[600px] overflow-hidden rounded-xl">
+            <section className="relative w-full h-[600px] sm:h-[800px] md:h-[600px] overflow-hidden rounded-xl" style={{ backgroundColor: '#090514', background: '#090514' }}>
 
                 {/* Background Image */}
                 {featured.map((g, i) => (
@@ -79,13 +79,13 @@ export function HeroCarousel({ games }: { games: GameItem[] }) {
                 ))}
 
                 {/* Gradient overlays for smoke fade effect - Dramatically strengthened */}
-                <div className="absolute inset-0 bg-[#090514]/40" />
+                <div className="absolute inset-0 !bg-[#090514]/40" />
                 {/* <div className="absolute inset-0 bg-gradient-to-r from-[#090514] via-[#090514]/90 to-transparent" /> */}
-                <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#090514] via-[#090514]/70 to-transparent z-10" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#090514] via-transparent to-transparent opacity-80" />
-                <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#090514] to-transparent pointer-events-none" />
-                <div className="absolute inset-y-0 right-0 w-60 bg-gradient-to-l from-[#090514] via-[#090514]/20 to-transparent pointer-events-none" />
-                <div className="absolute inset-y-0 left-0 w-60 bg-gradient-to-r from-[#090514] via-[#090514]/40 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 h-48 !bg-gradient-to-t from-[#090514] via-[#090514]/70 to-transparent z-10" />
+                <div className="absolute inset-0 !bg-gradient-to-t from-[#090514] via-transparent to-transparent opacity-80" />
+                <div className="absolute inset-x-0 top-0 h-24 !bg-gradient-to-b from-[#090514] to-transparent pointer-events-none" />
+                <div className="absolute inset-y-0 right-0 w-60 !bg-gradient-to-l from-[#090514] via-[#090514]/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-y-0 left-0 w-60 !bg-gradient-to-r from-[#090514] via-[#090514]/40 to-transparent pointer-events-none" />
 
                 {/* Content - Elevated z-index to stay on top of all gradients/glows */}
                 <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 md:p-12 max-w-2xl z-30" key={current}>
@@ -131,31 +131,30 @@ export function HeroCarousel({ games }: { games: GameItem[] }) {
                     </div>
                 </div>
 
-                {/* Dot indicators */}
-                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                {/* Dot indicators - styled like download/details buttons */}
+                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 z-30 bg-[#090514]/60 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10">
                     {featured.map((_, i) => (
                         <button
                             key={i}
                             onClick={() => goTo(i)}
                             className={`transition-all duration-300 rounded-full ${i === current
-                                ? "w-7 h-2.5 bg-[#9d4edd]"
-                                : "w-2.5 h-2.5 bg-white/30 hover:bg-white/50"
-                                }`}
+                                ? "w-8 h-3 bg-[#9d4edd] shadow-[0_0_12px_rgba(157,78,221,0.9)]"
+                                : "w-3 h-3 bg-white/50 hover:bg-white/80 hover:scale-110"
+                            }`}
                         />
                     ))}
                 </div>
 
-
-                {/* Nav arrows */}
+                {/* Nav arrows - styled like download/details buttons */}
                 <button
                     onClick={prev}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-[#090514]/60 hover:bg-[#090514]/90 text-white transition-all hover:scale-110 backdrop-blur-sm hidden sm:flex items-center justify-center"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-[#090514]/60 hover:bg-[#9d4edd] border border-white/10 hover:border-[#9d4edd] text-white transition-all hover:scale-110 backdrop-blur-md hidden sm:flex items-center justify-center shadow-lg z-30"
                 >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-6 h-6" />
                 </button>
                 <button
                     onClick={next}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-[#090514]/60 hover:bg-[#090514]/90 text-white transition-all hover:scale-110 backdrop-blur-sm hidden sm:flex items-center justify-center"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-[#090514]/60 hover:bg-[#9d4edd] text-white transition-all hover:scale-110 backdrop-blur-sm hidden sm:flex items-center justify-center"
                 >
                     <ChevronRight className="w-5 h-5" />
                 </button>

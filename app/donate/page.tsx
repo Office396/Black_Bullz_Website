@@ -38,7 +38,7 @@ export default function DonatePage() {
   const goalPercentage = (currentAmount / monthlyGoal) * 100
 
   return (
-    <div className="min-h-screen bg-[#090514]">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <div className="pt-16">
@@ -52,7 +52,7 @@ export default function DonatePage() {
               <p className="text-gray-400 text-lg">Help us fight against restrictive DRM and corporate monopolies.</p>
             </div>
 
-            <div className="bg-gradient-to-br from-[#1a103c] to-[#120b22] border border-[#2d1b54] rounded-2xl p-6 mb-8">
+            <div className="bg-card border border-border rounded-2xl p-6 mb-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-white/5 rounded-xl p-4 text-center">
                   <div className="flex items-center justify-center gap-2 mb-2">
@@ -142,7 +142,7 @@ export default function DonatePage() {
               </button>
             </div>
 
-            <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-6 mb-8">
+            <div className="bg-card border border-border rounded-2xl p-6 mb-8">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-yellow-500" />
                 Champions of Freedom
@@ -153,9 +153,9 @@ export default function DonatePage() {
                     <div className={cn(
                       "w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm",
                       donor.rank === 1 ? "bg-yellow-500 text-black" :
-                      donor.rank === 2 ? "bg-gray-400 text-black" :
-                      donor.rank === 3 ? "bg-amber-700 text-white" :
-                      "bg-white/10 text-gray-300"
+                        donor.rank === 2 ? "bg-gray-400 text-black" :
+                          donor.rank === 3 ? "bg-amber-700 text-white" :
+                            "bg-white/10 text-gray-300"
                     )}>
                       {donor.rank}
                     </div>
@@ -168,7 +168,7 @@ export default function DonatePage() {
               </div>
             </div>
 
-            <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-6">
+            <div className="bg-card border border-border rounded-2xl p-6">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <HelpCircle className="w-5 h-5 text-[#9d4edd]" />
                 Frequently Asked Questions

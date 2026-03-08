@@ -20,11 +20,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-[#090514]`}>
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-background`}>
         {/* PageLoader handles client-side route changes with a controlled delay */}
         <PageLoader />
         {/* Suspense ensures client components that suspend show a fallback immediately */}

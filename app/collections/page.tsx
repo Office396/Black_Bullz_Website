@@ -1,40 +1,40 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
+import { CardFan } from "@/components/card-fan"
 import { FolderHeart, ChevronRight, Gamepad2 } from "lucide-react"
 
 const collections = [
-  { name: "Final Fantasy Series", slug: "final-fantasy", count: 15, image: "/placeholder.svg" },
-  { name: "Metal Gear Solid Series", slug: "metal-gear-solid", count: 8, image: "/placeholder.svg" },
-  { name: "Far Cry Series", slug: "far-cry", count: 12, image: "/placeholder.svg" },
-  { name: "Fallout Series", slug: "fallout", count: 7, image: "/placeholder.svg" },
-  { name: "Assassin's Creed Series", slug: "assassins-creed", count: 14, image: "/placeholder.svg" },
-  { name: "Resident Evil Series", slug: "resident-evil", count: 10, image: "/placeholder.svg" },
-  { name: "Call of Duty Series", slug: "call-of-duty", count: 18, image: "/placeholder.svg" },
-  { name: "Grand Theft Auto Series", slug: "gta", count: 9, image: "/placeholder.svg" },
-  { name: "Battlefield Series", slug: "battlefield", count: 11, image: "/placeholder.svg" },
-  { name: "Tomb Raider Series", slug: "tomb-raider", count: 12, image: "/placeholder.svg" },
-  { name: "Need for Speed Series", slug: "need-for-speed", count: 15, image: "/placeholder.svg" },
-  { name: "The Witcher Series", slug: "witcher", count: 5, image: "/placeholder.svg" },
-  { name: "Dragon Age Series", slug: "dragon-age", count: 4, image: "/placeholder.svg" },
-  { name: "Mass Effect Series", slug: "mass-effect", count: 4, image: "/placeholder.svg" },
-  { name: "Borderlands Series", slug: "borderlands", count: 6, image: "/placeholder.svg" },
-  { name: "Hitman Series", slug: "hitman", count: 8, image: "/placeholder.svg" },
-  { name: "Dark Souls Series", slug: "dark-souls", count: 5, image: "/placeholder.svg" },
-  { name: "Diablo Series", slug: "diablo", count: 4, image: "/placeholder.svg" },
-  { name: "Elder Scrolls Series", slug: "elder-scrolls", count: 6, image: "/placeholder.svg" },
-  { name: "Bioshock Series", slug: "bioshock", count: 3, image: "/placeholder.svg" },
-  { name: "Halo Series", slug: "halo", count: 7, image: "/placeholder.svg" },
-  { name: "Forza Series", slug: "forza", count: 8, image: "/placeholder.svg" },
-  { name: "FIFA Series", slug: "fifa", count: 12, image: "/placeholder.svg" },
-  { name: "NBA 2K Series", slug: "nba-2k", count: 10, image: "/placeholder.svg" },
-  { name: "Minecraft Series", slug: "minecraft", count: 3, image: "/placeholder.svg" },
-  { name: "Portal Series", slug: "portal", count: 2, image: "/placeholder.svg" },
-  { name: "Half-Life Series", slug: "half-life", count: 4, image: "/placeholder.svg" },
-  { name: "Left 4 Dead Series", slug: "left-4-dead", count: 2, image: "/placeholder.svg" },
+  { name: "Final Fantasy Series", slug: "final-fantasy", count: 15, images: ["/placeholder.svg"] },
+  { name: "Metal Gear Solid Series", slug: "metal-gear-solid", count: 8, images: ["/placeholder.svg"] },
+  { name: "Far Cry Series", slug: "far-cry", count: 12, images: ["/placeholder.svg"] },
+  { name: "Fallout Series", slug: "fallout", count: 7, images: ["/placeholder.svg"] },
+  { name: "Assassin's Creed Series", slug: "assassins-creed", count: 14, images: ["/placeholder.svg"] },
+  { name: "Resident Evil Series", slug: "resident-evil", count: 10, images: ["/placeholder.svg"] },
+  { name: "Call of Duty Series", slug: "call-of-duty", count: 18, images: ["/placeholder.svg"] },
+  { name: "Grand Theft Auto Series", slug: "gta", count: 9, images: ["/placeholder.svg"] },
+  { name: "Battlefield Series", slug: "battlefield", count: 11, images: ["/placeholder.svg"] },
+  { name: "Tomb Raider Series", slug: "tomb-raider", count: 12, images: ["/placeholder.svg"] },
+  { name: "Need for Speed Series", slug: "need-for-speed", count: 15, images: ["/placeholder.svg"] },
+  { name: "The Witcher Series", slug: "witcher", count: 5, images: ["/placeholder.svg"] },
+  { name: "Dragon Age Series", slug: "dragon-age", count: 4, images: ["/placeholder.svg"] },
+  { name: "Mass Effect Series", slug: "mass-effect", count: 4, images: ["/placeholder.svg"] },
+  { name: "Borderlands Series", slug: "borderlands", count: 6, images: ["/placeholder.svg"] },
+  { name: "Hitman Series", slug: "hitman", count: 8, images: ["/placeholder.svg"] },
+  { name: "Dark Souls Series", slug: "dark-souls", count: 5, images: ["/placeholder.svg"] },
+  { name: "Diablo Series", slug: "diablo", count: 4, images: ["/placeholder.svg"] },
+  { name: "Elder Scrolls Series", slug: "elder-scrolls", count: 6, images: ["/placeholder.svg"] },
+  { name: "Bioshock Series", slug: "bioshock", count: 3, images: ["/placeholder.svg"] },
+  { name: "Halo Series", slug: "halo", count: 7, images: ["/placeholder.svg"] },
+  { name: "Forza Series", slug: "forza", count: 8, images: ["/placeholder.svg"] },
+  { name: "FIFA Series", slug: "fifa", count: 12, images: ["/placeholder.svg"] },
+  { name: "NBA 2K Series", slug: "nba-2k", count: 10, images: ["/placeholder.svg"] },
+  { name: "Minecraft Series", slug: "minecraft", count: 3, images: ["/placeholder.svg"] },
+  { name: "Portal Series", slug: "portal", count: 2, images: ["/placeholder.svg"] },
+  { name: "Half-Life Series", slug: "half-life", count: 4, images: ["/placeholder.svg"] },
+  { name: "Left 4 Dead Series", slug: "left-4-dead", count: 2, images: ["/placeholder.svg"] },
 ]
 
 export default function CollectionsPage() {
@@ -57,6 +57,7 @@ export default function CollectionsPage() {
             </p>
           </div>
 
+          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
@@ -81,33 +82,33 @@ export default function CollectionsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {/* Collections grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {collections.map((collection) => (
               <Link
                 key={collection.slug}
                 href={`/collections/${collection.slug}`}
-                className="group"
+                className="group block"
               >
-                <div className="relative bg-gradient-to-br from-[#1a103c] to-[#120b22] border border-[#2d1b54] rounded-xl overflow-hidden hover:border-[#9d4edd]/50 transition-all duration-300 hover:scale-[1.02]">
-                  <div className="relative aspect-video">
-                    <img
-                      src={collection.image}
-                      alt={collection.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                <div className="relative bg-gradient-to-br from-[#1a103c] to-[#120b22] border border-[#2d1b54] rounded-xl p-3 hover:border-[#9d4edd]/50 transition-colors duration-300">
+                  {/* Card fan — overflow visible so fan pops up without disturbing siblings */}
+                  <div className="relative mb-3" style={{ overflow: "visible" }}>
+                    <CardFan
+                      images={collection.images}
+                      count={collection.count}
+                      name={collection.name}
                     />
-                    <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-[#9d4edd]/90 text-white text-[10px] font-bold uppercase rounded shadow-lg z-10 pointer-events-none">
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-[#9d4edd]/90 text-white text-[10px] font-bold uppercase rounded shadow-lg z-20 pointer-events-none whitespace-nowrap">
                       COLLECTION
                     </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <h3 className="text-white font-medium text-base line-clamp-2 group-hover:text-[#9d4edd] transition-colors">
-                        {collection.name}
-                      </h3>
-                      <p className="text-gray-400 text-sm mt-1">
-                        {collection.count} Games
-                      </p>
-                    </div>
                   </div>
+
+                  <h3 className="text-white font-medium text-sm line-clamp-2 group-hover:text-[#9d4edd] transition-colors text-center">
+                    {collection.name}
+                  </h3>
+                  <p className="text-gray-400 text-xs text-center mt-1">
+                    {collection.count} Games
+                  </p>
                 </div>
               </Link>
             ))}

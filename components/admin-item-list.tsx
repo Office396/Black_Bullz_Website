@@ -17,7 +17,6 @@ const tabs = [
   { id: "all", label: "All" },
   { id: "pc-games", label: "PC Games" },
   { id: "android-games", label: "Android Games" },
-  { id: "software", label: "Software" },
 ]
 
 export function AdminItemList({ searchQuery }: AdminItemListProps) {
@@ -84,11 +83,10 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
     // Apply category filter
     if (activeTab !== "all") {
       const categoryMap: Record<string, string> = {
-        "pc-games": "PC Games",
-        "android-games": "Android Games",
-        "software": "Software"
-      }
-      filtered = filtered.filter(item => item.category === categoryMap[activeTab])
+          "pc-games": "PC Games",
+          "android-games": "Android Games",
+        }
+        filtered = filtered.filter(item => item.category === categoryMap[activeTab])
     }
 
     // Apply search filter
@@ -206,14 +204,13 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
         {tabs.map((tab) => {
           const count = tab.id === "all"
             ? itemsWithCloudCount.length
-            : itemsWithCloudCount.filter((item) => {
-              const categoryMap: Record<string, string> = {
-                "pc-games": "PC Games",
-                "android-games": "Android Games",
-                "software": "Software"
-              }
-              return item.category === categoryMap[tab.id]
-            }).length
+              : itemsWithCloudCount.filter((item) => {
+                const categoryMap: Record<string, string> = {
+                  "pc-games": "PC Games",
+                  "android-games": "Android Games",
+                }
+                return item.category === categoryMap[tab.id]
+              }).length
           return (
             <Button
               key={tab.id}

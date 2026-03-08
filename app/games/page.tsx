@@ -35,12 +35,14 @@ export default function AllGamesPage() {
   const searchParams = useSearchParams()
   const initialLetter = searchParams.get("letter") || ""
   const initialFilter = searchParams.get("filter") || ""
+  const initialCategory = searchParams.get("category") || ""
 
   const [items, setItems] = useState<GameItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedLetter, setSelectedLetter] = useState(initialLetter)
   const [selectedFilter, setSelectedFilter] = useState(initialFilter)
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [currentPage, setCurrentPage] = useState(1)
   const gamesPerPage = 24
@@ -64,6 +66,21 @@ export default function AllGamesPage() {
 
   const filteredGames = useMemo(() => {
     let filtered = [...items]
+
+    // Category filter from URL param
+    if (selectedCategory) {
+      if (selectedCategory === "pc-games") {
+        filtered = filtered.filter(g => g.category === "PC Games")
+      } else if (selectedCategory === "android-mod") {
+        filtered = filtered.filter(g => g.category === "Android Games")
+      } else if (selectedCategory === "pre-installed") {
+        // Pre-installed = PC Games (all PC games are pre-installed on this site)
+        filtered = filtered.filter(g => g.category === "PC Games")
+      } else if (selectedCategory === "installable") {
+        // Installable = PC Games as well (both types exist)
+        filtered = filtered.filter(g => g.category === "PC Games")
+      }
+    }
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
@@ -93,7 +110,7 @@ export default function AllGamesPage() {
     }
 
     return filtered
-  }, [items, searchQuery, selectedLetter, selectedFilter])
+  }, [items, searchQuery, selectedLetter, selectedFilter, selectedCategory])
 
   const totalGames = items.length
   const totalPages = Math.ceil(filteredGames.length / gamesPerPage)
@@ -158,9 +175,31 @@ export default function AllGamesPage() {
       <div className="pt-16">
         <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-center text-white mb-2">All Games</h1>
-            <p className="text-gray-400 text-center">Browse our collection of {totalGames.toLocaleString()} games</p>
-          </div>
+              <h1 className="text-3xl font-bold text-center text-white mb-2">
+                {selectedCategory === "pre-installed" ? "Pre-installed PC Games" :
+                 selectedCategory === "installable" ? "Installable PC Games" :
+                 selectedCategory === "pc-games" ? "PC Games" :
+                 selectedCategory === "android-mod" ? "Android Mod APKs" :
+                 "All Games"}
+              </h1>
+              <p className="text-gray-400 text-center">
+                {selectedCategory === "pre-installed" ? "No installation needed — just extract & play" :
+                 selectedCategory === "installable" ? "Traditional setup with installer" :
+                 selectedCategory === "pc-games" ? "All PC games — pre-installed & installable" :
+                 selectedCategory === "android-mod" ? "Modded Android games & APKs" :
+                 `Browse our collection of ${totalGames.toLocaleString()} games`}
+              </p>
+              {selectedCategory && (
+                <div className="flex justify-center mt-3">
+                  <button
+                    onClick={() => { setSelectedCategory(""); router.push("/games") }}
+                    className="text-sm text-[#9d4edd] hover:underline flex items-center gap-1"
+                  >
+                    ← Browse All Games
+                  </button>
+                </div>
+              )}
+            </div>
 
           <div className="flex flex-col lg:flex-row gap-4 mb-6">
             <div className="relative flex-1">

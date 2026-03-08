@@ -50,14 +50,14 @@ export default function TopGamesPage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-[#090514]">
+      <div className="min-h-screen bg-background">
         <Header />
         <div className="pt-16">
           <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
             <div className="h-10 w-48 bg-[#1a103c] rounded animate-pulse mb-6" />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 h-96 bg-[#1a103c] rounded-xl animate-pulse" />
-              <div className="h-96 bg-[#1a103c] rounded-xl animate-pulse" />
+              <div className="lg:col-span-2 h-96 bg-card rounded-xl animate-pulse" />
+              <div className="h-96 bg-card rounded-xl animate-pulse" />
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function TopGamesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090514]">
+    <div className="min-h-screen bg-background">
       <Header />
 
       <div className="pt-16">
@@ -87,14 +87,14 @@ export default function TopGamesPage() {
               </div>
               <p className="text-2xl font-bold text-white">{(totalDownloads / 1000000).toFixed(1)}M</p>
             </div>
-            <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4">
+            <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <Trophy className="w-5 h-5 text-[#9d4edd]" />
                 <span className="text-gray-400 text-sm">Total Games</span>
               </div>
               <p className="text-2xl font-bold text-white">{items.length.toLocaleString()}</p>
             </div>
-            <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4">
+            <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-3 mb-2">
                 <Star className="w-5 h-5 text-[#9d4edd]" />
                 <span className="text-gray-400 text-sm">Average Rating</span>
@@ -104,7 +104,7 @@ export default function TopGamesPage() {
           </div>
 
           {featuredGame && (
-            <div className="relative bg-gradient-to-br from-[#1a103c] to-[#120b22] border border-[#2d1b54] rounded-2xl overflow-hidden mb-8">
+            <div className="relative bg-card border border-border rounded-2xl overflow-hidden mb-8">
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-transparent to-transparent" />
               <div className="absolute top-4 left-4 px-3 py-1 bg-yellow-500 text-black font-bold text-sm rounded-full flex items-center gap-1">
                 <Trophy className="w-4 h-4" />
@@ -151,7 +151,7 @@ export default function TopGamesPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {topGames.slice(0, 24).map((game, index) => (
                   <Link key={game.id} href={`/game/${game.id}`} className="group relative">
-                    <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
+                    <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-secondary">
                       <img
                         src={game.image || "/placeholder.svg"}
                         alt={game.title}
@@ -184,7 +184,7 @@ export default function TopGamesPage() {
               </h3>
               <div className="space-y-3">
                 {runnerUps.map((game, index) => (
-                  <Link key={game.id} href={`/game/${game.id}`} className="flex items-center gap-3 p-3 bg-[#120b22] border border-[#2d1b54] rounded-xl hover:border-[#9d4edd]/50 transition-all group">
+                  <Link key={game.id} href={`/game/${game.id}`} className="flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:border-[#9d4edd]/50 transition-all group">
                     <div className="relative w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden">
                       <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover" />
                       <div className={`absolute top-0.5 left-0.5 px-1 py-0.5 rounded text-white text-[7px] font-bold uppercase z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>

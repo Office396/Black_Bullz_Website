@@ -9,10 +9,10 @@ import { AdminItemForm } from "@/components/admin-item-form"
 import { AdminItemList } from "@/components/admin-item-list"
 import { AdminSettings } from "@/components/admin-settings"
 import { AdminFeedback } from "@/components/admin-feedback"
-import { AdminTrendingManagement } from "@/components/admin-trending-management"
+import { AdminPageModifier } from "@/components/admin-page-modifier"
 import AdminSystemStatus from "@/components/admin-system-status"
 import AdminDetailsAutomation from "@/components/admin-details-automation"
-import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, TrendingUp, Workflow } from "lucide-react"
+import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -73,9 +73,9 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <Workflow className="h-4 w-4" />
                 Auto Scraper
               </TabsTrigger>
-              <TabsTrigger value="trending" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <TrendingUp className="h-4 w-4" />
-                Trending
+              <TabsTrigger value="modifier" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Edit3 className="h-4 w-4" />
+                Modifier
               </TabsTrigger>
               <TabsTrigger value="feedback" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all relative cursor-pointer">
                 <MessageSquare className="h-4 w-4" />
@@ -127,8 +127,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <AdminDetailsAutomation />
           </TabsContent>
 
-          <TabsContent value="trending" className="mt-0 outline-none">
-            <AdminTrendingManagement />
+          <TabsContent value="modifier" className="mt-0 outline-none">
+            <AdminPageModifier />
           </TabsContent>
 
           <TabsContent value="feedback" className="mt-0 outline-none">
