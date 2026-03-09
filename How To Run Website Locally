@@ -1,0 +1,4 @@
+In Command Prompt:
+npm install
+
+npm run dev
