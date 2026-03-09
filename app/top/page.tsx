@@ -41,7 +41,28 @@ export default function TopGamesPage() {
   }, [])
 
   const topGames = [...items]
-    .sort((a, b) => ((b.downloads || b.views || 0) - (a.downloads || a.views || 0)))
+    .sort((a, b) => {
+      // Sort by downloads (highest first)
+      const downloadsA = a.downloads || 0
+      const downloadsB = b.downloads || 0
+      
+      if (downloadsB !== downloadsA) {
+        return downloadsB - downloadsA
+      }
+      
+      // If downloads are equal, sort by views
+      const viewsA = a.views || 0
+      const viewsB = b.views || 0
+      
+      if (viewsB !== viewsA) {
+        return viewsB - viewsA
+      }
+      
+      // If both are equal, sort by rating
+      const ratingA = a.rating || 0
+      const ratingB = b.rating || 0
+      return ratingB - ratingA
+    })
     .slice(0, 100)
 
   const featuredGame = topGames[0]
@@ -74,9 +95,9 @@ export default function TopGamesPage() {
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
               <Trophy className="w-8 h-8 text-yellow-500" />
-              <h1 className="text-3xl font-bold text-white">Top Games (All-Time)</h1>
+              <h1 className="text-3xl font-bold text-white">Top Games</h1>
             </div>
-            <p className="text-gray-400">The most downloaded games of all time</p>
+            <p className="text-gray-400">The most downloaded games in our website</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -104,9 +125,9 @@ export default function TopGamesPage() {
           </div>
 
           {featuredGame && (
-            <div className="relative bg-card border border-border rounded-2xl overflow-hidden mb-8">
+            <div className="relative bg-card border border-border rounded-2xl overflow-hidden mb-8 pt-12">
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-transparent to-transparent" />
-              <div className="absolute top-4 left-4 px-3 py-1 bg-yellow-500 text-black font-bold text-sm rounded-full flex items-center gap-1">
+              <div className="absolute top-4 left-4 px-3 py-1 bg-yellow-500 text-black font-bold text-sm rounded-full flex items-center gap-1 z-10">
                 <Trophy className="w-4 h-4" />
                 #1 MOST DOWNLOADED
               </div>

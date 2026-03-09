@@ -15,11 +15,28 @@ interface GameItem {
     releaseDate?: string
 }
 
-export function HeroCarousel({ games }: { games: GameItem[] }) {
+interface CarouselModifier {
+    id: string
+    gameId: number
+    landscapeImage: string
+    logoImage: string
+    order: number
+}
+
+interface HeroCarouselProps {
+    games: GameItem[]
+    modifiers?: CarouselModifier[]
+}
+
+export function HeroCarousel({ games, modifiers = [] }: HeroCarouselProps) {
     const [current, setCurrent] = useState(0)
     const [isAnimating, setIsAnimating] = useState(false)
     const [lightOn, setLightOn] = useState(false)
-    const featured = games.slice(0, 8)
+    
+    // Use modifiers if available, otherwise use first 8 games
+    const featured = modifiers.length > 0 
+        ? modifiers.sort((a, b) => a.order - b.order).slice(0, 8)
+        : games.slice(0, 8)
 
     const goTo = useCallback((index: number) => {
         if (isAnimating) return
@@ -45,7 +62,22 @@ export function HeroCarousel({ games }: { games: GameItem[] }) {
 
     if (featured.length === 0) return null
 
-    const game = featured[current]
+    // Get current item - could be a modifier or a game
+    const currentItem = featured[current]
+    const isModifier = 'landscapeImage' in currentItem
+    
+    // Get game data
+    const game = isModifier 
+        ? games.find(g => g.id === (currentItem as CarouselModifier).gameId) || currentItem
+        : currentItem as GameItem
+    
+    // Get image to display
+    const displayImage = isModifier 
+        ? (currentItem as CarouselModifier).landscapeImage 
+        : (currentItem as GameItem).image
+    
+    // Get logo if available
+    const logoImage = isModifier ? (currentItem as CarouselModifier).logoImage : null
 
     return (
         <>
@@ -61,22 +93,28 @@ export function HeroCarousel({ games }: { games: GameItem[] }) {
             <section className="relative w-full h-[600px] sm:h-[800px] md:h-[600px] overflow-hidden rounded-xl" style={{ backgroundColor: '#090514', background: '#090514' }}>
 
                 {/* Background Image */}
-                {featured.map((g, i) => (
-                    <div
-                        key={g.id}
-                        className={`absolute inset-0 transition-opacity duration-700 ${i === current ? "opacity-100" : "opacity-0"
-                            }`}
-                    >
-                        <Image
-                            src={g.image || "/placeholder.svg"}
-                            alt={g.title}
-                            fill
-                            className="object-cover object-center"
-                            priority={i === 0}
-                            sizes="100vw"
-                        />
-                    </div>
-                ))}
+                {featured.map((item, i) => {
+                    const isModifier = 'landscapeImage' in item
+                    const imageUrl = isModifier ? (item as CarouselModifier).landscapeImage : (item as GameItem).image
+                    const itemGame = isModifier ? games.find(g => g.id === (item as CarouselModifier).gameId) : item
+                    
+                    return (
+                        <div
+                            key={isModifier ? (item as CarouselModifier).id : (item as GameItem).id}
+                            className={`absolute inset-0 transition-opacity duration-700 ${i === current ? "opacity-100" : "opacity-0"
+                                }`}
+                        >
+                            <Image
+                                src={imageUrl || "/placeholder.svg"}
+                                alt={(itemGame as GameItem)?.title || 'Game'}
+                                fill
+                                className="object-cover object-center"
+                                priority={i === 0}
+                                sizes="100vw"
+                            />
+                        </div>
+                    )
+                })}
 
                 {/* Gradient overlays for smoke fade effect - Dramatically strengthened */}
                 <div className="absolute inset-0 !bg-[#090514]/40" />
@@ -89,29 +127,44 @@ export function HeroCarousel({ games }: { games: GameItem[] }) {
 
                 {/* Content - Elevated z-index to stay on top of all gradients/glows */}
                 <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 md:p-12 max-w-2xl z-30" key={current}>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 leading-tight hero-text-anim tracking-wide uppercase">
-                        {game.title}
-                    </h2>
+                    {/* Logo Image if available */}
+                    {logoImage && (
+                        <div className="mb-4 hero-slide-up">
+                            <img 
+                                src={logoImage} 
+                                alt={(game as GameItem).title}
+                                className="h-24 md:h-32 w-auto drop-shadow-2xl"
+                                style={{ filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.8))' }}
+                            />
+                        </div>
+                    )}
+                    
+                    {/* Title - only show if no logo */}
+                    {!logoImage && (
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 leading-tight hero-text-anim tracking-wide uppercase">
+                            {(game as GameItem).title}
+                        </h2>
+                    )}
 
                     <div className="flex items-center gap-2 mb-3 hero-slide-up" style={{ animationDelay: '0.1s' }}>
                         <span className="px-2.5 py-0.5 bg-[#9d4edd] text-white text-xs font-bold rounded">
-                            {game.category}
+                            {(game as GameItem).category}
                         </span>
                         <span className="px-2.5 py-0.5 bg-[#1a103c] text-gray-300 text-xs rounded border border-[#2d1b54] uppercase">
-                            {game.category === "Android Games" ? "Android" : "PC"}
+                            {(game as GameItem).category === "Android Games" ? "Android" : "PC"}
                         </span>
-                        {game.size && (
-                            <span className="text-gray-400 text-xs">{game.size}</span>
+                        {(game as GameItem).size && (
+                            <span className="text-gray-400 text-xs">{(game as GameItem).size}</span>
                         )}
                     </div>
 
                     <p className="text-gray-300 text-sm md:text-base mb-5 line-clamp-3 hero-slide-up" style={{ animationDelay: '0.2s' }}>
-                        {game.description}
+                        {(game as GameItem).description}
                     </p>
 
                     <div className="flex items-center gap-3 hero-slide-up" style={{ animationDelay: '0.3s' }}>
                         <Link
-                            href={`/game/${game.id}`}
+                            href={`/game/${(game as GameItem).id}`}
                             className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-semibold rounded-lg transition-all duration-200 hover:scale-105 text-sm"
                         >
                             Download Now
@@ -120,7 +173,7 @@ export function HeroCarousel({ games }: { games: GameItem[] }) {
                             </svg>
                         </Link>
                         <Link
-                            href={`/game/${game.id}`}
+                            href={`/game/${(game as GameItem).id}`}
                             className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white font-medium rounded-lg border border-white/10 transition-all duration-200 text-sm"
                         >
                             Details

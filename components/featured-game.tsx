@@ -16,8 +16,63 @@ interface GameItem {
     uploadDate?: string
 }
 
-export function FeaturedGame({ game }: { game: GameItem | null }) {
+interface FeaturedGameProps {
+    game: GameItem | null
+    trailerUrl?: string
+}
+
+// Helper function to detect video type and create proper embed
+function getVideoEmbedConfig(url: string): { type: 'youtube' | 'video' | 'iframe', embedUrl: string } | null {
+    if (!url) return null
+    
+    // Check if it's a YouTube URL
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        let videoId = null
+        
+        // Already an embed URL
+        if (url.includes('youtube.com/embed/')) {
+            videoId = url.split('embed/')[1]?.split('?')[0]
+        }
+        // Regular YouTube watch URL
+        else if (url.includes('youtube.com/watch')) {
+            const urlParams = new URLSearchParams(url.split('?')[1])
+            videoId = urlParams.get('v')
+        }
+        // Short YouTube URL (youtu.be)
+        else if (url.includes('youtu.be/')) {
+            videoId = url.split('youtu.be/')[1]?.split('?')[0]
+        }
+        
+        if (videoId) {
+            return {
+                type: 'youtube',
+                embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`
+            }
+        }
+    }
+    
+    // Check if it's a direct video file (MP4, WebM, OGG)
+    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov']
+    const isDirectVideo = videoExtensions.some(ext => url.toLowerCase().includes(ext))
+    
+    if (isDirectVideo) {
+        return {
+            type: 'video',
+            embedUrl: url
+        }
+    }
+    
+    // For other iframe embeds (Vimeo, Dailymotion, etc.)
+    return {
+        type: 'iframe',
+        embedUrl: url
+    }
+}
+
+export function FeaturedGame({ game, trailerUrl }: FeaturedGameProps) {
     if (!game) return null
+    
+    const videoConfig = trailerUrl ? getVideoEmbedConfig(trailerUrl) : null
 
     const today = new Date().toLocaleDateString('en-US', {
         year: 'numeric',
@@ -27,19 +82,63 @@ export function FeaturedGame({ game }: { game: GameItem | null }) {
 
     return (
         <section className="py-6">
-            <div className="relative bg-[#120b22] border border-[#2d1b54] rounded-2xl overflow-hidden">
-                {/* Background blur */}
-                <div className="absolute top-0 right-0 w-1/2 h-full opacity-20">
-                    <Image
-                        src={game.image || "/placeholder.svg"}
-                        alt=""
-                        fill
-                        className="object-cover blur-2xl"
-                        sizes="50vw"
-                    />
-                </div>
+            <div className="relative bg-[#120b22]/40 border border-[#2d1b54]/50 rounded-2xl overflow-hidden backdrop-blur-sm min-h-[400px]">
+                {/* Video Background - Supports YouTube, direct video files, and other platforms */}
+                {videoConfig && (
+                    <div className="absolute inset-0 z-0">
+                        {videoConfig.type === 'video' ? (
+                            // Direct video file (MP4, WebM, etc.)
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="absolute inset-0 w-full h-full object-cover"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                }}
+                            >
+                                <source src={videoConfig.embedUrl} type="video/mp4" />
+                                <source src={videoConfig.embedUrl} type="video/webm" />
+                                Your browser does not support the video tag.
+                            </video>
+                        ) : (
+                            // YouTube or other iframe embeds
+                            <iframe
+                                src={videoConfig.embedUrl}
+                                className="absolute inset-0 w-full h-full pointer-events-none"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    border: 'none'
+                                }}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                title="Game Trailer"
+                            />
+                        )}
+                        {/* Gradient overlay for text readability */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#120b22]/90 via-[#120b22]/60 to-[#120b22]/40" />
+                    </div>
+                )}
 
-                <div className="relative flex flex-col md:flex-row gap-6 p-6 md:p-8">
+                {/* Static background blur if no trailer */}
+                {!videoConfig && (
+                    <div className="absolute top-0 right-0 w-1/2 h-full opacity-20">
+                        <Image
+                            src={game.image || "/placeholder.svg"}
+                            alt=""
+                            fill
+                            className="object-cover blur-2xl"
+                            sizes="50vw"
+                        />
+                    </div>
+                )}
+
+                <div className="relative z-10 flex flex-col md:flex-row gap-6 p-6 md:p-8 min-h-[400px]">
                     {/* Game Cover */}
                     <div className="relative w-48 h-64 md:w-56 md:h-72 flex-shrink-0 mx-auto md:mx-0">
                         <div className="relative w-full h-full rounded-xl overflow-hidden shadow-2xl shadow-black/40 ring-1 ring-white/10">

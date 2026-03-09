@@ -72,9 +72,12 @@ export function CarouselEditor({ items, games, onChange }: CarouselEditorProps) 
     }
 
     onChange([...items, newItem])
+    
+    // Clear form
     setSelectedGameId(null)
     setLandscapeImage("")
     setLogoImage("")
+    setGameSearch("")
   }
 
   const startEdit = (item: CarouselItem) => {
@@ -158,20 +161,28 @@ export function CarouselEditor({ items, games, onChange }: CarouselEditorProps) 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-gray-400 text-sm">Select Game</label>
-              <Select value={selectedGameId?.toString()} onValueChange={(v) => setSelectedGameId(Number(v))}>
+              <Select 
+                value={selectedGameId?.toString() || ""} 
+                onValueChange={(v) => {
+                  if (v) setSelectedGameId(Number(v))
+                }}
+              >
                 <SelectTrigger className="bg-[#120b22] border-[#2d1b54] text-white">
                   <SelectValue placeholder="Choose a game..." />
                 </SelectTrigger>
                 <SelectContent className="bg-[#120b22] border-[#2d1b54] max-h-[300px]">
-                  <div className="sticky top-0 p-2 bg-[#120b22] border-b border-[#2d1b54]">
+                  <div className="sticky top-0 p-2 bg-[#120b22] border-b border-[#2d1b54] z-50">
                     <div className="relative">
-                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
                       <Input
                         placeholder="Search games..."
                         value={gameSearch}
-                        onChange={(e) => setGameSearch(e.target.value)}
+                        onChange={(e) => {
+                          e.stopPropagation()
+                          setGameSearch(e.target.value)
+                        }}
+                        onKeyDown={(e) => e.stopPropagation()}
                         className="pl-8 bg-[#1a103c] border-[#2d1b54] text-white text-sm h-8"
-                        onClick={(e) => e.stopPropagation()}
                       />
                     </div>
                   </div>

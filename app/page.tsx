@@ -28,26 +28,85 @@ interface GameItem {
 export default function HomePage() {
   const [items, setItems] = useState<GameItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
+  const [pageModifiers, setPageModifiers] = useState<{
+    carousel: any[]
+    trendingGames: any[]
+    gameOfTheDay: any
+    collections: any[]
+  }>({
+    carousel: [],
+    trendingGames: [],
+    gameOfTheDay: null,
+    collections: []
+  })
 
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("/api/items")
-        const result = await response.json()
-        if (result.success) {
-          setItems(result.data)
+        // Fetch all games
+        const itemsResponse = await fetch("/api/items")
+        const itemsResult = await itemsResponse.json()
+        if (itemsResult.success) {
+          setItems(itemsResult.data)
         }
+
+        // Fetch page modifiers
+        const [carouselRes, trendingRes, gotdRes, collectionsRes] = await Promise.all([
+          fetch("/api/admin/carousel"),
+          fetch("/api/admin/trending-games"),
+          fetch("/api/admin/game-of-the-day"),
+          fetch("/api/admin/collections")
+        ])
+
+        const carousel = await carouselRes.json()
+        const trending = await trendingRes.json()
+        const gotd = await gotdRes.json()
+        const collections = await collectionsRes.json()
+
+        setPageModifiers({
+          carousel: carousel.items || [],
+          trendingGames: trending.games || [],
+          gameOfTheDay: gotd.game || null,
+          collections: collections.collections || []
+        })
+
+        console.log('=== PAGE MODIFIERS LOADED ===')
+        console.log('Carousel items:', carousel.items?.length || 0)
+        console.log('Trending games:', trending.games?.length || 0)
+        console.log('Collections:', collections.collections?.length || 0)
       } catch (error) {
-        console.error("Error fetching items:", error)
+        console.error("Error fetching data:", error)
       } finally {
         setIsLoaded(true)
       }
     }
-    fetchItems()
+    fetchData()
   }, [])
 
-  const trendingGames = items.filter(g => g.trending === true)
-  const featuredGame = items.length > 0
+  // Get carousel games based on admin settings or fallback to first 8
+  const carouselGames = pageModifiers.carousel.length > 0
+    ? pageModifiers.carousel
+        .sort((a, b) => a.order - b.order)
+        .map(item => items.find(g => g.id === item.gameId))
+        .filter(Boolean)
+    : items.slice(0, 8)
+
+  console.log('=== CAROUSEL DISPLAY ===')
+  console.log('Using modifiers:', pageModifiers.carousel.length > 0)
+  console.log('Carousel games count:', carouselGames.length)
+
+  // Get trending games based on admin settings or fallback to trending flag
+  const trendingGames = pageModifiers.trendingGames.length > 0
+    ? pageModifiers.trendingGames
+        .sort((a, b) => a.order - b.order)
+        .map(item => items.find(g => g.id === item.gameId))
+        .filter(Boolean)
+    : items.filter(g => g.trending === true)
+
+  // Get featured game (game of the day or latest)
+  const featuredGame = pageModifiers.gameOfTheDay
+    ? items.find(g => g.id === pageModifiers.gameOfTheDay.gameId)
+    : items.length > 0
     ? [...items].sort((a, b) => {
       const dA = new Date(a.uploadDate || a.releaseDate || 0).getTime()
       const dB = new Date(b.uploadDate || b.releaseDate || 0).getTime()
@@ -88,7 +147,7 @@ export default function HomePage() {
 
       <div className="pt-16">
         <div className="max-w-full mx-auto px-4 lg:px-6 pt-6">
-          <HeroCarousel games={items} />
+          <HeroCarousel games={carouselGames} modifiers={pageModifiers.carousel} />
         </div>
 
         <div className="max-w-full mx-auto px-4 lg:px-6">
@@ -108,11 +167,14 @@ export default function HomePage() {
         </div>
 
         <div className="max-w-full mx-auto px-4 lg:px-6">
-          <FeaturedGame game={featuredGame} />
+          <FeaturedGame 
+            game={featuredGame} 
+            trailerUrl={pageModifiers.gameOfTheDay?.trailerUrl}
+          />
         </div>
 
         <div className="max-w-full mx-auto px-4 lg:px-6">
-          <EpicCollections />
+          <EpicCollections collections={pageModifiers.collections} allGames={items} />
         </div>
 
         <div className="max-w-full mx-auto px-4 lg:px-6">

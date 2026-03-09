@@ -56,6 +56,7 @@ export function TrendingGamesEditor({ trendingGames, games, onChange }: Trending
 
     onChange([...trendingGames, newGame])
     setSelectedGameId(null)
+    setGameSearch("")
   }
 
   const removeGame = (gameId: number) => {
@@ -98,20 +99,28 @@ export function TrendingGamesEditor({ trendingGames, games, onChange }: Trending
           </h3>
           
           <div className="flex gap-4">
-            <Select value={selectedGameId?.toString()} onValueChange={(v) => setSelectedGameId(Number(v))}>
+            <Select 
+              value={selectedGameId?.toString() || ""} 
+              onValueChange={(v) => {
+                if (v) setSelectedGameId(Number(v))
+              }}
+            >
               <SelectTrigger className="bg-[#120b22] border-[#2d1b54] text-white flex-1">
                 <SelectValue placeholder="Choose a game..." />
               </SelectTrigger>
               <SelectContent className="bg-[#120b22] border-[#2d1b54] max-h-[300px]">
-                <div className="sticky top-0 p-2 bg-[#120b22] border-b border-[#2d1b54]">
+                <div className="sticky top-0 p-2 bg-[#120b22] border-b border-[#2d1b54] z-50">
                   <div className="relative">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
                     <Input
                       placeholder="Search games..."
                       value={gameSearch}
-                      onChange={(e) => setGameSearch(e.target.value)}
+                      onChange={(e) => {
+                        e.stopPropagation()
+                        setGameSearch(e.target.value)
+                      }}
+                      onKeyDown={(e) => e.stopPropagation()}
                       className="pl-8 bg-[#1a103c] border-[#2d1b54] text-white text-sm h-8"
-                      onClick={(e) => e.stopPropagation()}
                     />
                   </div>
                 </div>

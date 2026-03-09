@@ -17,28 +17,53 @@ interface GameItem {
   uploadDate?: string
 }
 
+interface TrendingGame {
+  gameId: number
+  order: number
+}
+
 export default function TrendingGamesPage() {
   const [items, setItems] = useState<GameItem[]>([])
+  const [trendingGames, setTrendingGames] = useState<GameItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("/api/items")
-        const result = await response.json()
-        if (result.success) {
-          setItems(result.data)
+        // Fetch all games
+        const gamesResponse = await fetch("/api/items")
+        const gamesResult = await gamesResponse.json()
+        
+        // Fetch trending games from admin panel
+        const trendingResponse = await fetch("/api/admin/trending-games")
+        const trendingResult = await trendingResponse.json()
+
+        if (gamesResult.success) {
+          setItems(gamesResult.data)
+          
+          // If admin has set trending games, use those
+          if (trendingResult.games && trendingResult.games.length > 0) {
+            const trendingGamesData = trendingResult.games
+              .sort((a: TrendingGame, b: TrendingGame) => a.order - b.order)
+              .map((tg: TrendingGame) => gamesResult.data.find((g: GameItem) => g.id === tg.gameId))
+              .filter(Boolean) as GameItem[]
+            
+            setTrendingGames(trendingGamesData)
+          } else {
+            // Fallback to games with trending flag
+            const fallbackTrending = gamesResult.data.filter((g: GameItem) => g.trending).slice(0, 50)
+            setTrendingGames(fallbackTrending)
+          }
         }
       } catch (error) {
-        console.error("Error fetching items:", error)
+        console.error("Error fetching data:", error)
       } finally {
         setIsLoaded(true)
       }
     }
-    fetchItems()
+    fetchData()
   }, [])
 
-  const trendingGames = items.filter(g => g.trending).slice(0, 50)
   const weeklyDownloads = Math.floor(Math.random() * 500000) + 100000
 
   if (!isLoaded) {
@@ -90,7 +115,7 @@ export default function TrendingGamesPage() {
             </div>
           </div>
 
-          {trendingGames.length > 0 && (
+          {trendingGames.length > 0 ? (
             <>
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
                 <div className="lg:col-span-1">
@@ -152,32 +177,38 @@ export default function TrendingGamesPage() {
                   </div>
                 </div>
               </div>
-            </>
-          )}
 
-          <div>
-            <h3 className="text-xl font-bold text-white mb-4">All Trending</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3">
-              {trendingGames.map((game) => (
-                <Link key={game.id} href={`/game/${game.id}`} className="group">
-                  <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                    <img
-                      src={game.image || "/placeholder.svg"}
-                      alt={game.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
-                    <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                      {game.category === "Android Games" ? "ANDROID" : "PC"}
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <h4 className="text-white text-xs font-medium mt-1.5 line-clamp-1 group-hover:text-[#9d4edd] transition-colors">
-                    {game.title}
-                  </h4>
-                </Link>
-              ))}
+              <div>
+                <h3 className="text-xl font-bold text-white mb-4">All Trending</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3">
+                  {trendingGames.map((game) => (
+                    <Link key={game.id} href={`/game/${game.id}`} className="group">
+                      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
+                        <img
+                          src={game.image || "/placeholder.svg"}
+                          alt={game.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                        <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                          {game.category === "Android Games" ? "ANDROID" : "PC"}
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <h4 className="text-white text-xs font-medium mt-1.5 line-clamp-1 group-hover:text-[#9d4edd] transition-colors">
+                        {game.title}
+                      </h4>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-20">
+              <TrendingUp className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-400 mb-2">No Trending Games Yet</h2>
+              <p className="text-gray-500">Set trending games in the admin panel to display them here.</p>
             </div>
-          </div>
+          )}
         </div>
 
         <SiteFooter />

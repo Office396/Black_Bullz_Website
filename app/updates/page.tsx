@@ -14,6 +14,7 @@ interface GameItem {
   size?: string
   uploadDate?: string
   releaseDate?: string
+  updatedDate?: string
 }
 
 export default function RecentUpdatesPage() {
@@ -39,17 +40,35 @@ export default function RecentUpdatesPage() {
 
   const recentGames = [...items]
     .sort((a, b) => {
-      const dateA = new Date(a.uploadDate || a.releaseDate || 0).getTime()
-      const dateB = new Date(b.uploadDate || b.releaseDate || 0).getTime()
-      return dateB - dateA
+      // Priority: updatedDate > uploadDate > releaseDate > game ID (for newly added games without dates)
+      // This ensures the most recently added or edited games appear first
+      const dateA = new Date(a.updatedDate || a.uploadDate || a.releaseDate || 0).getTime()
+      const dateB = new Date(b.updatedDate || b.uploadDate || b.releaseDate || 0).getTime()
+      
+      // If dates are equal (or both missing), sort by ID (higher ID = newer)
+      if (dateA === dateB) {
+        return b.id - a.id
+      }
+      
+      return dateB - dateA // Newest first
     })
 
   const groupedByDate = recentGames.reduce((acc, game) => {
-    const date = new Date(game.uploadDate || game.releaseDate || Date.now()).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+    // Use the most recent date available (updatedDate > uploadDate > releaseDate)
+    const gameDate = game.updatedDate || game.uploadDate || game.releaseDate
+    
+    let date: string
+    if (gameDate) {
+      date = new Date(gameDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    } else {
+      // For games without any date, group them as "Recently Added"
+      date = "Recently Added (No Date)"
+    }
+    
     if (!acc[date]) acc[date] = []
     acc[date].push(game)
     return acc

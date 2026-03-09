@@ -14,23 +14,33 @@ import Lottie from "lottie-react"
 import diceAnimation from "@/Dice roll.json"
 
 const genres = [
-  { name: "Action", href: "/genre/action" },
-  { name: "Adventure", href: "/genre/adventure" },
-  { name: "Anime", href: "/genre/anime" },
-  { name: "Classic", href: "/genre/classic" },
-  { name: "Fighting", href: "/genre/fighting" },
-  { name: "Horror", href: "/genre/horror" },
-  { name: "Indie", href: "/genre/indie" },
-  { name: "Multiplayer", href: "/genre/multiplayer" },
-  { name: "Open World", href: "/genre/open-world" },
-  { name: "Puzzle", href: "/genre/puzzle" },
-  { name: "Racing", href: "/genre/racing" },
-  { name: "RPG", href: "/genre/rpg" },
-  { name: "Simulation", href: "/genre/simulation" },
-  { name: "Sports", href: "/genre/sports" },
-  { name: "Survival", href: "/genre/survival" },
-  { name: "VR", href: "/genre/vr" },
+  { name: "Action", href: "/genre/action", letter: "A" },
+  { name: "Adventure", href: "/genre/adventure", letter: "A" },
+  { name: "Anime", href: "/genre/anime", letter: "A" },
+  { name: "Classic", href: "/genre/classic", letter: "C" },
+  { name: "Fighting", href: "/genre/fighting", letter: "F" },
+  { name: "Horror", href: "/genre/horror", letter: "H" },
+  { name: "Indie", href: "/genre/indie", letter: "I" },
+  { name: "Multiplayer", href: "/genre/multiplayer", letter: "M" },
+  { name: "Open World", href: "/genre/open-world", letter: "O" },
+  { name: "Puzzle", href: "/genre/puzzle", letter: "P" },
+  { name: "Racing", href: "/genre/racing", letter: "R" },
+  { name: "RPG", href: "/genre/rpg", letter: "R" },
+  { name: "Simulation", href: "/genre/simulation", letter: "S" },
+  { name: "Sports", href: "/genre/sports", letter: "S" },
+  { name: "Survival", href: "/genre/survival", letter: "S" },
+  { name: "VR", href: "/genre/vr", letter: "V" },
 ]
+
+// Group genres by first letter
+const genresByLetter = genres.reduce((acc, genre) => {
+  const letter = genre.letter
+  if (!acc[letter]) {
+    acc[letter] = []
+  }
+  acc[letter].push(genre)
+  return acc
+}, {} as Record<string, typeof genres>)
 
 const mainNavItems = [
   { href: "/games", label: "All Games" },
@@ -38,7 +48,7 @@ const mainNavItems = [
   { href: "/trending", label: "Trending" },
   { name: "Genre", label: "Genre", isDropdown: true },
   { href: "/updates", label: "Recent Updates" },
-  { href: "/collections", label: "Collections" },
+  { name: "Collections", label: "Collections", isDropdown: true },
   { href: "/donate", label: "Donate", icon: Heart },
   { href: "/publishers", label: "Publishers" },
   { href: "/request", label: "Request" },
@@ -57,18 +67,28 @@ interface SearchResult {
   category: string
 }
 
+interface Collection {
+  id: string
+  name: string
+  gameIds: number[]
+  order: number
+}
+
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isGenreOpen, setIsGenreOpen] = useState(false)
+  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false)
   const [isMoreOpen, setIsMoreOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchPopupOpen, setIsSearchPopupOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [collections, setCollections] = useState<Collection[]>([])
   const [theme, setTheme] = useState<"dark" | "light">("dark")
   const [isSpinning, setIsSpinning] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const genreRef = useRef<HTMLDivElement>(null)
+  const collectionsRef = useRef<HTMLDivElement>(null)
   const moreRef = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter()
@@ -78,6 +98,22 @@ export function Header() {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  useEffect(() => {
+    // Fetch collections
+    const fetchCollections = async () => {
+      try {
+        const response = await fetch("/api/admin/collections")
+        const data = await response.json()
+        if (data.collections) {
+          setCollections(data.collections.sort((a: Collection, b: Collection) => a.order - b.order))
+        }
+      } catch (error) {
+        console.error("Error fetching collections:", error)
+      }
+    }
+    fetchCollections()
   }, [])
 
   useEffect(() => {
@@ -95,6 +131,9 @@ export function Header() {
       if (genreRef.current && !genreRef.current.contains(e.target as Node)) {
         setIsGenreOpen(false)
       }
+      if (collectionsRef.current && !collectionsRef.current.contains(e.target as Node)) {
+        setIsCollectionsOpen(false)
+      }
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
         setIsMoreOpen(false)
       }
@@ -107,6 +146,7 @@ export function Header() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsGenreOpen(false)
+        setIsCollectionsOpen(false)
         setIsMoreOpen(false)
         setIsSearchPopupOpen(false)
         setIsMenuOpen(false)
@@ -428,25 +468,94 @@ export function Header() {
                         <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", isGenreOpen && "rotate-180")} />
                       </button>
                       {isGenreOpen && (
+                        <div className="absolute top-full left-0 mt-1 w-[720px] bg-[#0a0514] border border-[#2d1b54] rounded-xl shadow-2xl shadow-black/50 p-6 animate-in fade-in-0 slide-in-from-top-2 duration-200 z-50">
+                          {/* Header */}
+                          <div className="mb-6">
+                            <h3 className="text-[#00d9ff] text-sm font-bold uppercase tracking-wider mb-1">Featured Genres</h3>
+                            <p className="text-gray-500 text-xs">Curated categories from your navigation menu.</p>
+                          </div>
+
+                          {/* Genres Grid */}
+                          <div className="grid grid-cols-3 gap-6">
+                            {Object.entries(genresByLetter).sort(([a], [b]) => a.localeCompare(b)).map(([letter, letterGenres]) => (
+                              <div key={letter}>
+                                <div className="flex items-center gap-2 mb-3">
+                                  <span className="text-[#00d9ff] text-lg font-bold">{letter}</span>
+                                  <span className="text-gray-600 text-xs uppercase tracking-wider">Genres</span>
+                                </div>
+                                <div className="space-y-2">
+                                  {letterGenres.map((genre) => (
+                                    <Link
+                                      key={genre.name}
+                                      href={genre.href}
+                                      onClick={() => setIsGenreOpen(false)}
+                                      className="block text-gray-300 hover:text-[#9d4edd] text-sm transition-colors py-1"
+                                    >
+                                      {genre.name}
+                                    </Link>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Footer */}
+                          <div className="mt-6 pt-4 border-t border-[#2d1b54]">
+                            <Link
+                              href="/genres"
+                              onClick={() => setIsGenreOpen(false)}
+                              className="inline-flex items-center gap-2 text-[#00d9ff] hover:text-[#9d4edd] text-sm font-medium transition-colors"
+                            >
+                              Show All
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+                if (item.name === "Collections") {
+                  return (
+                    <div key={item.name} ref={collectionsRef} className="relative">
+                      <button
+                        onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
+                        className={cn(
+                          "flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                          isCollectionsOpen ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5"
+                        )}
+                      >
+                        {item.label}
+                        <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", isCollectionsOpen && "rotate-180")} />
+                      </button>
+                      {isCollectionsOpen && (
                         <div className="absolute top-full left-0 mt-1 w-56 bg-[#120b22] border border-[#2d1b54] rounded-xl shadow-xl shadow-black/30 py-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
                           <div className="max-h-80 overflow-y-auto">
-                            {genres.map((genre) => (
-                              <Link
-                                key={genre.name}
-                                href={genre.href}
-                                onClick={() => setIsGenreOpen(false)}
-                                className="block px-4 py-2 text-sm text-gray-300 hover:text-[#9d4edd] hover:bg-white/5 transition-colors"
-                              >
-                                {genre.name}
-                              </Link>
-                            ))}
+                            {collections.length === 0 ? (
+                              <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                No collections yet
+                              </div>
+                            ) : (
+                              collections.map((collection) => (
+                                <Link
+                                  key={collection.id}
+                                  href={`/collections/${collection.id}`}
+                                  onClick={() => setIsCollectionsOpen(false)}
+                                  className="block px-4 py-2 text-sm text-gray-300 hover:text-[#9d4edd] hover:bg-white/5 transition-colors"
+                                >
+                                  {collection.name}
+                                </Link>
+                              ))
+                            )}
                             <div className="border-t border-[#2d1b54] mt-2 pt-2">
                               <Link
-                                href="/genres"
-                                onClick={() => setIsGenreOpen(false)}
+                                href="/collections"
+                                onClick={() => setIsCollectionsOpen(false)}
                                 className="block px-4 py-2 text-sm text-[#9d4edd] hover:bg-white/5 transition-colors font-medium"
                               >
-                                Show All Genres →
+                                View All Collections →
                               </Link>
                             </div>
                           </div>

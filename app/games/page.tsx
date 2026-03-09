@@ -19,6 +19,7 @@ interface GameItem {
   size?: string
   uploadDate?: string
   releaseDate?: string
+  rating?: number
 }
 
 const alphabet = ["0-9", ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(i + 65))]
@@ -101,11 +102,19 @@ export default function AllGamesPage() {
       }
     }
 
+    // Sort by filter or default to popular (rating)
     if (selectedFilter === "latest") {
       filtered = filtered.sort((a, b) => {
         const dateA = new Date(a.uploadDate || a.releaseDate || 0).getTime()
         const dateB = new Date(b.uploadDate || b.releaseDate || 0).getTime()
         return dateB - dateA
+      })
+    } else {
+      // Default: Sort by rating (popular games first)
+      filtered = filtered.sort((a, b) => {
+        const ratingA = a.rating || 0
+        const ratingB = b.rating || 0
+        return ratingB - ratingA
       })
     }
 

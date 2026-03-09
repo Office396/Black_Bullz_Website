@@ -1,19 +1,36 @@
 "use client"
 
 import Link from "next/link"
-import { FolderHeart, ChevronRight } from "lucide-react"
+import { FolderHeart } from "lucide-react"
 import { CardFan } from "@/components/card-fan"
 
-const collections = [
-    { name: "Final Fantasy Series", slug: "final-fantasy", count: 15, images: ["/placeholder.svg"] },
-    { name: "Metal Gear Solid Series", slug: "metal-gear-solid", count: 8, images: ["/placeholder.svg"] },
-    { name: "Far Cry Series", slug: "far-cry", count: 12, images: ["/placeholder.svg"] },
-    { name: "Fallout Series", slug: "fallout", count: 7, images: ["/placeholder.svg"] },
-    { name: "Assassin's Creed Series", slug: "assassins-creed", count: 14, images: ["/placeholder.svg"] },
-    { name: "Resident Evil Series", slug: "resident-evil", count: 10, images: ["/placeholder.svg"] },
-]
+interface Collection {
+    id: string
+    name: string
+    gameIds: number[]
+    order: number
+}
 
-export function EpicCollections() {
+interface Game {
+    id: number
+    title: string
+    image: string
+}
+
+interface EpicCollectionsProps {
+    collections?: Collection[]
+    allGames?: Game[]
+}
+
+export function EpicCollections({ collections = [], allGames = [] }: EpicCollectionsProps) {
+    // If no collections from admin, show nothing
+    if (collections.length === 0) {
+        return null
+    }
+
+    // Sort collections by order
+    const sortedCollections = [...collections].sort((a, b) => a.order - b.order)
+
     return (
         <section className="py-6">
             <div className="flex items-center justify-between mb-5">
@@ -33,34 +50,44 @@ export function EpicCollections() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                {collections.map((collection) => (
-                    <Link
-                        key={collection.slug}
-                        href={`/collections/${collection.slug}`}
-                        className="group block"
-                    >
-                        <div className="relative bg-gradient-to-br from-[#1a103c] to-[#120b22] border border-[#2d1b54] rounded-xl p-3 hover:border-[#9d4edd]/50 transition-all duration-300">
-                            {/* Card fan fills the top area; overflow visible so fan pops up */}
-                            <div className="relative mb-3" style={{ overflow: "visible" }}>
-                                <CardFan
-                                    images={collection.images}
-                                    count={collection.count}
-                                    name={collection.name}
-                                />
-                                {/* SERIES badge */}
-                                <div className="absolute top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-[#9d4edd]/90 text-white text-[10px] font-bold uppercase rounded shadow-lg z-20 pointer-events-none whitespace-nowrap">
-                                    SERIES
+                {sortedCollections.map((collection) => {
+                    // Get games for this collection
+                    const collectionGames = collection.gameIds
+                        .map(id => allGames.find(g => g.id === id))
+                        .filter(Boolean) as Game[]
+                    
+                    // Get images from games
+                    const images = collectionGames.map(g => g.image)
+                    
+                    return (
+                        <Link
+                            key={collection.id}
+                            href={`/collections/${collection.id}`}
+                            className="group block"
+                        >
+                            <div className="relative bg-gradient-to-br from-[#1a103c] to-[#120b22] border border-[#2d1b54] rounded-xl p-3 hover:border-[#9d4edd]/50 transition-all duration-300">
+                                {/* Card fan fills the top area; overflow visible so fan pops up */}
+                                <div className="relative mb-3" style={{ overflow: "visible" }}>
+                                    <CardFan
+                                        images={images}
+                                        count={collectionGames.length}
+                                        name={collection.name}
+                                    />
+                                    {/* SERIES badge */}
+                                    <div className="absolute top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-[#9d4edd]/90 text-white text-[10px] font-bold uppercase rounded shadow-lg z-20 pointer-events-none whitespace-nowrap">
+                                        SERIES
+                                    </div>
                                 </div>
+                                <h3 className="text-white font-medium text-sm line-clamp-2 group-hover:text-[#9d4edd] transition-colors text-center">
+                                    {collection.name}
+                                </h3>
+                                <p className="text-gray-500 text-xs text-center mt-1">
+                                    {collectionGames.length} {collectionGames.length === 1 ? 'Game' : 'Games'}
+                                </p>
                             </div>
-                            <h3 className="text-white font-medium text-sm line-clamp-2 group-hover:text-[#9d4edd] transition-colors text-center">
-                                {collection.name}
-                            </h3>
-                            <p className="text-gray-500 text-xs text-center mt-1">
-                                {collection.count} Games
-                            </p>
-                        </div>
-                    </Link>
-                ))}
+                        </Link>
+                    )
+                })}
             </div>
         </section>
     )

@@ -49,6 +49,8 @@ export function GameOfTheDayEditor({ gameOfTheDay, games, onChange }: GameOfTheD
       gameId: selectedGameId,
       trailerUrl,
     })
+    
+    setGameSearch("")
   }
 
   const removeGameOfTheDay = () => {
@@ -117,20 +119,28 @@ export function GameOfTheDayEditor({ gameOfTheDay, games, onChange }: GameOfTheD
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-gray-400 text-sm">Select Game</label>
-              <Select value={selectedGameId?.toString()} onValueChange={(v) => setSelectedGameId(Number(v))}>
+              <Select 
+                value={selectedGameId?.toString() || ""} 
+                onValueChange={(v) => {
+                  if (v) setSelectedGameId(Number(v))
+                }}
+              >
                 <SelectTrigger className="bg-[#120b22] border-[#2d1b54] text-white">
                   <SelectValue placeholder="Choose a game..." />
                 </SelectTrigger>
                 <SelectContent className="bg-[#120b22] border-[#2d1b54] max-h-[300px]">
-                  <div className="sticky top-0 p-2 bg-[#120b22] border-b border-[#2d1b54]">
+                  <div className="sticky top-0 p-2 bg-[#120b22] border-b border-[#2d1b54] z-50">
                     <div className="relative">
-                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
                       <Input
                         placeholder="Search games..."
                         value={gameSearch}
-                        onChange={(e) => setGameSearch(e.target.value)}
+                        onChange={(e) => {
+                          e.stopPropagation()
+                          setGameSearch(e.target.value)
+                        }}
+                        onKeyDown={(e) => e.stopPropagation()}
                         className="pl-8 bg-[#1a103c] border-[#2d1b54] text-white text-sm h-8"
-                        onClick={(e) => e.stopPropagation()}
                       />
                     </div>
                   </div>
@@ -150,16 +160,22 @@ export function GameOfTheDayEditor({ gameOfTheDay, games, onChange }: GameOfTheD
             </div>
 
             <div className="space-y-2">
-              <label className="text-gray-400 text-sm">Trailer URL (YouTube/Video)</label>
+              <label className="text-gray-400 text-sm">Trailer URL (Any Video Platform)</label>
               <Input
-                placeholder="https://www.youtube.com/embed/..."
+                placeholder="YouTube, direct video file, or any video URL"
                 value={trailerUrl}
                 onChange={(e) => setTrailerUrl(e.target.value)}
                 className="bg-[#120b22] border-[#2d1b54] text-white"
               />
-              <p className="text-xs text-gray-500">
-                Use YouTube embed URL or direct video link. The trailer will play in the transparent section.
-              </p>
+              <div className="text-xs text-gray-500 space-y-1">
+                <p className="font-semibold text-gray-400">✅ Supported formats (auto-detected):</p>
+                <ul className="list-disc list-inside space-y-0.5 ml-2">
+                  <li><strong>YouTube:</strong> <code className="bg-black/30 px-1 rounded">youtube.com/watch?v=...</code> or <code className="bg-black/30 px-1 rounded">youtu.be/...</code></li>
+                  <li><strong>Direct Video:</strong> <code className="bg-black/30 px-1 rounded">https://example.com/video.mp4</code></li>
+                  <li><strong>Other Platforms:</strong> Vimeo, Dailymotion, or any embed URL</li>
+                </ul>
+                <p className="text-[#9d4edd] mt-2">🎬 Video will autoplay, loop continuously, and hide controls!</p>
+              </div>
             </div>
           </div>
 

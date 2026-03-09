@@ -1,17 +1,17 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Trash2, Grid3x3, X, Search } from "lucide-react"
+import { Plus, Trash2, Grid3x3, X, Search, MoveUp, MoveDown } from "lucide-react"
 
 interface Game {
   id: number
   title: string
   image: string
-  category: string
+  category?: string
 }
 
 interface Collection {
@@ -29,7 +29,6 @@ interface CollectionsEditorProps {
 
 export function CollectionsEditor({ collections, games, onChange }: CollectionsEditorProps) {
   const [newCollectionName, setNewCollectionName] = useState("")
-  const [editingCollection, setEditingCollection] = useState<string | null>(null)
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null)
   const [gameSearches, setGameSearches] = useState<Record<string, string>>({})
 
@@ -39,7 +38,7 @@ export function CollectionsEditor({ collections, games, onChange }: CollectionsE
     const searchLower = search.toLowerCase()
     return games.filter(game => 
       game.title.toLowerCase().includes(searchLower) ||
-      game.category.toLowerCase().includes(searchLower)
+      game.category?.toLowerCase().includes(searchLower)
     )
   }
 
@@ -70,6 +69,23 @@ export function CollectionsEditor({ collections, games, onChange }: CollectionsE
     }
   }
 
+  const moveCollection = (index: number, direction: "up" | "down") => {
+    const sortedCollections = [...collections].sort((a, b) => a.order - b.order)
+    const targetIndex = direction === "up" ? index - 1 : index + 1
+    
+    if (targetIndex < 0 || targetIndex >= sortedCollections.length) return
+    
+    // Swap collections
+    const temp = sortedCollections[index]
+    sortedCollections[index] = sortedCollections[targetIndex]
+    sortedCollections[targetIndex] = temp
+    
+    // Update order numbers
+    sortedCollections.forEach((col, idx) => col.order = idx)
+    
+    onChange(sortedCollections)
+  }
+
   const addGameToCollection = (collectionId: string) => {
     if (!selectedGameId) {
       alert("Please select a game")
@@ -89,12 +105,34 @@ export function CollectionsEditor({ collections, games, onChange }: CollectionsE
 
     onChange(updatedCollections)
     setSelectedGameId(null)
+    setGameSearch(collectionId, "")
   }
 
   const removeGameFromCollection = (collectionId: string, gameId: number) => {
     const updatedCollections = collections.map(c => {
       if (c.id === collectionId) {
         return { ...c, gameIds: c.gameIds.filter(id => id !== gameId) }
+      }
+      return c
+    })
+
+    onChange(updatedCollections)
+  }
+
+  const moveGameInCollection = (collectionId: string, gameIndex: number, direction: "up" | "down") => {
+    const updatedCollections = collections.map(c => {
+      if (c.id === collectionId) {
+        const newGameIds = [...c.gameIds]
+        const targetIndex = direction === "up" ? gameIndex - 1 : gameIndex + 1
+        
+        if (targetIndex < 0 || targetIndex >= newGameIds.length) return c
+        
+        // Swap the game IDs
+        const temp = newGameIds[gameIndex]
+        newGameIds[gameIndex] = newGameIds[targetIndex]
+        newGameIds[targetIndex] = temp
+        
+        return { ...c, gameIds: newGameIds }
       }
       return c
     })
@@ -114,7 +152,7 @@ export function CollectionsEditor({ collections, games, onChange }: CollectionsE
           Collections Manager
         </CardTitle>
         <p className="text-gray-400 text-sm">
-          Create game series/collections. Games will display with the existing animation.
+          Create game series/collections. Reorder collections and games within them.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -153,40 +191,73 @@ export function CollectionsEditor({ collections, games, onChange }: CollectionsE
             </div>
           ) : (
             <div className="space-y-4">
-              {collections.map((collection) => (
+              {collections.sort((a, b) => a.order - b.order).map((collection, collectionIndex) => (
                 <div
                   key={collection.id}
                   className="p-4 bg-[#1a103c] border border-[#2d1b54] rounded-lg space-y-4"
                 >
                   {/* Collection Header */}
                   <div className="flex items-center justify-between">
-                    <h4 className="text-white font-semibold text-lg">{collection.name}</h4>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => deleteCollection(collection.id)}
-                      className="border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      <h4 className="text-white font-semibold text-lg">{collection.name}</h4>
+                      <span className="text-gray-500 text-sm">Order: {collectionIndex + 1}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => moveCollection(collectionIndex, "up")}
+                        disabled={collectionIndex === 0}
+                        className="border-[#2d1b54] text-gray-400 hover:text-white"
+                        title="Move collection up"
+                      >
+                        <MoveUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => moveCollection(collectionIndex, "down")}
+                        disabled={collectionIndex === collections.length - 1}
+                        className="border-[#2d1b54] text-gray-400 hover:text-white"
+                        title="Move collection down"
+                      >
+                        <MoveDown className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => deleteCollection(collection.id)}
+                        className="border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Add Game to Collection */}
                   <div className="flex gap-2">
-                    <Select value={selectedGameId?.toString()} onValueChange={(v) => setSelectedGameId(Number(v))}>
+                    <Select 
+                      value={selectedGameId?.toString() || ""} 
+                      onValueChange={(v) => {
+                        if (v) setSelectedGameId(Number(v))
+                      }}
+                    >
                       <SelectTrigger className="bg-[#120b22] border-[#2d1b54] text-white flex-1">
                         <SelectValue placeholder="Add a game..." />
                       </SelectTrigger>
                       <SelectContent className="bg-[#120b22] border-[#2d1b54] max-h-[300px]">
-                        <div className="sticky top-0 p-2 bg-[#120b22] border-b border-[#2d1b54]">
+                        <div className="sticky top-0 p-2 bg-[#120b22] border-b border-[#2d1b54] z-50">
                           <div className="relative">
-                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
                             <Input
                               placeholder="Search games..."
                               value={gameSearches[collection.id] || ""}
-                              onChange={(e) => setGameSearch(collection.id, e.target.value)}
+                              onChange={(e) => {
+                                e.stopPropagation()
+                                setGameSearch(collection.id, e.target.value)
+                              }}
+                              onKeyDown={(e) => e.stopPropagation()}
                               className="pl-8 bg-[#1a103c] border-[#2d1b54] text-white text-sm h-8"
-                              onClick={(e) => e.stopPropagation()}
                             />
                           </div>
                         </div>
@@ -218,30 +289,56 @@ export function CollectionsEditor({ collections, games, onChange }: CollectionsE
                     {collection.gameIds.length === 0 ? (
                       <p className="text-gray-500 text-sm italic">No games added yet</p>
                     ) : (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                        {collection.gameIds.map((gameId) => {
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {collection.gameIds.map((gameId, gameIndex) => {
                           const game = getGame(gameId)
                           if (!game) return null
 
                           return (
                             <div
                               key={gameId}
-                              className="relative group bg-[#120b22] border border-[#2d1b54] rounded-lg overflow-hidden"
+                              className="relative group bg-[#120b22] border border-[#2d1b54] rounded-lg overflow-hidden flex items-center gap-3 p-2"
                             >
                               <img
                                 src={game.image}
                                 alt={game.title}
-                                className="w-full h-32 object-cover"
+                                className="w-16 h-20 object-cover rounded"
                               />
-                              <div className="p-2">
-                                <p className="text-white text-xs font-medium truncate">{game.title}</p>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-medium truncate">{game.title}</p>
+                                <p className="text-gray-500 text-xs">Position: {gameIndex + 1}</p>
                               </div>
-                              <button
-                                onClick={() => removeGameFromCollection(collection.id, gameId)}
-                                className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
+                              <div className="flex flex-col gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => moveGameInCollection(collection.id, gameIndex, "up")}
+                                  disabled={gameIndex === 0}
+                                  className="border-[#2d1b54] text-gray-400 hover:text-white h-7 w-7 p-0"
+                                  title="Move up"
+                                >
+                                  <MoveUp className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => moveGameInCollection(collection.id, gameIndex, "down")}
+                                  disabled={gameIndex === collection.gameIds.length - 1}
+                                  className="border-[#2d1b54] text-gray-400 hover:text-white h-7 w-7 p-0"
+                                  title="Move down"
+                                >
+                                  <MoveDown className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => removeGameFromCollection(collection.id, gameId)}
+                                  className="border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white h-7 w-7 p-0"
+                                  title="Remove"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
                           )
                         })}

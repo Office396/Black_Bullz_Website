@@ -40,6 +40,7 @@ export interface Item {
     actualDownloadLinks: Array<{ name: string; url: string; size: string }>
   }>
   uploadDate: string
+  updatedDate?: string
 }
 
 export async function getItems(): Promise<Item[]> {
@@ -67,7 +68,9 @@ export async function getItems(): Promise<Item[]> {
       androidRequirements: item.android_requirements,
       sharedPinCode: item.shared_pin_code,
       sharedRarPassword: item.shared_rar_password,
-      cloudDownloads: item.cloud_downloads || []
+      cloudDownloads: item.cloud_downloads || [],
+      uploadDate: item.upload_date,
+      updatedDate: item.updated_date
     }))
   } catch (error) {
     console.error('Error in getItems:', error)
@@ -75,8 +78,8 @@ export async function getItems(): Promise<Item[]> {
   }
 }
 
-export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate'>): Promise<Item> {
-  const now = new Date()
+export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'updatedDate'>): Promise<Item> {
+  const now = new Date().toISOString()
   const dbItem = {
     title: itemData.title,
     category: itemData.category,
@@ -97,7 +100,8 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate'>): Promis
     shared_pin_code: itemData.sharedPinCode,
     shared_rar_password: itemData.sharedRarPassword,
     cloud_downloads: itemData.cloudDownloads,
-    upload_date: now.toISOString().split('T')[0]
+    upload_date: now,
+    updated_date: now
   }
 
   const { data, error } = await supabase
@@ -156,7 +160,9 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate'>): Promis
     androidRequirements: data.android_requirements,
     sharedPinCode: data.shared_pin_code,
     sharedRarPassword: data.shared_rar_password,
-    cloudDownloads: data.cloud_downloads || []
+    cloudDownloads: data.cloud_downloads || [],
+    uploadDate: data.upload_date,
+    updatedDate: data.updated_date
   }
 }
 
@@ -183,6 +189,9 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
   if (itemData.sharedRarPassword !== undefined) dbUpdate.shared_rar_password = itemData.sharedRarPassword
   if (itemData.cloudDownloads !== undefined) dbUpdate.cloud_downloads = itemData.cloudDownloads
   if (itemData.uploadDate !== undefined) dbUpdate.upload_date = itemData.uploadDate
+  
+  // Automatically set updated_date to current timestamp whenever an item is edited
+  dbUpdate.updated_date = new Date().toISOString()
 
   const { data, error } = await supabase
     .from('items')
@@ -208,7 +217,9 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
     androidRequirements: data.android_requirements,
     sharedPinCode: data.shared_pin_code,
     sharedRarPassword: data.shared_rar_password,
-    cloudDownloads: data.cloud_downloads || []
+    cloudDownloads: data.cloud_downloads || [],
+    uploadDate: data.upload_date,
+    updatedDate: data.updated_date
   }
 }
 
