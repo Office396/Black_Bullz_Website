@@ -1,95 +1,36 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
+import { getItems } from "@/lib/server/items-store"
 import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
-import { Trophy, TrendingUp, Download, Eye, Star } from "lucide-react"
+import { Trophy, TrendingUp, Download, Star } from "lucide-react"
+import Link from "next/link"
 
-interface GameItem {
-  id: number
-  title: string
-  category: string
-  image: string
-  size?: string
-  rating?: number
-  views?: number
-  downloads?: number
-  uploadDate?: string
-}
-
-export default function TopGamesPage() {
-  const [items, setItems] = useState<GameItem[]>([])
-  const [isLoaded, setIsLoaded] = useState(false)
-
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const response = await fetch("/api/items")
-        const result = await response.json()
-        if (result.success) {
-          setItems(result.data)
-        }
-      } catch (error) {
-        console.error("Error fetching items:", error)
-      } finally {
-        setIsLoaded(true)
-      }
-    }
-    fetchItems()
-  }, [])
+export default async function TopGamesPage() {
+  let items: any[] = []
+  try {
+    items = await getItems()
+  } catch (error) {
+    console.error("Error fetching items:", error)
+  }
 
   const topGames = [...items]
     .sort((a, b) => {
-      // Sort by downloads (highest first)
       const downloadsA = a.downloads || 0
       const downloadsB = b.downloads || 0
-      
-      if (downloadsB !== downloadsA) {
-        return downloadsB - downloadsA
-      }
-      
-      // If downloads are equal, sort by views
+      if (downloadsB !== downloadsA) return downloadsB - downloadsA
       const viewsA = a.views || 0
       const viewsB = b.views || 0
-      
-      if (viewsB !== viewsA) {
-        return viewsB - viewsA
-      }
-      
-      // If both are equal, sort by rating
-      const ratingA = a.rating || 0
-      const ratingB = b.rating || 0
-      return ratingB - ratingA
+      if (viewsB !== viewsA) return viewsB - viewsA
+      return (b.rating || 0) - (a.rating || 0)
     })
     .slice(0, 100)
 
   const featuredGame = topGames[0]
   const runnerUps = topGames.slice(1, 5)
-  const totalDownloads = items.reduce((sum, g) => sum + (g.downloads || Math.floor(Math.random() * 50000) + 1000), 0)
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="pt-16">
-          <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
-            <div className="h-10 w-48 bg-[#1a103c] rounded animate-pulse mb-6" />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 h-96 bg-card rounded-xl animate-pulse" />
-              <div className="h-96 bg-card rounded-xl animate-pulse" />
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const totalDownloads = items.reduce((sum, g) => sum + (g.downloads || 5000), 0)
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
       <div className="pt-16">
         <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-6">
@@ -133,11 +74,7 @@ export default function TopGamesPage() {
               </div>
               <div className="flex flex-col lg:flex-row gap-6 p-6 lg:p-8">
                 <div className="relative w-48 h-64 lg:w-56 lg:h-72 flex-shrink-0 mx-auto lg:mx-0">
-                  <img
-                    src={featuredGame.image || "/placeholder.svg"}
-                    alt={featuredGame.title}
-                    className="w-full h-full object-cover rounded-xl shadow-2xl"
-                  />
+                  <img src={featuredGame.image || "/placeholder.svg"} alt={featuredGame.title} className="w-full h-full object-cover rounded-xl shadow-2xl" />
                   <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 ${featuredGame.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
                     {featuredGame.category === "Android Games" ? "ANDROID" : "PC"}
                   </div>
@@ -150,14 +87,9 @@ export default function TopGamesPage() {
                       <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                       <span className="text-white font-medium">{featuredGame.rating || 4.8}</span>
                     </div>
-                    {featuredGame.size && (
-                      <span className="text-gray-400">{featuredGame.size}</span>
-                    )}
+                    {featuredGame.size && <span className="text-gray-400">{featuredGame.size}</span>}
                   </div>
-                  <Link
-                    href={`/game/${featuredGame.id}`}
-                    className="inline-flex items-center justify-center lg:justify-start gap-2 px-6 py-3 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-semibold rounded-lg transition-all w-fit mx-auto lg:mx-0"
-                  >
+                  <Link href={`/game/${featuredGame.id}`} className="inline-flex items-center justify-center lg:justify-start gap-2 px-6 py-3 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-semibold rounded-lg transition-all w-fit mx-auto lg:mx-0">
                     <Download className="w-5 h-5" />
                     Download Now
                   </Link>
@@ -173,14 +105,9 @@ export default function TopGamesPage() {
                 {topGames.slice(0, 24).map((game, index) => (
                   <Link key={game.id} href={`/game/${game.id}`} className="group relative">
                     <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-secondary">
-                      <img
-                        src={game.image || "/placeholder.svg"}
-                        alt={game.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                      />
+                      <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                       {index < 3 && (
-                        <div className={`absolute top-2 left-2 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold text-white ${index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : "bg-amber-700"
-                          }`}>
+                        <div className={`absolute top-2 left-2 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold text-white ${index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : "bg-amber-700"}`}>
                           {index + 1}
                         </div>
                       )}
@@ -189,15 +116,12 @@ export default function TopGamesPage() {
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <h4 className="text-white text-sm font-medium mt-2 line-clamp-1 group-hover:text-[#9d4edd] transition-colors">
-                      {game.title}
-                    </h4>
+                    <h4 className="text-white text-sm font-medium mt-2 line-clamp-1 group-hover:text-[#9d4edd] transition-colors">{game.title}</h4>
                     <p className="text-gray-500 text-xs">{game.size}</p>
                   </Link>
                 ))}
               </div>
             </div>
-
             <div className="lg:col-span-1">
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-[#9d4edd]" />
@@ -208,19 +132,13 @@ export default function TopGamesPage() {
                   <Link key={game.id} href={`/game/${game.id}`} className="flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:border-[#9d4edd]/50 transition-all group">
                     <div className="relative w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden">
                       <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover" />
-                      <div className={`absolute top-0.5 left-0.5 px-1 py-0.5 rounded text-white text-[7px] font-bold uppercase z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                        {game.category === "Android Games" ? "APK" : "PC"}
-                      </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold text-white ${index === 0 ? "bg-gray-400" : index === 1 ? "bg-amber-700" : "bg-gray-600"
-                          }`}>
+                        <span className={`w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold text-white ${index === 0 ? "bg-gray-400" : index === 1 ? "bg-amber-700" : "bg-gray-600"}`}>
                           {index + 2}
                         </span>
-                        <h4 className="text-white text-sm font-medium line-clamp-1 group-hover:text-[#9d4edd] transition-colors">
-                          {game.title}
-                        </h4>
+                        <h4 className="text-white text-sm font-medium line-clamp-1 group-hover:text-[#9d4edd] transition-colors">{game.title}</h4>
                       </div>
                       <p className="text-gray-500 text-xs">{game.size}</p>
                     </div>
@@ -230,7 +148,6 @@ export default function TopGamesPage() {
             </div>
           </div>
         </div>
-
         <SiteFooter />
       </div>
     </div>

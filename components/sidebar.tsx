@@ -78,7 +78,6 @@ export function Sidebar() {
   }, [])
 
   const [displayTrending, setDisplayTrending] = useState<TrendingGame[]>([])
-  const [isTrendingLoaded, setIsTrendingLoaded] = useState(false)
 
   // Separate useEffect for trending items
   useEffect(() => {
@@ -110,7 +109,7 @@ export function Sidebar() {
       } catch (error) {
         console.error("Error fetching items:", error)
       } finally {
-        setIsTrendingLoaded(true)
+        // fetch complete
       }
     }
     fetchItems()
@@ -124,21 +123,7 @@ export function Sidebar() {
           <CardTitle className="text-white text-lg">Trending</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
-          {!isTrendingLoaded ? (
-            // Loading state with attractive skeleton animation
-            <div className="space-y-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center space-x-3 p-2 rounded-lg animate-pulse">
-                  <div className="w-12 h-12 bg-gray-700 rounded-lg flex-shrink-0"></div>
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="h-3 bg-gray-700 rounded w-3/4"></div>
-                    <div className="h-2 bg-gray-700 rounded w-1/2"></div>
-                    <div className="h-2 bg-gray-700 rounded w-1/3"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : displayTrending.length > 0 ? (
+          {displayTrending.length > 0 ? (
             displayTrending.map((game) => (
               <Link
                 key={game.id}

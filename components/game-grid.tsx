@@ -225,20 +225,6 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
       }
     }
   }, [isLoaded, totalPages, searchParams])
-  // Don't render anything until the initial load is complete
-  if (!isLoaded) {
-    return (
-      <div className="space-y-6">
-        <div className="animate-pulse bg-gray-800 h-8 w-32 rounded"></div>
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
-            <div key={i} className="bg-gray-800 rounded-lg h-64 animate-pulse"></div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {!filterLatest && (

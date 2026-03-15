@@ -10,9 +10,10 @@ import { AdminItemList } from "@/components/admin-item-list"
 import { AdminSettings } from "@/components/admin-settings"
 import { AdminFeedback } from "@/components/admin-feedback"
 import { AdminPageModifier } from "@/components/admin-page-modifier"
+import { AdminDonateEditor } from "@/components/admin-donate-editor"
 import AdminSystemStatus from "@/components/admin-system-status"
 import AdminDetailsAutomation from "@/components/admin-details-automation"
-import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow } from "lucide-react"
+import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow, Heart } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -90,6 +91,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <Activity className="h-4 w-4" />
                 System Status
               </TabsTrigger>
+              <TabsTrigger value="donate" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Heart className="h-4 w-4" />
+                Donate
+              </TabsTrigger>
             </TabsList>
 
             {activeTab === "list" && (
@@ -141,6 +146,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
           <TabsContent value="system" className="mt-0 outline-none">
             <AdminSystemStatus />
+          </TabsContent>
+
+          <TabsContent value="donate" className="mt-0 outline-none">
+            <AdminDonateEditor />
           </TabsContent>
         </Tabs>
       </div>

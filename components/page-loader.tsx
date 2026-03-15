@@ -1,35 +1,19 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
+import NextTopLoader from "nextjs-toploader"
 
 export function PageLoader() {
-  // Start as true so loader is visible immediately on initial load and route changes
-  const [isLoading, setIsLoading] = useState(true)
-  const pathname = usePathname()
-
-  useEffect(() => {
-    // Trigger loader on every pathname change
-    setIsLoading(true)
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 800)
-
-    return () => clearTimeout(timer)
-  }, [pathname])
-
-  if (!isLoading) return null
-
   return (
-    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="relative w-48 h-48 mx-auto mb-4">
-          <video autoPlay loop muted className="w-full h-full object-contain">
-            <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/700_F_669683156_9EPE8bLAvgoRhMnBfGOSQF6CGLKhsEEe_ST%20%28online-video-cutter.com%29-9p0CdowwI5OwXM4iOSRhEsn6F3lxo3.mp4" type="video/mp4" />
-          </video>
-        </div>
-        <p className="text-white text-lg font-semibold">Loading...</p>
-      </div>
-    </div>
+    <NextTopLoader
+      color="#9d4edd"
+      initialPosition={0.08}
+      crawlSpeed={200}
+      height={3}
+      crawl={true}
+      showSpinner={false}
+      easing="ease"
+      speed={200}
+      shadow="0 0 10px #9d4edd,0 0 5px #c77dff"
+    />
   )
 }

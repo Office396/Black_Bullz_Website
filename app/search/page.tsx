@@ -213,23 +213,6 @@ export default function SearchPage() {
                 </div>
               </div>
 
-              {/* Loading skeleton */}
-              {isLoading && (
-                <div className={cn(
-                  viewMode === "grid"
-                    ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
-                    : "space-y-3"
-                )}>
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    viewMode === "grid" ? (
-                      <div key={i} className="aspect-[3/4] bg-[#1a103c] rounded-xl animate-pulse" />
-                    ) : (
-                      <div key={i} className="h-24 bg-[#1a103c] rounded-xl animate-pulse" />
-                    )
-                  ))}
-                </div>
-              )}
-
               {/* No results */}
               {!isLoading && displayResults.length === 0 && (
                 <div className="text-center py-20">

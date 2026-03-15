@@ -73,6 +73,7 @@ interface GameData {
 
 interface GameDetailsProps {
   game: GameData
+  allGames?: GameData[]
 }
 
 // Cloud provider icons/colors
@@ -92,24 +93,24 @@ function getCloudStyle(name: string) {
   return CLOUD_STYLES[name] || CLOUD_STYLES["default"]
 }
 
-export function GameDetails({ game }: GameDetailsProps) {
+export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [isFavorite, setIsFavorite] = useState(false)
   const [installTab, setInstallTab] = useState<"pre-installed" | "installable">("pre-installed")
   const [expandedCloud, setExpandedCloud] = useState<number | null>(null)
 
-  const isPCGame = game.category === "PC Games"
-  const isAndroid = game.category === "Android Games"
+  const isPCGame = game?.category === "PC Games"
+  const isAndroid = game?.category === "Android Games"
 
-  const averageRating = typeof game.rating === 'number' ? game.rating : parseFloat(String(game.rating || '4.5'))
+  const averageRating = typeof game?.rating === 'number' ? game.rating : parseFloat(String(game?.rating || '4.5'))
   const recommendPercent = Math.min(95, Math.max(70, averageRating * 20))
-  const views = game.views || Math.floor(Math.random() * 5000) + 500
-  const downloads = game.downloads || Math.floor(Math.random() * 50000) + 1000
+  const views = game?.views || 1250
+  const downloads = game?.downloads || 15000
 
-  const features = game.keyFeatures?.filter(Boolean) || game.features || []
-  const genres = game.genres || []
-  const cloudDownloads = game.cloudDownloads || []
+  const features = game?.keyFeatures?.filter(Boolean) || game?.features || []
+  const genres = game?.genres || []
+  const cloudDownloads = game?.cloudDownloads || []
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -120,6 +121,8 @@ export function GameDetails({ game }: GameDetailsProps) {
       return () => document.removeEventListener('keydown', handleKeyDown)
     }
   }, [lightboxOpen])
+
+  if (!game) return null
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return "Unknown"
@@ -243,7 +246,7 @@ export function GameDetails({ game }: GameDetailsProps) {
                     downloadSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }
                 }}
-                className="inline-flex items-center gap-2 px-8 py-5 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-semibold rounded-lg transition-all duration-200 hover:scale-105 text-base"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white font-semibold rounded-lg transition-all duration-200 hover:scale-105 text-base"
               >
                 <Download className="w-5 h-5" />
                 Download Now
@@ -846,6 +849,92 @@ export function GameDetails({ game }: GameDetailsProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Related Games */}
+      {allGames.length > 0 && (() => {
+        const gameGenres = game.genres || []
+        const gameFeatures = (game.keyFeatures?.filter(Boolean) || game.features || [])
+          .map((f: string) => f.toLowerCase())
+        const gameCategory = game.category
+
+        // Score each game by genre + feature overlap
+        const scored = allGames
+          .filter(g => g.id !== game.id && g.category === gameCategory)
+          .map(g => {
+            const gGenres = g.genres || []
+            const gFeatures = (g.keyFeatures?.filter(Boolean) || g.features || [])
+              .map((f: string) => f.toLowerCase())
+            const genreScore = gGenres.filter((genre: string) => gameGenres.includes(genre)).length * 2
+            const featureScore = gFeatures.filter((f: string) =>
+              gameFeatures.some(mf => mf.includes(f) || f.includes(mf))
+            ).length
+            return { ...g, score: genreScore + featureScore }
+          })
+          .sort((a, b) => b.score - a.score)
+
+        const related = scored.slice(0, 10)
+
+        // Top in same category by rating
+        const topInCategory = allGames
+          .filter(g => g.id !== game.id && g.category === gameCategory)
+          .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
+          .slice(0, 10)
+
+        if (related.length === 0 && topInCategory.length === 0) return null
+
+        const GameCard = ({ g, index }: { g: any; index?: number }) => (
+          <Link key={g.id} href={`/game/${g.id}`} className="group flex-shrink-0 w-28 sm:w-32">
+            <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
+              <img
+                src={g.image || "/placeholder.svg"}
+                alt={g.title}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              />
+              {index !== undefined && index < 3 && (
+                <div className={`absolute top-1.5 left-1.5 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold text-white ${index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : "bg-amber-700"}`}>
+                  {index + 1}
+                </div>
+              )}
+              <div className={`absolute ${index !== undefined && index < 3 ? 'top-1.5 right-1.5' : 'top-1.5 left-1.5'} px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase shadow-lg z-10 ${g.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
+                {g.category === "Android Games" ? "APK" : "PC"}
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <p className="text-white text-[10px] font-medium line-clamp-2">{g.title}</p>
+              </div>
+            </div>
+            <p className="text-gray-400 text-xs mt-1.5 line-clamp-1 group-hover:text-[#9d4edd] transition-colors">{g.title}</p>
+          </Link>
+        )
+
+        return (
+          <div className="space-y-6">
+            {related.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <span className="w-1 h-6 bg-[#9d4edd] rounded-full" />
+                  Related Games
+                </h2>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {related.map(g => <GameCard key={g.id} g={g} />)}
+                </div>
+              </div>
+            )}
+
+            {topInCategory.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <span className="w-1 h-6 bg-yellow-500 rounded-full" />
+                  Top {gameCategory === "Android Games" ? "Android" : "PC"} Games
+                </h2>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                  {topInCategory.map((g, i) => <GameCard key={g.id} g={g} index={i} />)}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Comments */}
       <Comments gameId={game.id} itemName={game.title} />

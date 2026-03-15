@@ -468,28 +468,44 @@ export function Header() {
                         <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", isGenreOpen && "rotate-180")} />
                       </button>
                       {isGenreOpen && (
-                        <div className="absolute top-full left-0 mt-1 w-[720px] bg-[#0a0514] border border-[#2d1b54] rounded-xl shadow-2xl shadow-black/50 p-6 animate-in fade-in-0 slide-in-from-top-2 duration-200 z-50">
+                        <div className="absolute top-full left-0 mt-1 w-[720px] rounded-xl shadow-2xl shadow-black/50 p-6 animate-in fade-in-0 slide-in-from-top-2 duration-200 z-50"
+                          style={{
+                            background: 'linear-gradient(135deg, #0f0720 0%, #120b22 40%, #1a0d2e 70%, #0d0619 100%)',
+                            border: '1px solid rgba(157, 78, 221, 0.3)',
+                            boxShadow: '0 25px 50px rgba(0,0,0,0.7), 0 0 40px rgba(157,78,221,0.08), inset 0 1px 0 rgba(157,78,221,0.15)'
+                          }}
+                        >
+                          {/* Subtle glow orb top-right */}
+                          <div className="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none"
+                            style={{ background: 'radial-gradient(circle at top right, rgba(157,78,221,0.12) 0%, transparent 70%)' }} />
+
                           {/* Header */}
-                          <div className="mb-6">
-                            <h3 className="text-[#00d9ff] text-sm font-bold uppercase tracking-wider mb-1">Featured Genres</h3>
+                          <div className="mb-6 relative">
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-1"
+                              style={{ background: 'linear-gradient(90deg, #9d4edd, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                              Featured Genres
+                            </h3>
                             <p className="text-gray-500 text-xs">Curated categories from your navigation menu.</p>
                           </div>
 
                           {/* Genres Grid */}
-                          <div className="grid grid-cols-3 gap-6">
+                          <div className="grid grid-cols-3 gap-6 relative">
                             {Object.entries(genresByLetter).sort(([a], [b]) => a.localeCompare(b)).map(([letter, letterGenres]) => (
                               <div key={letter}>
                                 <div className="flex items-center gap-2 mb-3">
-                                  <span className="text-[#00d9ff] text-lg font-bold">{letter}</span>
+                                  <span className="text-lg font-bold"
+                                    style={{ background: 'linear-gradient(135deg, #9d4edd, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                    {letter}
+                                  </span>
                                   <span className="text-gray-600 text-xs uppercase tracking-wider">Genres</span>
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-1.5">
                                   {letterGenres.map((genre) => (
                                     <Link
                                       key={genre.name}
                                       href={genre.href}
                                       onClick={() => setIsGenreOpen(false)}
-                                      className="block text-gray-300 hover:text-[#9d4edd] text-sm transition-colors py-1"
+                                      className="block text-gray-400 hover:text-white text-sm transition-all duration-150 py-0.5 px-2 rounded-lg hover:bg-[#9d4edd]/15 hover:translate-x-0.5"
                                     >
                                       {genre.name}
                                     </Link>
@@ -500,14 +516,15 @@ export function Header() {
                           </div>
 
                           {/* Footer */}
-                          <div className="mt-6 pt-4 border-t border-[#2d1b54]">
+                          <div className="mt-6 pt-4 relative" style={{ borderTop: '1px solid rgba(157,78,221,0.2)' }}>
                             <Link
                               href="/genres"
                               onClick={() => setIsGenreOpen(false)}
-                              className="inline-flex items-center gap-2 text-[#00d9ff] hover:text-[#9d4edd] text-sm font-medium transition-colors"
+                              className="inline-flex items-center gap-2 text-sm font-medium transition-all hover:gap-3"
+                              style={{ background: 'linear-gradient(90deg, #9d4edd, #c77dff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                             >
-                              Show All
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              Show All Genres
+                              <svg className="w-4 h-4 text-[#9d4edd]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
                             </Link>
