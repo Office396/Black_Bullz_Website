@@ -5,14 +5,14 @@ import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import {
   Search, Menu, X, ChevronDown, Sun, Moon, LogIn,
-  Heart, MoreHorizontal
+  Heart, Bell, User, History, Star, Settings, LogOut,
+  Sparkles, Crown, ChevronRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import Lottie from "lottie-react"
 import diceAnimation from "@/Dice roll.json"
-
+import { useUser } from "@/lib/user-context"
 const genres = [
   { name: "Action", href: "/genre/action", letter: "A" },
   { name: "Adventure", href: "/genre/adventure", letter: "A" },
@@ -52,13 +52,9 @@ const mainNavItems = [
   { href: "/donate", label: "Donate", icon: Heart },
   { href: "/publishers", label: "Publishers" },
   { href: "/request", label: "Request" },
-  { name: "More", label: "More", isDropdown: true },
 ]
 
-const moreMenuItems = [
-  { href: "/blog", label: "Blog" },
-  { href: "/leaderboard", label: "Leaderboard" },
-]
+const moreMenuItems: { href: string; label: string }[] = []
 
 interface SearchResult {
   id: number
@@ -78,7 +74,6 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isGenreOpen, setIsGenreOpen] = useState(false)
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false)
-  const [isMoreOpen, setIsMoreOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchPopupOpen, setIsSearchPopupOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -86,13 +81,25 @@ export function Header() {
   const [collections, setCollections] = useState<Collection[]>([])
   const [theme, setTheme] = useState<"dark" | "light">("dark")
   const [isSpinning, setIsSpinning] = useState(false)
-  const searchRef = useRef<HTMLDivElement>(null)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isNotifOpen, setIsNotifOpen] = useState(false)
+  const spinningTargetRef = useRef<string | null>(null)
   const genreRef = useRef<HTMLDivElement>(null)
   const collectionsRef = useRef<HTMLDivElement>(null)
-  const moreRef = useRef<HTMLDivElement>(null)
+  const profileRef = useRef<HTMLDivElement>(null)
+  const notifRef = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter()
   const pathname = usePathname()
+  const { user, logout, notifications, unreadCount, markNotificationsRead } = useUser()
+
+  // Stop spinning once the route actually changes to the target
+  useEffect(() => {
+    if (spinningTargetRef.current && pathname.includes(spinningTargetRef.current)) {
+      setIsSpinning(false)
+      spinningTargetRef.current = null
+    }
+  }, [pathname])
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -114,6 +121,8 @@ export function Header() {
       }
     }
     fetchCollections()
+    // Pre-warm the games cache on mount so search is instant when popup opens
+    prefetchGames()
   }, [])
 
   useEffect(() => {
@@ -134,8 +143,11 @@ export function Header() {
       if (collectionsRef.current && !collectionsRef.current.contains(e.target as Node)) {
         setIsCollectionsOpen(false)
       }
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setIsMoreOpen(false)
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileOpen(false)
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setIsNotifOpen(false)
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
@@ -147,7 +159,6 @@ export function Header() {
       if (e.key === "Escape") {
         setIsGenreOpen(false)
         setIsCollectionsOpen(false)
-        setIsMoreOpen(false)
         setIsSearchPopupOpen(false)
         setIsMenuOpen(false)
       }
@@ -175,195 +186,82 @@ export function Header() {
     }
   }
 
+  // Cache all games once for instant in-memory search
+  const allGamesRef = useRef<SearchResult[]>([])
+  const gamesCachedRef = useRef(false)
+
+  async function prefetchGames() {
+    if (gamesCachedRef.current) return
+    try {
+      const res = await fetch("/api/items?limit=1000")
+      const result = await res.json()
+      if (result.success && result.data) {
+        allGamesRef.current = result.data
+        gamesCachedRef.current = true
+      }
+    } catch {}
+  }
+
   const handleSearchInput = (value: string) => {
       setSearchQuery(value)
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
 
-      // Clear previous timeout
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
+      const term = value.trim().toLowerCase()
+      if (!term) { setSearchResults([]); return }
 
-      if (value.trim().length >= 2) {
-        // Reduced debounce to 150ms for faster response
-        searchTimeoutRef.current = setTimeout(async () => {
-          try {
-            // Fetch more results for better filtering
-            const response = await fetch(`/api/items?q=${encodeURIComponent(value.trim())}&limit=100`)
-            const result = await response.json()
+      const words = term.split(/\s+/).filter(w => w.length > 0)
+      const results = allGamesRef.current
+        .map((item: SearchResult) => {
+          const title = item.title.toLowerCase()
+          const titleWords = title.split(/[\s\-_:()]+/).filter(w => w.length > 0)
+          let score = 0
 
-            if (result.success && result.data) {
-              const searchTerm = value.trim().toLowerCase()
-              const searchWords = searchTerm.split(/\s+/).filter(w => w.length > 0)
+          if (title === term) return { ...item, score: 100000 }
+          if (title.startsWith(term)) score += 50000
+          if (title.includes(term)) score += 25000
 
-              // Ultra-intelligent filtering with YouTube-like algorithm
-              const filteredResults = result.data
-                .map((item: SearchResult) => {
-                  const title = item.title.toLowerCase()
-                  const titleWords = title.split(/[\s\-_:()]+/).filter((w: string) => w.length > 0)
-                  let score = 0
-
-                  // === LEVEL 1: EXACT MATCHES (Highest Priority) ===
-
-                  // Perfect exact match
-                  if (title === searchTerm) {
-                    return { ...item, score: 100000 }
-                  }
-
-                  // Title starts with exact search term
-                  if (title.startsWith(searchTerm)) {
-                    score += 50000
-                  }
-
-                  // Title contains exact search term as phrase
-                  if (title.includes(searchTerm)) {
-                    score += 25000
-                  }
-
-                  // === LEVEL 2: WORD-LEVEL MATCHING ===
-
-                  // All search words appear in exact order
-                  let allWordsInOrder = true
-                  let lastIndex = -1
-                  for (const word of searchWords) {
-                    const index = title.indexOf(word, lastIndex + 1)
-                    if (index === -1) {
-                      allWordsInOrder = false
-                      break
-                    }
-                    lastIndex = index
-                  }
-                  if (allWordsInOrder && searchWords.length > 1) {
-                    score += 10000
-                  }
-
-                  // Check each search word against title words
-                  let exactWordMatches = 0
-                  let startsWithMatches = 0
-                  let containsMatches = 0
-
-                  for (let i = 0; i < searchWords.length; i++) {
-                    const searchWord = searchWords[i]
-
-                    for (let j = 0; j < titleWords.length; j++) {
-                      const titleWord = titleWords[j]
-
-                      // Exact word match
-                      if (titleWord === searchWord) {
-                        exactWordMatches++
-                        // Bonus if it's the first word
-                        if (i === 0 && j === 0) {
-                          score += 5000
-                        } else {
-                          score += 2000
-                        }
-                      }
-                      // Word starts with search word
-                      else if (titleWord.startsWith(searchWord)) {
-                        startsWithMatches++
-                        score += 1000
-                      }
-                      // Word contains search word
-                      else if (titleWord.includes(searchWord)) {
-                        containsMatches++
-                        score += 500
-                      }
-                    }
-                  }
-
-                  // === LEVEL 3: ACRONYM MATCHING (like "gta" for "Grand Theft Auto") ===
-
-                  if (searchWords.length === 1 && searchWords[0].length >= 2) {
-                    const searchChars = searchWords[0].split('')
-
-                    // Check if search term matches first letters of title words
-                    if (titleWords.length >= searchChars.length) {
-                      let matches = 0
-                      for (let i = 0; i < searchChars.length && i < titleWords.length; i++) {
-                        if (titleWords[i][0] === searchChars[i]) {
-                          matches++
-                        }
-                      }
-                      if (matches === searchChars.length) {
-                        score += 8000 + (matches * 500)
-                      } else if (matches >= searchChars.length * 0.7) {
-                        score += 3000 + (matches * 300)
-                      }
-                    }
-                  }
-
-                  // === LEVEL 4: FUZZY MATCHING & TYPO TOLERANCE (Only if no good matches yet) ===
-
-                  if (score < 1000) {
-                    for (const searchWord of searchWords) {
-                      for (const titleWord of titleWords) {
-                        // Levenshtein distance for typo tolerance
-                        const distance = getLevenshteinDistance(searchWord, titleWord)
-                        const maxLen = Math.max(searchWord.length, titleWord.length)
-                      const similarity = 1 - (distance / maxLen)
-
-                      // If 70% similar, consider it a match (typo tolerance)
-                      if (similarity >= 0.7) {
-                        score += Math.floor(similarity * 800)
-                      }
-
-                      // Character overlap scoring
-                      let charMatches = 0
-                      for (let i = 0; i < Math.min(searchWord.length, titleWord.length); i++) {
-                        if (searchWord[i] === titleWord[i]) {
-                          charMatches++
-                        }
-                      }
-                      if (charMatches >= searchWord.length * 0.6) {
-                        score += charMatches * 50
-                      }
-                    }
-                  }
-                }
-
-                  // === LEVEL 5: PARTIAL WORD MATCHING ===
-
-                  // Check if search term is part of any compound word
-                  for (const titleWord of titleWords) {
-                    for (const searchWord of searchWords) {
-                      if (titleWord.length > searchWord.length && titleWord.includes(searchWord)) {
-                        score += 300
-                      }
-                    }
-                  }
-
-                  // === LEVEL 6: CONTEXTUAL BONUSES ===
-
-                  // Bonus for matching multiple words
-                  if (exactWordMatches > 1) {
-                    score += exactWordMatches * 1000
-                  }
-
-                  // Bonus for matching percentage of search words
-                  const matchPercentage = (exactWordMatches + startsWithMatches) / searchWords.length
-                  if (matchPercentage >= 0.5) {
-                    score += Math.floor(matchPercentage * 2000)
-                  }
-
-                  // Penalty for very long titles (prefer concise matches)
-                  if (titleWords.length > 10) {
-                    score = Math.floor(score * 0.9)
-                  }
-
-                  return { ...item, score }
-                })
-                .filter((item: SearchResult & { score: number }) => item.score > 0)
-                .sort((a: SearchResult & { score: number }, b: SearchResult & { score: number }) => b.score - a.score)
-                .slice(0, 5)
-
-              setSearchResults(filteredResults)
-            }
-          } catch (error) {
-            console.error("Search error:", error)
+          let lastIdx = -1; let inOrder = true
+          for (const w of words) {
+            const i = title.indexOf(w, lastIdx + 1)
+            if (i === -1) { inOrder = false; break }
+            lastIdx = i
           }
-        }, 50) // Ultra-fast: 50ms for real-time feel
-      } else {
-        setSearchResults([])
-      }
+          if (inOrder && words.length > 1) score += 10000
+
+          for (let i = 0; i < words.length; i++) {
+            for (let j = 0; j < titleWords.length; j++) {
+              if (titleWords[j] === words[i]) score += i === 0 && j === 0 ? 5000 : 2000
+              else if (titleWords[j].startsWith(words[i])) score += 1000
+              else if (titleWords[j].includes(words[i])) score += 500
+            }
+          }
+
+          if (words.length === 1) {
+            const chars = words[0].split("")
+            if (titleWords.length >= chars.length) {
+              const matches = chars.filter((c: string, i: number) => titleWords[i]?.[0] === c).length
+              if (matches === chars.length) score += 8000
+              else if (matches >= chars.length * 0.7) score += 3000
+            }
+          }
+
+          if (score < 1000) {
+            for (const sw of words) {
+              for (const tw of titleWords) {
+                const dist = getLevenshteinDistance(sw, tw)
+                const sim = 1 - dist / Math.max(sw.length, tw.length)
+                if (sim >= 0.7) score += Math.floor(sim * 800)
+              }
+            }
+          }
+
+          return { ...item, score }
+        })
+        .filter((item: any) => item.score > 0)
+        .sort((a: any, b: any) => b.score - a.score)
+        .slice(0, 8)
+
+      setSearchResults(results)
     }
 
     // Levenshtein distance algorithm for typo tolerance
@@ -411,10 +309,9 @@ export function Header() {
       const result = await response.json()
       if (result.success && result.data.length > 0) {
         const randomIndex = Math.floor(Math.random() * result.data.length)
-        setTimeout(() => {
-          setIsSpinning(false)
-          router.push(`/game/${result.data[randomIndex].id}`)
-        }, 600)
+        const gameId = result.data[randomIndex].id
+        spinningTargetRef.current = `/game/${gameId}`
+        router.push(`/game/${gameId}`)
       } else {
         setIsSpinning(false)
       }
@@ -581,39 +478,6 @@ export function Header() {
                     </div>
                   )
                 }
-                if (item.name === "More") {
-                  return (
-                    <div key={item.name} ref={moreRef} className="relative">
-                      <button
-                        onClick={() => setIsMoreOpen(!isMoreOpen)}
-                        className={cn(
-                          "flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                          isMoreOpen ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5"
-                        )}
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                        <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", isMoreOpen && "rotate-180")} />
-                      </button>
-                      {isMoreOpen && (
-                        <div className="absolute top-full right-0 mt-1 w-40 bg-[#120b22] border border-[#2d1b54] rounded-xl shadow-xl shadow-black/30 py-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
-                          {moreMenuItems.map((menuItem) => (
-                            <Link
-                              key={menuItem.href}
-                              href={menuItem.href}
-                              onClick={() => setIsMoreOpen(false)}
-                              className={cn(
-                                "block px-4 py-2 text-sm transition-colors",
-                                isActive(menuItem.href) ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5"
-                              )}
-                            >
-                              {menuItem.label}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                }
               }
               return (
                 <Link
@@ -636,7 +500,7 @@ export function Header() {
           <div className="flex items-center space-x-2">
             <div className="flex items-center">
               <button
-                onClick={() => setIsSearchPopupOpen(true)}
+                onClick={() => { setIsSearchPopupOpen(true); prefetchGames() }}
                 className="p-2 text-gray-400 hover:text-[#9d4edd] transition-colors rounded-full hover:bg-white/5"
                 title="Search Games"
               >
@@ -747,7 +611,7 @@ export function Header() {
 
             <button
               onClick={toggleTheme}
-              className="p-2 text-gray-400 hover:text-[#9d4edd] transition-colors rounded-full hover:bg-white/5 hidden sm:flex overflow-hidden"
+              className="p-2 transition-colors rounded-full hidden sm:flex overflow-hidden text-gray-400 hover:text-[#9d4edd] hover:bg-[#9d4edd]/10 dark:hover:bg-[#9d4edd]/10"
               title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               <div className="relative w-5 h-5 flex items-center justify-center">
@@ -756,27 +620,133 @@ export function Header() {
               </div>
             </button>
 
-            <Link
-              href="/login"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-300 hover:text-white transition-colors"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Log in</span>
-            </Link>
+            {user ? (
+              <>
+                {/* Become a Creator button */}
+                {!user.is_creator && (
+                  <Link href="/subscribe" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-105 border"
+                    style={{ background: "linear-gradient(135deg, rgba(157,78,221,0.2), rgba(199,125,255,0.1))", borderColor: "rgba(157,78,221,0.5)", color: "#c77dff" }}>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span className="hidden md:block">Become a Creator</span>
+                  </Link>
+                )}
+                {user.is_creator && (
+                  <Link href="/creator" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-105 border"
+                    style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.1))", borderColor: "rgba(245,158,11,0.5)", color: "#fbbf24" }}>
+                    <Crown className="w-3.5 h-3.5" />
+                    <span className="hidden md:block">Creator Mode</span>
+                  </Link>
+                )}
 
-            <Link
-              href="/signup"
-              className="hidden sm:flex items-center px-3 py-1.5 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Sign up
-            </Link>
+                {/* Notification Bell */}
+                <div ref={notifRef} className="relative">
+                  <button onClick={() => { setIsNotifOpen(!isNotifOpen); if (!isNotifOpen) markNotificationsRead() }}
+                    className="relative p-2 text-gray-400 hover:text-[#9d4edd] transition-colors rounded-full hover:bg-white/5">
+                    <Bell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  {isNotifOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-80 bg-[#120b22] border border-[#2d1b54] rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+                      <div className="px-4 py-3 border-b border-[#2d1b54] flex items-center justify-between">
+                        <span className="text-white font-semibold text-sm">Notifications</span>
+                        <span className="text-xs text-gray-500">{notifications.length} total</span>
+                      </div>
+                      <div className="max-h-72 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="px-4 py-8 text-center text-gray-500 text-sm">No notifications yet</div>
+                        ) : notifications.map(n => (
+                          <div key={n.id} className={cn("px-4 py-3 border-b border-[#2d1b54]/50 hover:bg-white/5 transition-colors", !n.is_read && "bg-[#9d4edd]/5")}>
+                            <div className="flex items-start gap-2">
+                              <div className={cn("w-2 h-2 rounded-full mt-1.5 flex-shrink-0", n.type === 'success' ? 'bg-green-400' : n.type === 'error' ? 'bg-red-400' : 'bg-[#9d4edd]')} />
+                              <div>
+                                <p className="text-white text-xs font-semibold">{n.title}</p>
+                                <p className="text-gray-400 text-xs mt-0.5">{n.message}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden text-white hover:text-[#9d4edd] hover:bg-white/5"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
+                {/* Profile Dropdown */}
+                <div ref={profileRef} className="relative">
+                  <button onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="flex items-center gap-2 p-1 rounded-full hover:bg-white/5 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#9d4edd] to-[#7b2cbf] flex items-center justify-center text-white font-bold text-sm ring-2 ring-[#9d4edd]/40 overflow-hidden">
+                      {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
+                    </div>
+                  </button>
+                  {isProfileOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-56 bg-[#120b22] border border-[#2d1b54] rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+                      <div className="px-4 py-3 border-b border-[#2d1b54]">
+                        <p className="text-white font-semibold text-sm truncate">{user.name}</p>
+                        <p className="text-gray-500 text-xs truncate">@{user.username}</p>
+                        {user.subscription_plan !== 'free' && (
+                          <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(157,78,221,0.2)", color: "#c77dff" }}>
+                            <Crown className="w-2.5 h-2.5" /> {user.subscription_plan}
+                          </span>
+                        )}
+                      </div>
+                      {[
+                        { href: `/profile`, icon: User, label: "My Profile" },
+                        { href: `/profile?tab=history`, icon: History, label: "Watch History" },
+                        { href: `/profile?tab=favourites`, icon: Star, label: "Favourites" },
+                        { href: `/subscribe`, icon: Crown, label: "Subscription" },
+                        { href: `/profile?tab=settings`, icon: Settings, label: "Settings" },
+                      ].map(item => (
+                        <Link key={item.href} href={item.href} onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                          <item.icon className="w-4 h-4 text-gray-500" />
+                          {item.label}
+                          <ChevronRight className="w-3 h-3 ml-auto text-gray-600" />
+                        </Link>
+                      ))}
+                      {!user.is_creator && (
+                        <Link href="/subscribe" onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold transition-colors border-t border-[#2d1b54]"
+                          style={{ color: "#c77dff" }}>
+                          <Sparkles className="w-4 h-4" />
+                          Become a Creator
+                          <ChevronRight className="w-3 h-3 ml-auto" />
+                        </Link>
+                      )}
+                      {user.is_creator && (
+                        <Link href="/creator" onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold transition-colors border-t border-[#2d1b54]"
+                          style={{ color: "#fbbf24" }}>
+                          <Crown className="w-4 h-4" />
+                          Creator Mode
+                          <ChevronRight className="w-3 h-3 ml-auto" />
+                        </Link>
+                      )}
+                      <button onClick={() => { logout(); setIsProfileOpen(false) }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors border-t border-[#2d1b54]">
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-300 hover:text-white transition-colors">
+                  <LogIn className="w-4 h-4" />
+                  <span>Log in</span>
+                </Link>
+                <Link href="/signup" className="hidden sm:flex items-center px-3 py-1.5 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-medium rounded-lg transition-colors">
+                  Sign up
+                </Link>
+              </>
+            )}
+
+            <Button variant="ghost" size="sm" className="lg:hidden text-white hover:text-[#9d4edd] hover:bg-white/5" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
@@ -945,13 +915,13 @@ export function Header() {
                     className="w-full bg-[#1a103c] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-500 outline-none transition-all duration-200"
                   />
                 </div>
-                <p className="mt-2 text-gray-500 text-xs">Type at least 2 characters to see suggestions</p>
+                <p className="mt-2 text-gray-500 text-xs">Start typing to see instant results</p>
               </form>
             </div>
 
             {/* Results */}
             <div className="flex-1 overflow-y-auto p-4">
-              {searchQuery.trim().length >= 2 && searchResults.length > 0 ? (
+              {searchQuery.trim().length > 0 && searchResults.length > 0 ? (
                 <div className="space-y-3">
                   <h3 className="text-[#9d4edd] text-xs font-bold uppercase tracking-wider mb-3">Search Results</h3>
                   {searchResults.map((result) => (
@@ -982,22 +952,20 @@ export function Header() {
                       </div>
                     </Link>
                   ))}
-                  {searchQuery.trim().length >= 2 && (
-                    <button
-                      onClick={handleSearch}
-                      className="w-full mt-3 py-2.5 px-4 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-                    >
-                      View All Results
-                      <Search className="h-4 w-4" />
-                    </button>
-                  )}
+                  <button
+                    onClick={handleSearch}
+                    className="w-full mt-3 py-2.5 px-4 bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    View All Results
+                    <Search className="h-4 w-4" />
+                  </button>
                 </div>
-              ) : searchQuery.trim().length >= 2 && searchQuery.length >= 2 ? (
+              ) : searchQuery.trim().length > 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#9d4edd]/10 flex items-center justify-center">
                     <Search className="w-8 h-8 text-[#9d4edd]/50" />
                   </div>
-                  <p className="text-gray-400 text-sm">No games found matching "{searchQuery}"</p>
+                  <p className="text-gray-400 text-sm">No games found matching &quot;{searchQuery}&quot;</p>
                 </div>
               ) : (
                 <div className="space-y-6">

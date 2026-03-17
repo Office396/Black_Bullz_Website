@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,7 +13,7 @@ import { AdminPageModifier } from "@/components/admin-page-modifier"
 import { AdminDonateEditor } from "@/components/admin-donate-editor"
 import AdminSystemStatus from "@/components/admin-system-status"
 import AdminDetailsAutomation from "@/components/admin-details-automation"
-import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow, Heart } from "lucide-react"
+import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow, Heart, Users, Bell, GamepadIcon } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -95,6 +95,14 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <Heart className="h-4 w-4" />
                 Donate
               </TabsTrigger>
+              <TabsTrigger value="users" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Users className="h-4 w-4" />
+                Users
+              </TabsTrigger>
+              <TabsTrigger value="requests" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <GamepadIcon className="h-4 w-4" />
+                Requests
+              </TabsTrigger>
             </TabsList>
 
             {activeTab === "list" && (
@@ -151,8 +159,197 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <TabsContent value="donate" className="mt-0 outline-none">
             <AdminDonateEditor />
           </TabsContent>
+
+          <TabsContent value="users" className="mt-0 outline-none">
+            <AdminUsersPanel />
+          </TabsContent>
+
+          <TabsContent value="requests" className="mt-0 outline-none">
+            <AdminRequestsPanel />
+          </TabsContent>
         </Tabs>
       </div>
+    </div>
+  )
+}
+
+function AdminUsersPanel() {
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [notifTitle, setNotifTitle] = useState("")
+  const [notifMsg, setNotifMsg] = useState("")
+  const [notifTarget, setNotifTarget] = useState<string>("all")
+  const [sending, setSending] = useState(false)
+
+  const load = async () => {
+    setLoading(true)
+    const res = await fetch('/api/admin/users')
+    const data = await res.json()
+    if (data.users) setUsers(data.users)
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  const sendNotif = async () => {
+    if (!notifTitle || !notifMsg) return
+    setSending(true)
+    await fetch('/api/admin/users', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'send_notification', user_id: notifTarget === 'all' ? null : notifTarget, title: notifTitle, message: notifMsg, type: 'info' })
+    })
+    setSending(false)
+    setNotifTitle(""); setNotifMsg("")
+    alert("Notification sent!")
+  }
+
+  const deleteUser = async (id: string) => {
+    if (!confirm("Delete this user?")) return
+    await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_user', user_id: id }) })
+    load()
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Send Notification */}
+      <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-5">
+        <h3 className="text-white font-bold mb-4 flex items-center gap-2"><Bell className="w-4 h-4 text-[#9d4edd]" /> Send Notification</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <Input placeholder="Title" value={notifTitle} onChange={e => setNotifTitle(e.target.value)} className="bg-[#1a103c] border-[#2d1b54] text-white" />
+          <select value={notifTarget} onChange={e => setNotifTarget(e.target.value)} className="bg-[#1a103c] border border-[#2d1b54] text-white rounded-lg px-3 py-2 text-sm">
+            <option value="all">All Users (Broadcast)</option>
+            {users.map(u => <option key={u.id} value={u.id}>{u.name} (@{u.username})</option>)}
+          </select>
+        </div>
+        <Input placeholder="Message" value={notifMsg} onChange={e => setNotifMsg(e.target.value)} className="bg-[#1a103c] border-[#2d1b54] text-white mb-3" />
+        <Button onClick={sendNotif} disabled={sending} className="bg-[#9d4edd] hover:bg-[#7b2cbf]">
+          {sending ? "Sending..." : "Send Notification"}
+        </Button>
+      </div>
+
+      {/* Users Table */}
+      <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-[#2d1b54] flex items-center justify-between">
+          <h3 className="text-white font-bold">Registered Users ({users.length})</h3>
+          <Button size="sm" variant="outline" onClick={load} className="border-[#2d1b54] text-gray-400">Refresh</Button>
+        </div>
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Loading...</div>
+        ) : users.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">No users yet</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#2d1b54] text-gray-400 text-xs uppercase">
+                  <th className="text-left px-4 py-3">User</th>
+                  <th className="text-left px-4 py-3">Email</th>
+                  <th className="text-left px-4 py-3">Role</th>
+                  <th className="text-left px-4 py-3">Plan</th>
+                  <th className="text-left px-4 py-3">Joined</th>
+                  <th className="px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id} className="border-b border-[#2d1b54]/50 hover:bg-white/5">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-[#9d4edd]/30 flex items-center justify-center text-white text-xs font-bold">{u.name?.charAt(0)}</div>
+                        <div>
+                          <p className="text-white font-medium">{u.name}</p>
+                          <p className="text-gray-500 text-xs">@{u.username}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-400">{u.email}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${u.role === 'creator' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'}`}>{u.role}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${u.subscription_plan !== 'free' ? 'bg-[#9d4edd]/20 text-[#c77dff]' : 'bg-gray-500/20 text-gray-500'}`}>{u.subscription_plan}</span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-center">
+                      <Button size="sm" variant="outline" onClick={() => deleteUser(u.id)} className="border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs">Delete</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function AdminRequestsPanel() {
+  const [requests, setRequests] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const load = async () => {
+    setLoading(true)
+    const res = await fetch('/api/requests')
+    const data = await res.json()
+    if (data.requests) setRequests(data.requests)
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  const updateStatus = async (id: string, status: string) => {
+    await fetch('/api/requests', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) })
+    load()
+  }
+
+  const statusColor: Record<string, string> = { pending: 'text-yellow-400 bg-yellow-500/20', processing: 'text-blue-400 bg-blue-500/20', completed: 'text-green-400 bg-green-500/20', rejected: 'text-red-400 bg-red-500/20' }
+
+  return (
+    <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl overflow-hidden">
+      <div className="p-4 border-b border-[#2d1b54] flex items-center justify-between">
+        <h3 className="text-white font-bold">Game Requests ({requests.length})</h3>
+        <Button size="sm" variant="outline" onClick={load} className="border-[#2d1b54] text-gray-400">Refresh</Button>
+      </div>
+      {loading ? (
+        <div className="p-8 text-center text-gray-500">Loading...</div>
+      ) : requests.length === 0 ? (
+        <div className="p-8 text-center text-gray-500">No requests yet</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#2d1b54] text-gray-400 text-xs uppercase">
+                <th className="text-left px-4 py-3">Game</th>
+                <th className="text-left px-4 py-3">Requested By</th>
+                <th className="text-left px-4 py-3">Platform</th>
+                <th className="text-left px-4 py-3">Status</th>
+                <th className="text-left px-4 py-3">Date</th>
+                <th className="px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requests.map(r => (
+                <tr key={r.id} className="border-b border-[#2d1b54]/50 hover:bg-white/5">
+                  <td className="px-4 py-3">
+                    <p className="text-white font-medium">{r.game_title}</p>
+                    {r.description && <p className="text-gray-500 text-xs mt-0.5 line-clamp-1">{r.description}</p>}
+                  </td>
+                  <td className="px-4 py-3 text-gray-400">{r.user_name}</td>
+                  <td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">{r.platform}</span></td>
+                  <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-bold ${statusColor[r.status] || ''}`}>{r.status}</span></td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">{new Date(r.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3">
+                    <select value={r.status} onChange={e => updateStatus(r.id, e.target.value)} className="bg-[#1a103c] border border-[#2d1b54] text-white rounded px-2 py-1 text-xs">
+                      {['pending','processing','completed','rejected'].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

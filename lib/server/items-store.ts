@@ -7,6 +7,7 @@ export interface Item {
   description: string
   longDescription: string
   developer: string
+  publisher?: string
   size: string
   releaseDate: string
   image: string
@@ -86,6 +87,7 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'update
     description: itemData.description,
     long_description: itemData.longDescription,
     developer: itemData.developer,
+    publisher: itemData.publisher,
     size: itemData.size,
     release_date: itemData.releaseDate,
     image: itemData.image,
@@ -174,6 +176,7 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
   if (itemData.description !== undefined) dbUpdate.description = itemData.description
   if (itemData.longDescription !== undefined) dbUpdate.long_description = itemData.longDescription
   if (itemData.developer !== undefined) dbUpdate.developer = itemData.developer
+  if (itemData.publisher !== undefined) dbUpdate.publisher = itemData.publisher
   if (itemData.size !== undefined) dbUpdate.size = itemData.size
   if (itemData.releaseDate !== undefined) dbUpdate.release_date = itemData.releaseDate
   if (itemData.image !== undefined) dbUpdate.image = itemData.image

@@ -396,15 +396,16 @@ html:not(.dark) [class*="border-gray-700"] {
   border-color: #e0e0e8 !important;
 }
 
-/* Smooth transitions for theme change */
+/* Smooth transitions for theme change - scoped to avoid lag */
 html,
-body,
+body {
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
 header,
 footer,
-main,
-section,
-div {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+main {
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 /* Hide scrollbar but keep scroll functionality */

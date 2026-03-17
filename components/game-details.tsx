@@ -8,12 +8,13 @@ import {
   Monitor, Cpu, MemoryStick, HardDrive, Clock, User,
   Calendar, ChevronLeft, Play, ThumbsUp, Share2, Shield,
   AlertTriangle, CheckCircle, Info, Package, Wrench,
-  ChevronDown, ChevronUp, Cloud
+  ChevronDown, ChevronUp, Cloud, Building2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Comments } from "@/components/comments"
+import { useUser } from "@/lib/user-context"
 
 interface SystemRequirements {
   os?: string
@@ -97,8 +98,14 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [isFavorite, setIsFavorite] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [installTab, setInstallTab] = useState<"pre-installed" | "installable">("pre-installed")
   const [expandedCloud, setExpandedCloud] = useState<number | null>(null)
+
+  // User context for favourites + watch history
+  const userCtx = useUser()
+  const user = userCtx?.user
+  const token = userCtx?.token
 
   const isPCGame = game?.category === "PC Games"
   const isAndroid = game?.category === "Android Games"
@@ -121,6 +128,14 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
       return () => document.removeEventListener('keydown', handleKeyDown)
     }
   }, [lightboxOpen])
+
+  // Load favourite state + track watch history
+  useEffect(() => {
+    if (!token || !game?.id) return
+    fetch('/api/user/favourites', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => { if (d.favourites) setIsFavorite(d.favourites.includes(game.id)) }).catch(() => {})
+    fetch('/api/user/history', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ gameId: game.id }) }).catch(() => {})
+  }, [token, game?.id])
 
   if (!game) return null
 
@@ -203,6 +218,15 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                   <p className="text-foreground text-sm font-medium">{game.developer}</p>
                 </div>
               )}
+              {(game as any).publisher && (
+                <div>
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1"><Building2 className="w-3 h-3" />Publisher</div>
+                  <Link href={`/publishers/${(game as any).publisher.toLowerCase().replace(/[^a-z0-9]+/g, '-')}?name=${encodeURIComponent((game as any).publisher)}`}
+                    className="text-[#9d4edd] hover:text-[#c77dff] text-sm font-medium transition-colors">
+                    {(game as any).publisher}
+                  </Link>
+                </div>
+              )}
               {game.size && (
                 <div>
                   <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1"><HardDrive className="w-3 h-3" />File Size</div>
@@ -257,11 +281,21 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
               </Button>
               <Button
                 variant="outline"
-                className={`border-white/20 ${isFavorite ? 'text-red-500 border-red-500/50' : 'text-white'}`}
-                onClick={() => setIsFavorite(!isFavorite)}
+                className={`border-white/20 ${isFavorite ? 'text-red-500 border-red-500/50' : 'text-white'} relative group`}
+                onClick={async () => {
+                  if (!user) { setShowLoginPrompt(true); setTimeout(() => setShowLoginPrompt(false), 3000); return }
+                  const res = await fetch('/api/user/favourites', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ gameId: game.id }) })
+                  const data = await res.json()
+                  if (data.success) setIsFavorite(data.isFavourite)
+                }}
               >
                 <Heart className={`w-4 h-4 mr-2 ${isFavorite ? 'fill-red-500' : ''}`} />
                 {isFavorite ? 'Favorited' : 'Favorite'}
+                {showLoginPrompt && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#120b22] border border-[#9d4edd]/40 rounded-lg text-xs text-white whitespace-nowrap shadow-xl z-50">
+                    <a href="/login" className="text-[#9d4edd] font-semibold hover:underline">Login</a> or <a href="/signup" className="text-[#9d4edd] font-semibold hover:underline">Sign up</a> to save favourites
+                  </div>
+                )}
               </Button>
               <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10">
                 <Share2 className="w-4 h-4 mr-2" />

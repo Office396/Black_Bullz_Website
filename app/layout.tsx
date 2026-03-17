@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { PageLoader } from "@/components/page-loader"
+import { UserProvider } from "@/lib/user-context"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-background`}>
+        <UserProvider>
         {/* PageLoader handles client-side route changes with a controlled delay */}
         <PageLoader />
         {/* Suspense ensures client components that suspend show a fallback immediately */}
@@ -43,6 +45,7 @@ export default function RootLayout({
           {children}
         </Suspense>
         <Analytics />
+        </UserProvider>
       </body>
     </html>
   )

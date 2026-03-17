@@ -631,14 +631,15 @@ export default function DonatePage() {
 
         {/* ── ALTERNATIVE SUPPORT ── */}
         <section id="alternatives" className="py-12 px-4">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-black text-white mb-2">Other Ways to Support</h2>
-              <p className="text-gray-400">Prefer a recurring contribution? We've got options.</p>
+              <p className="text-gray-400">Prefer a recurring contribution or one-time support? We've got options.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
               {/* Patreon */}
-              <div className="rounded-2xl border p-6" style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(18,11,34,0.9))", borderColor: "rgba(249,115,22,0.25)" }}>
+              <div className="rounded-2xl border p-6 flex flex-col" style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(18,11,34,0.9))", borderColor: "rgba(249,115,22,0.25)" }}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(249,115,22,0.2)" }}>
                     <Heart className="w-5 h-5 text-orange-400" />
@@ -648,7 +649,7 @@ export default function DonatePage() {
                     <p className="text-gray-500 text-xs">Monthly membership</p>
                   </div>
                 </div>
-                <div className="space-y-3 mb-5">
+                <div className="space-y-3 mb-5 flex-1">
                   {[
                     { tier: "Freedom Fighter", price: "$5/mo", perks: ["Supporter badge", "Ad-free browsing", "Early access"] },
                     { tier: "Revolution Leader", price: "$10/mo", perks: ["Everything above", "Priority support", "Leaderboard spotlight"] },
@@ -664,38 +665,73 @@ export default function DonatePage() {
                     </div>
                   ))}
                 </div>
-                <a href="https://patreon.com" target="_blank" rel="noopener noreferrer"
+                <a href="https://www.patreon.com/c/BullzGamez" target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-white transition-all hover:scale-[1.02]"
                   style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
                   <ExternalLink className="w-4 h-4" /> Join on Patreon
                 </a>
               </div>
 
-              {/* Ko-fi */}
-              <div className="rounded-2xl border p-6" style={{ background: "linear-gradient(135deg, rgba(6,182,212,0.08), rgba(18,11,34,0.9))", borderColor: "rgba(6,182,212,0.25)" }}>
+              {/* Open Collective - General */}
+              <div className="rounded-2xl border p-6 flex flex-col" style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(18,11,34,0.9))", borderColor: "rgba(99,102,241,0.25)" }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(99,102,241,0.2)" }}>
+                    <Users className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold">Open Collective</h3>
+                    <p className="text-gray-500 text-xs">Transparent funding</p>
+                  </div>
+                </div>
+                <p className="text-gray-400 text-sm mb-4 flex-1">
+                  100% transparent — every dollar in and out is publicly visible. Support us through Open Collective and see exactly where your money goes.
+                </p>
+                <div className="p-3 rounded-xl border mb-5" style={{ background: "rgba(99,102,241,0.08)", borderColor: "rgba(99,102,241,0.2)" }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded-full bg-indigo-400" />
+                    <span className="text-white text-xs font-semibold">Full Transparency</span>
+                  </div>
+                  <p className="text-gray-500 text-xs">All expenses and income are publicly logged. No hidden fees, no surprises.</p>
+                </div>
+                <a href="https://opencollective.com/bullz-games" target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-white transition-all hover:scale-[1.02]"
+                  style={{ background: "linear-gradient(135deg, #6366f1, #4f46e5)" }}>
+                  <ExternalLink className="w-4 h-4" /> Support on Open Collective
+                </a>
+              </div>
+
+              {/* Open Collective - Expenses */}
+              <div className="rounded-2xl border p-6 flex flex-col" style={{ background: "linear-gradient(135deg, rgba(6,182,212,0.08), rgba(18,11,34,0.9))", borderColor: "rgba(6,182,212,0.25)" }}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(6,182,212,0.2)" }}>
                     <Flame className="w-5 h-5 text-cyan-400" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold">Ko-fi</h3>
-                    <p className="text-gray-500 text-xs">One-time or recurring</p>
+                    <h3 className="text-white font-bold">Fund an Expense</h3>
+                    <p className="text-gray-500 text-xs">Direct server & hosting costs</p>
                   </div>
                 </div>
-                <p className="text-gray-400 text-sm mb-4">Buy us a coffee — or three. Every contribution goes directly to keeping the platform running.</p>
-                <div className="flex gap-2 mb-5">
-                  {["$3", "$6", "$12"].map((val) => (
-                    <div key={val} className="flex-1 text-center py-3 rounded-xl border font-bold text-sm" style={{ background: "rgba(6,182,212,0.08)", borderColor: "rgba(6,182,212,0.2)", color: "#22d3ee" }}>
-                      {val}
-                    </div>
+                <p className="text-gray-400 text-sm mb-4">Directly fund a specific server or hosting expense. Pick one below and contribute exactly what's needed.</p>
+                <div className="space-y-2 mb-5 flex-1">
+                  {[
+                    { label: "Server Infrastructure", href: "https://opencollective.com/bullz-games/expenses/289914" },
+                    { label: "Hosting & CDN Costs", href: "https://opencollective.com/bullz-games/expenses/289913" },
+                  ].map(({ label, href }) => (
+                    <a key={href} href={href} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-between p-3 rounded-xl border text-sm transition-all hover:scale-[1.01] group"
+                      style={{ background: "rgba(6,182,212,0.06)", borderColor: "rgba(6,182,212,0.2)" }}>
+                      <span className="text-white font-medium group-hover:text-cyan-300 transition-colors">{label}</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                    </a>
                   ))}
                 </div>
-                <a href="https://ko-fi.com" target="_blank" rel="noopener noreferrer"
+                <a href="https://opencollective.com/bullz-games" target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-white transition-all hover:scale-[1.02]"
                   style={{ background: "linear-gradient(135deg, #06b6d4, #0891b2)" }}>
-                  <ExternalLink className="w-4 h-4" /> Support on Ko-fi
+                  <ExternalLink className="w-4 h-4" /> View All Expenses
                 </a>
               </div>
+
             </div>
           </div>
         </section>

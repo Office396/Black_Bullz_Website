@@ -163,7 +163,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
   }
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
       <CardHeader>
         <CardTitle className="text-red-500 flex items-center gap-2">
           <MessageSquare className="h-5 w-5" />
@@ -178,7 +178,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
               placeholder="Your name"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+              className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               required
             />
             <Input
@@ -186,7 +186,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
               type="email"
               value={userEmail}
               onChange={(e) => setUserEmail(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+              className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               required
             />
           </div>
@@ -195,7 +195,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             rows={3}
-            className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+            className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             required
           />
           <Button type="submit" className="bg-red-600 hover:bg-red-700">
@@ -215,10 +215,10 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-2">
-                  <div className="bg-gray-700 rounded-lg p-4">
+                  <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-white font-medium">{comment.author}</span>
+                          <span className="text-gray-900 dark:text-white font-medium">{comment.author}</span>
                           {comment.author === "BullzGamez-Admin" && (
                             <div className="flex items-center gap-1">
                               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" version="1.1" width="256" height="256" viewBox="0 0 256 256" xmlSpace="preserve">
@@ -230,28 +230,28 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                             </div>
                           )}
                         </div>
-                        <span className="text-gray-400 text-sm">{formatTimestamp(comment.timestamp)}</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">{formatTimestamp(comment.timestamp)}</span>
                       </div>
-                    <p className="text-gray-300">{comment.content}</p>
+                    <p className="text-gray-700 dark:text-gray-300">{comment.content}</p>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
                   <button
                   onClick={() => handleLike(comment.id)}
-                  className="flex items-center gap-1 text-gray-400 hover:text-green-400 transition-colors"
+                  className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-green-500 transition-colors"
                   >
                   <ThumbsUp className="h-4 w-4" />
                   {comment.likes}
                   </button>
                   <button
                   onClick={() => handleDislike(comment.id)}
-                  className="flex items-center gap-1 text-gray-400 hover:text-red-400 transition-colors"
+                  className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors"
                   >
                   <ThumbsDown className="h-4 w-4" />
                   {comment.dislikes}
                   </button>
                   <button
                   onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                  className="flex items-center gap-1 text-gray-400 hover:text-blue-400 transition-colors"
+                  className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-blue-400 transition-colors"
                   >
                   <Reply className="h-4 w-4" />
                   Reply
@@ -259,7 +259,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                   {isAdmin && (
                   <button
                   onClick={() => apiDelete(comment.id)}
-                  className="ml-2 text-gray-400 hover:text-red-500 transition-colors"
+                  className="ml-2 text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
                   title="Delete comment"
                   >
                   Delete
@@ -275,14 +275,14 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                         value={replyContent}
                         onChange={(e) => setReplyContent(e.target.value)}
                         rows={2}
-                        className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                        className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       />
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <Input
                           placeholder="Your name"
                           value={userName}
                           onChange={(e) => setUserName(e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                          className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                           required
                         />
                         <Input
@@ -290,7 +290,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                           type="email"
                           value={userEmail}
                           onChange={(e) => setUserEmail(e.target.value)}
-                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                          className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                           required
                         />
                       </div>
@@ -306,7 +306,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                           onClick={() => setReplyingTo(null)}
                           size="sm"
                           variant="outline"
-                          className="bg-gray-700 border-gray-600 text-gray-300"
+                          className="bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                         >
                           Cancel
                         </Button>
@@ -316,7 +316,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
 
                   {/* Replies */}
                   {comment.replies && comment.replies.length > 0 && (
-                    <div className="ml-6 space-y-3 border-l border-gray-600 pl-4">
+                    <div className="ml-6 space-y-3 border-l border-gray-300 dark:border-gray-600 pl-4">
                       {comment.replies.map((reply) => (
                         <div key={reply.id} className="flex gap-3">
                           <Avatar className="w-8 h-8">
@@ -326,30 +326,30 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 space-y-2">
-                            <div className="bg-gray-700 rounded-lg p-3">
+                            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
                               <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-white font-medium text-sm">{reply.author}</span>
+                                  <span className="text-gray-900 dark:text-white font-medium text-sm">{reply.author}</span>
                                   {reply.author === "BullzGamez-Admin ✔️" && (
                                     <div className="flex items-center gap-1">
                                     </div>
                                   )}
                                 </div>
-                                <span className="text-gray-400 text-xs">{formatTimestamp(reply.timestamp)}</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-xs">{formatTimestamp(reply.timestamp)}</span>
                               </div>
-                              <p className="text-gray-300 text-sm">{reply.content}</p>
+                              <p className="text-gray-700 dark:text-gray-300 text-sm">{reply.content}</p>
                             </div>
                             <div className="flex items-center gap-4 text-xs">
                               <button
                                 onClick={() => handleLike(reply.id)}
-                                className="flex items-center gap-1 text-gray-400 hover:text-green-400 transition-colors"
+                                className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-green-500 transition-colors"
                               >
                                 <ThumbsUp className="h-3 w-3" />
                                 {reply.likes}
                               </button>
                               <button
                                 onClick={() => handleDislike(reply.id)}
-                                className="flex items-center gap-1 text-gray-400 hover:text-red-400 transition-colors"
+                                className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-red-400 transition-colors"
                               >
                                 <ThumbsDown className="h-3 w-3" />
                                 {reply.dislikes}
@@ -357,7 +357,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                               {isAdmin && (
                                 <button
                                   onClick={() => apiDelete(reply.id)}
-                                  className="ml-2 text-gray-400 hover:text-red-500 transition-colors"
+                                  className="ml-2 text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
                                   title="Delete reply"
                                 >
                                   Delete
