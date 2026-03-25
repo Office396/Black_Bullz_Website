@@ -1,775 +1,242 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
+import { MessageSquare, Star, Trash2, CheckCircle2, XCircle, Eye, Search, Reply } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
-import { Search, MessageSquare, Mail, Trash2, Eye, CheckCircle2, CircleDot, Reply } from "lucide-react"
-
-// Types for stored feedback
-export interface StoredComment {
-  id: number
-  itemId: number
-  itemName: string
-  author: string
-  email: string
-  content: string
-  type: "comment" | "reply"
-  parentId?: number
-  timestamp: string
-  status: "new" | "read"
-}
-
-export interface StoredMessage {
-  id: number
-  name: string
-  email: string
-  subject: string
-  message: string
-  timestamp: string
-  status: "new" | "read"
-}
 
 export function AdminFeedback() {
-  const [comments, setComments] = useState<StoredComment[]>([])
-  const [messages, setMessages] = useState<StoredMessage[]>([])
-
+  const [comments, setComments] = useState<any[]>([])
+  const [reviews, setReviews] = useState<any[]>([])
   const [commentSearch, setCommentSearch] = useState("")
-  const [commentStatus, setCommentStatus] = useState<"all" | "new" | "read">("all")
-  const [commentItemQuery, setCommentItemQuery] = useState("")
-
-  const [messageSearch, setMessageSearch] = useState("")
-  const [messageStatus, setMessageStatus] = useState<"all" | "new" | "read">("all")
-
-  const [viewDialogOpen, setViewDialogOpen] = useState(false)
-  const [viewContent, setViewContent] = useState<{ title: string; body: string } | null>(null)
-
-  // Comment reply dialog state
-  const [replyDialogOpen, setReplyDialogOpen] = useState(false)
-  const [replyTarget, setReplyTarget] = useState<StoredComment | null>(null)
+  const [reviewSearch, setReviewSearch] = useState("")
+  const [replyTarget, setReplyTarget] = useState<any | null>(null)
   const [replyText, setReplyText] = useState("")
   const [replySubmitting, setReplySubmitting] = useState(false)
 
-  // Message reply dialog state
-  const [msgReplyDialogOpen, setMsgReplyDialogOpen] = useState(false)
-  const [msgReplyTarget, setMsgReplyTarget] = useState<StoredMessage | null>(null)
-  const [msgReplySubject, setMsgReplySubject] = useState("")
-  const [msgReplyBody, setMsgReplyBody] = useState("")
-  const [msgSending, setMsgSending] = useState(false)
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Centralized comments across all items
-        const cRes = await fetch('/api/comments?BullzGamez-Admin=1', { cache: 'no-store' })
-        const cJson = await cRes.json()
-        if (Array.isArray(cJson?.data)) setComments(cJson.data)
-      } catch {}
-
-      try {
-        // Fetch messages from Supabase API or localStorage for development
-        if (process.env.NODE_ENV === 'development' && (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder'))) {
-          // In development without Supabase, use localStorage
-          const storedMessages = JSON.parse(localStorage.getItem('site_messages') || '[]')
-          if (Array.isArray(storedMessages)) setMessages(storedMessages)
-        } else {
-          // Production: fetch from API
-          const mRes = await fetch('/api/contact', { cache: 'no-store' })
-          const mJson = await mRes.json()
-          if (Array.isArray(mJson?.data)) setMessages(mJson.data.map((msg: any) => ({
-            id: msg.id,
-            name: msg.name,
-            email: msg.email,
-            subject: msg.subject,
-            message: msg.message,
-            timestamp: msg.timestamp,
-            status: msg.status
-          })))
-        }
-      } catch {}
-    }
-    fetchData()
-  }, [])
-
-  const saveComments = (list: StoredComment[]) => {
-    setComments(list)
-  }
-
-  const saveMessages = (list: StoredMessage[]) => {
-    setMessages(list)
-    try {
-      localStorage.setItem("site_messages", JSON.stringify(list))
-    } catch {}
-  }
-
-  const appendToSiteComments = (entry: StoredComment) => {
-    try {
-      const existing = JSON.parse(localStorage.getItem("site_comments") || "[]")
-      const list = Array.isArray(existing) ? existing : []
-      const updated = [entry, ...list]
-      localStorage.setItem("site_comments", JSON.stringify(updated))
-      setComments(updated)
-    } catch {}
-  }
-
-  const formatDate = (ts: string) => {
-    try {
-      const d = new Date(ts)
-      return d.toLocaleString()
-    } catch {
-      return ts
-    }
-  }
-
-  // Derived lists with filters
-  const filteredComments = useMemo(() => {
-    return comments
-      .filter((c) => (commentStatus === "all" ? true : c.status === commentStatus))
-      .filter((c) => (commentItemQuery ? c.itemName.toLowerCase().includes(commentItemQuery.toLowerCase()) : true))
-      .filter((c) => {
-        if (!commentSearch) return true
-        const needle = commentSearch.toLowerCase()
-        return (
-          c.content.toLowerCase().includes(needle) ||
-          c.author.toLowerCase().includes(needle) ||
-          c.email.toLowerCase().includes(needle) ||
-          c.itemName.toLowerCase().includes(needle)
-        )
-      })
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-  }, [comments, commentStatus, commentItemQuery, commentSearch])
-
-  const filteredMessages = useMemo(() => {
-    return messages
-      .filter((m) => (messageStatus === "all" ? true : m.status === messageStatus))
-      .filter((m) => {
-        if (!messageSearch) return true
-        const needle = messageSearch.toLowerCase()
-        return (
-          m.subject.toLowerCase().includes(needle) ||
-          m.message.toLowerCase().includes(needle) ||
-          m.name.toLowerCase().includes(needle) ||
-          m.email.toLowerCase().includes(needle)
-        )
-      })
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-  }, [messages, messageStatus, messageSearch])
-
-  // Common actions
   const getAdminToken = () => {
-    try {
-      return localStorage.getItem('admin_token') || ''
-    } catch {
-      return ''
-    }
+    try { return localStorage.getItem('admin_token') || '' } catch { return '' }
   }
 
-  const fetchAdminComments = async () => {
+  const loadComments = async () => {
     try {
       const res = await fetch('/api/comments?BullzGamez-Admin=1', { cache: 'no-store' })
       const json = await res.json()
-      if (json?.success) setComments(json.data)
+      if (json.success) setComments(json.data || [])
     } catch {}
   }
 
-  const markCommentStatus = async (id: number, status: "new" | "read") => {
-    const row = comments.find((c) => c.id === id)
-    if (!row) return
-    const adminToken = getAdminToken()
+  const loadReviews = async () => {
     try {
-      await fetch('/api/comments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'status', itemId: row.itemId, targetId: id, status, adminToken })
-      })
-      await fetchAdminComments()
-    } catch {}
-  }
-  const deleteComment = async (id: number) => {
-    const row = comments.find((c) => c.id === id)
-    if (!row) return
-    const adminToken = getAdminToken()
-    try {
-      await fetch('/api/comments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', itemId: row.itemId, targetId: id, adminToken })
-      })
-      await fetchAdminComments()
-    } catch {}
-  }
-  const clearComments = async () => {
-    if (!confirm("Clear all comments?")) return
-    const adminToken = getAdminToken()
-    // Delete each comment/reply by ID
-    try {
-      const toDelete = comments.map((c) => ({ id: c.id, itemId: c.itemId }))
-      await Promise.all(
-        toDelete.map((row) =>
-          fetch('/api/comments', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'delete', itemId: row.itemId, targetId: row.id, adminToken })
-          })
-        )
-      )
-      await fetchAdminComments()
+      const res = await fetch('/api/reviews?all=1', { cache: 'no-store' })
+      const json = await res.json()
+      if (json.reviews) setReviews(json.reviews)
     } catch {}
   }
 
-  const markMessageStatus = (id: number, status: "new" | "read") => {
-    saveMessages(messages.map((m) => (m.id === id ? { ...m, status } : m)))
-  }
-  const deleteMessage = async (id: number) => {
-    try {
-      const response = await fetch(`/api/contact?id=${id}`, {
-        method: 'DELETE',
-      })
+  useEffect(() => { loadComments(); loadReviews() }, [])
 
-      const result = await response.json()
-
-      if (response.ok && result.success) {
-        // Remove from local state as well
-        saveMessages(messages.filter((m) => m.id !== id))
-        alert("Message deleted successfully!")
-      } else {
-        throw new Error(result.error || 'Failed to delete message')
-      }
-    } catch (error) {
-      console.error('Error deleting message:', error)
-      alert("Failed to delete message. Please try again.")
-    }
-  }
-  const clearMessages = () => {
-    if (confirm("Clear all messages?")) saveMessages([])
+  const deleteComment = async (id: number, itemId: number) => {
+    if (!confirm('Delete this comment?')) return
+    await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete', itemId, targetId: id, adminToken: getAdminToken() }) })
+    loadComments()
   }
 
-  const unreadComments = comments.filter((c) => c.status === "new").length
-  const unreadMessages = messages.filter((m) => m.status === "new").length
-
-  const openView = (title: string, body: string) => {
-    setViewContent({ title, body })
-    setViewDialogOpen(true)
+  const markComment = async (id: number, itemId: number, status: 'new' | 'read') => {
+    await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'status', itemId, targetId: id, status, adminToken: getAdminToken() }) })
+    loadComments()
   }
 
-  const openReplyForComment = (c: StoredComment) => {
-    setReplyTarget(c)
-    setReplyText("")
-    setReplyDialogOpen(true)
-  }
-
-  const sendAdminReplyToComment = async () => {
+  const sendAdminReply = async () => {
     if (!replyTarget || !replyText.trim()) return
     setReplySubmitting(true)
-    try {
-      const parentId = replyTarget.type === "reply" ? (replyTarget.parentId || replyTarget.id) : replyTarget.id
-
-      await fetch('/api/comments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'reply',
-          itemId: replyTarget.itemId,
-          parentId,
-          itemName: replyTarget.itemName,
-          author: 'Admin',
-          email: '',
-          content: replyText.trim(),
-          avatar: '/placeholder-user.jpg',
-        })
-      })
-
-      await fetchAdminComments()
-      await markCommentStatus(replyTarget.id, "read")
-
-      setReplyDialogOpen(false)
-      setReplyTarget(null)
-      setReplyText("")
-      alert("Reply posted. It is now visible on the website under that comment.")
-    } catch (e) {
-      console.error(e)
-      alert("Failed to post reply. Please try again.")
-    } finally {
-      setReplySubmitting(false)
-    }
+    const parentId = replyTarget.type === 'reply' ? (replyTarget.parentId || replyTarget.id) : replyTarget.id
+    await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reply', itemId: replyTarget.itemId, parentId, itemName: replyTarget.itemName, author: 'BullzGamez-Admin', email: '', content: replyText.trim() }) })
+    await markComment(replyTarget.id, replyTarget.itemId, 'read')
+    setReplyTarget(null); setReplyText(""); setReplySubmitting(false)
+    loadComments()
   }
 
-  const openReplyForMessage = (m: StoredMessage) => {
-    setMsgReplyTarget(m)
-    setMsgReplySubject(m.subject?.startsWith("Re:") ? m.subject : `Re: ${m.subject}`)
-    setMsgReplyBody("")
-    setMsgReplyDialogOpen(true)
+  const updateReview = async (id: number, status: string) => {
+    await fetch('/api/reviews', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) })
+    loadReviews()
   }
 
-  const sendEmailReply = async () => {
-    if (!msgReplyTarget || !msgReplyBody.trim()) return
-    setMsgSending(true)
-    try {
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: msgReplyTarget.email,
-          subject: msgReplySubject,
-          replyContent: msgReplyBody,
-          originalMessage: msgReplyTarget.message,
-          customerName: msgReplyTarget.name,
-          messageDate: msgReplyTarget.timestamp
-        }),
-      })
+  const deleteReview = async (id: number) => {
+    if (!confirm('Delete this review?')) return
+    await fetch(`/api/reviews?id=${id}`, { method: 'DELETE' })
+    loadReviews()
+  }
 
-      const result = await response.json()
+  const filteredComments = useMemo(() => {
+    if (!commentSearch) return comments
+    const q = commentSearch.toLowerCase()
+    return comments.filter(c => c.content?.toLowerCase().includes(q) || c.author?.toLowerCase().includes(q) || c.itemName?.toLowerCase().includes(q))
+  }, [comments, commentSearch])
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to send email')
-      }
+  const filteredReviews = useMemo(() => {
+    if (!reviewSearch) return reviews
+    const q = reviewSearch.toLowerCase()
+    return reviews.filter(r => r.user_name?.toLowerCase().includes(q) || r.game_title?.toLowerCase().includes(q) || r.content?.toLowerCase().includes(q))
+  }, [reviews, reviewSearch])
 
-      // Mark as read locally
-      markMessageStatus(msgReplyTarget.id, "read")
+  const pendingReviews = reviews.filter(r => r.status === 'pending').length
+  const newComments = comments.filter(c => c.status === 'new').length
 
-      setMsgReplyDialogOpen(false)
-      setMsgReplyTarget(null)
-      setMsgReplySubject("")
-      setMsgReplyBody("")
-      alert("Email sent successfully via Resend with professional template.")
-    } catch (e) {
-      console.error(e)
-      alert("Failed to send email. Ensure RESEND_API_KEY is configured and domain is verified.")
-    } finally {
-      setMsgSending(false)
-    }
+  const formatDate = (ts: string) => {
+    try { return new Date(ts).toLocaleString() } catch { return ts }
+  }
+
+  const STATUS_COLORS: Record<string, string> = {
+    pending: 'bg-yellow-500/20 text-yellow-400',
+    approved: 'bg-green-500/20 text-green-400',
+    rejected: 'bg-red-500/20 text-red-400',
+    new: 'bg-blue-500/20 text-blue-400',
+    read: 'bg-gray-500/20 text-gray-400',
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-white flex items-center gap-2 text-lg md:text-xl">
-            <MessageSquare className="h-5 w-5" />
-            Feedback Inbox
-            <span className="ml-2 text-xs text-gray-400 font-normal hidden md:inline">Manage comments and messages</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-2 md:px-6">
-          <Tabs defaultValue="comments" className="space-y-4 md:space-y-6">
-            <TabsList className="bg-gray-800 border-gray-700 grid w-full grid-cols-2 md:flex md:w-auto">
-              <TabsTrigger value="comments" className="data-[state=active]:bg-red-600 text-sm">
-                <MessageSquare className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Comments</span>
-                <span className="md:hidden">Comments</span>
-                {unreadComments > 0 && <Badge className="ml-1 md:ml-2 bg-blue-600 text-xs">{unreadComments}</Badge>}
-              </TabsTrigger>
-              <TabsTrigger value="messages" className="data-[state=active]:bg-red-600 text-sm">
-                <Mail className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Messages</span>
-                <span className="md:hidden">Messages</span>
-                {unreadMessages > 0 && <Badge className="ml-1 md:ml-2 bg-blue-600 text-xs">{unreadMessages}</Badge>}
-              </TabsTrigger>
-            </TabsList>
+    <div className="space-y-4">
+      <Tabs defaultValue="comments">
+        <TabsList className="bg-[#120b22] border border-[#2d1b54] p-1">
+          <TabsTrigger value="comments" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            Comments
+            {newComments > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-blue-500 text-white text-[10px] font-bold">{newComments}</span>}
+          </TabsTrigger>
+          <TabsTrigger value="reviews" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2">
+            <Star className="w-4 h-4" />
+            Reviews
+            {pendingReviews > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-yellow-500 text-black text-[10px] font-bold">{pendingReviews}</span>}
+          </TabsTrigger>
+        </TabsList>
 
-            {/* Comments */}
-            <TabsContent value="comments" className="space-y-4">
-              <div className="flex flex-col gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search comments, authors, emails or items..."
-                    value={commentSearch}
-                    onChange={(e) => setCommentSearch(e.target.value)}
-                    className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
-                  />
-                </div>
-                <Input
-                  placeholder="Filter by item name"
-                  value={commentItemQuery}
-                  onChange={(e) => setCommentItemQuery(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
-                />
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCommentStatus("all")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (commentStatus === "all" ? "ring-1 ring-red-600" : "")}
-                  >
-                    All
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCommentStatus("new")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (commentStatus === "new" ? "ring-1 ring-red-600" : "")}
-                  >
-                    New
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCommentStatus("read")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (commentStatus === "read" ? "ring-1 ring-red-600" : "")}
-                  >
-                    Read
-                  </Button>
-                  <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 text-gray-300 text-xs" onClick={clearComments}>
-                    <Trash2 className="h-4 w-4 mr-1" /> Clear All
-                  </Button>
-                </div>
+        {/* COMMENTS TAB */}
+        <TabsContent value="comments" className="mt-4">
+          <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-[#2d1b54] flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Input value={commentSearch} onChange={e => setCommentSearch(e.target.value)} placeholder="Search comments..."
+                  className="pl-9 bg-[#1a103c] border-[#2d1b54] text-white text-sm" />
               </div>
-
-              <Separator className="bg-gray-700" />
-
-              <div className="overflow-auto rounded-md border border-gray-700">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-gray-300 text-xs md:text-sm">Date</TableHead>
-                      <TableHead className="text-gray-300 text-xs md:text-sm">Item</TableHead>
-                      <TableHead className="text-gray-300 text-xs md:text-sm">From</TableHead>
-                      <TableHead className="text-gray-300 text-xs md:text-sm">Content</TableHead>
-                      <TableHead className="text-gray-300 text-xs md:text-sm">Status</TableHead>
-                      <TableHead className="text-gray-300 text-xs md:text-sm text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredComments.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-gray-400 text-sm">
-                          No comments
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {filteredComments.map((c) => (
-                      <TableRow key={c.id} className="hover:bg-gray-800/60">
-                        <TableCell className="text-gray-400 whitespace-nowrap text-xs md:text-sm">{formatDate(c.timestamp)}</TableCell>
-                        <TableCell className="text-gray-200">
-                          <div className="flex flex-col gap-1">
-                            <Badge className={`${c.type === "reply" ? "bg-blue-700" : "bg-green-700"} text-xs w-fit`}>
-                              {c.type === "reply" ? "Reply" : "Comment"}
-                            </Badge>
-                            <span className="text-white text-xs md:text-sm truncate max-w-[120px] md:max-w-none">{c.itemName}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-gray-300">
-                          <div className="flex flex-col">
-                            <span className="text-white text-xs md:text-sm truncate max-w-[80px] md:max-w-none">{c.author}</span>
-                            <span className="text-gray-400 text-xs truncate max-w-[80px] md:max-w-none">{c.email}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-gray-300">
-                          <div className="max-w-[150px] md:max-w-[420px] truncate text-xs md:text-sm" title={c.content}>
-                            {c.content}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {c.status === "new" ? (
-                            <Badge className="bg-yellow-700 flex items-center gap-1 text-xs">
-                              <CircleDot className="h-2 w-2 md:h-3 md:w-3" /> New
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-gray-700 flex items-center gap-1 text-xs">
-                              <CheckCircle2 className="h-2 w-2 md:h-3 md:w-3" /> Read
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex flex-col gap-1 md:flex-row md:justify-end md:gap-2">
-                            <div className="flex gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
-                                onClick={() => openView(`${c.itemName} • ${c.author}`, c.content)}
-                              >
-                                <Eye className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
-                                <span className="hidden md:inline">View</span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
-                                onClick={() => openReplyForComment(c)}
-                              >
-                                <Reply className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
-                                <span className="hidden md:inline">Reply</span>
-                              </Button>
-                            </div>
-                            <div className="flex gap-1">
-                              {c.status === "new" ? (
-                                <Button size="sm" className="bg-green-700 hover:bg-green-800 h-7 text-xs md:h-8 md:text-sm" onClick={() => markCommentStatus(c.id, "read")}>
-                                  <span className="hidden md:inline">Mark Read</span>
-                                  <span className="md:hidden">Read</span>
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
-                                  onClick={() => markCommentStatus(c.id, "new")}
-                                >
-                                  <span className="hidden md:inline">Mark New</span>
-                                  <span className="md:hidden">New</span>
-                                </Button>
-                              )}
-                              <Button size="sm" variant="destructive" className="bg-red-700 hover:bg-red-800 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2" onClick={() => deleteComment(c.id)}>
-                                <Trash2 className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
-                                <span className="hidden md:inline">Delete</span>
-                              </Button>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-
-            {/* Messages */}
-            <TabsContent value="messages" className="space-y-4">
-              <div className="flex flex-col gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search by subject, name, email or message..."
-                    value={messageSearch}
-                    onChange={(e) => setMessageSearch(e.target.value)}
-                    className="pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setMessageStatus("all")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (messageStatus === "all" ? "ring-1 ring-red-600" : "")}
-                  >
-                    All
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setMessageStatus("new")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (messageStatus === "new" ? "ring-1 ring-red-600" : "")}
-                  >
-                    New
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setMessageStatus("read")}
-                    className={"bg-gray-700 border-gray-600 text-gray-300 text-xs " + (messageStatus === "read" ? "ring-1 ring-red-600" : "")}
-                  >
-                    Read
-                  </Button>
-                  <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 text-gray-300 text-xs" onClick={clearMessages}>
-                    <Trash2 className="h-4 w-4 mr-1" /> Clear All
-                  </Button>
-                </div>
-              </div>
-
-              <Separator className="bg-gray-700" />
-
-              <div className="overflow-auto rounded-md border border-gray-700">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-gray-300 text-xs md:text-sm">Date</TableHead>
-                      <TableHead className="text-gray-300 text-xs md:text-sm">Subject</TableHead>
-                      <TableHead className="text-gray-300 text-xs md:text-sm">From</TableHead>
-                      <TableHead className="text-gray-300 text-xs md:text-sm">Message</TableHead>
-                      <TableHead className="text-gray-300 text-xs md:text-sm">Status</TableHead>
-                      <TableHead className="text-gray-300 text-xs md:text-sm text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredMessages.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-gray-400 text-sm">
-                          No messages
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {filteredMessages.map((m) => (
-                      <TableRow key={m.id} className="hover:bg-gray-800/60">
-                        <TableCell className="text-gray-400 whitespace-nowrap text-xs md:text-sm">{formatDate(m.timestamp)}</TableCell>
-                        <TableCell className="text-white">
-                          <div className="max-w-[120px] md:max-w-none truncate text-xs md:text-sm" title={m.subject}>
-                            {m.subject}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-gray-300">
-                          <div className="flex flex-col">
-                            <span className="text-white text-xs md:text-sm truncate max-w-[80px] md:max-w-none">{m.name}</span>
-                            <span className="text-gray-400 text-xs truncate max-w-[80px] md:max-w-none">{m.email}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-gray-300">
-                          <div className="max-w-[150px] md:max-w-[420px] truncate text-xs md:text-sm" title={m.message}>
-                            {m.message}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {m.status === "new" ? (
-                            <Badge className="bg-yellow-700 flex items-center gap-1 text-xs">
-                              <CircleDot className="h-2 w-2 md:h-3 md:w-3" /> New
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-gray-700 flex items-center gap-1 text-xs">
-                              <CheckCircle2 className="h-2 w-2 md:h-3 md:w-3" /> Read
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex flex-col gap-1 md:flex-row md:justify-end md:gap-2">
-                            <div className="flex gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
-                                onClick={() => openView(m.subject, m.message)}
-                              >
-                                <Eye className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
-                                <span className="hidden md:inline">View</span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
-                                onClick={() => openReplyForMessage(m)}
-                              >
-                                <Reply className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
-                                <span className="hidden md:inline">Reply</span>
-                              </Button>
-                            </div>
-                            <div className="flex gap-1">
-                              {m.status === "new" ? (
-                                <Button size="sm" className="bg-green-700 hover:bg-green-800 h-7 text-xs md:h-8 md:text-sm" onClick={() => markMessageStatus(m.id, "read")}>
-                                  <span className="hidden md:inline">Mark Read</span>
-                                  <span className="md:hidden">Read</span>
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="bg-gray-700 border-gray-600 text-gray-300 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2"
-                                  onClick={() => markMessageStatus(m.id, "new")}
-                                >
-                                  <span className="hidden md:inline">Mark New</span>
-                                  <span className="md:hidden">New</span>
-                                </Button>
-                              )}
-                              <Button size="sm" variant="destructive" className="bg-red-700 hover:bg-red-800 h-7 w-7 p-0 md:h-8 md:w-auto md:p-2" onClick={() => deleteMessage(m.id)}>
-                                <Trash2 className="h-3 w-3 md:h-3.5 md:w-3.5 md:mr-1" />
-                                <span className="hidden md:inline">Delete</span>
-                              </Button>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* View dialog */}
-      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-[95vw] md:max-w-[600px] max-h-[80vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle className="text-sm md:text-lg pr-8">{viewContent?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="text-gray-300 whitespace-pre-wrap text-sm md:text-base leading-relaxed">{viewContent?.body}</div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Comment reply dialog */}
-      <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-[95vw] md:max-w-[500px] max-h-[80vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle className="text-sm md:text-lg pr-8">
-              Reply to {replyTarget?.author}
-              <div className="text-xs md:text-sm text-gray-400 font-normal mt-1 truncate">
-                on {replyTarget?.itemName}
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="text-xs text-gray-400">Your reply will appear on the website as Admin.</div>
-            <Textarea
-              placeholder="Type your reply..."
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              rows={4}
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
-            />
-            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-2">
-              <Button
-                onClick={() => setReplyDialogOpen(false)}
-                variant="outline"
-                size="sm"
-                className="bg-gray-700 border-gray-600 text-gray-300 w-full sm:w-auto"
-                disabled={replySubmitting}
-              >
-                Cancel
-              </Button>
-              <Button onClick={sendAdminReplyToComment} className="bg-red-600 hover:bg-red-700 w-full sm:w-auto" disabled={replySubmitting} size="sm">
-                {replySubmitting ? "Sending..." : "Send Reply"}
-              </Button>
+              <Button size="sm" variant="outline" onClick={loadComments} className="border-[#2d1b54] text-gray-400">Refresh</Button>
             </div>
+
+            {/* Reply dialog */}
+            {replyTarget && (
+              <div className="p-4 border-b border-[#9d4edd]/30 bg-[#9d4edd]/5">
+                <p className="text-[#9d4edd] text-xs font-bold mb-2">Replying to {replyTarget.author} on "{replyTarget.itemName}"</p>
+                <p className="text-gray-400 text-xs mb-3 italic">"{replyTarget.content}"</p>
+                <Textarea value={replyText} onChange={e => setReplyText(e.target.value)} rows={3} placeholder="Write admin reply..."
+                  className="bg-[#1a103c] border-[#2d1b54] text-white text-sm mb-2" />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={sendAdminReply} disabled={replySubmitting || !replyText.trim()} className="bg-[#9d4edd] hover:bg-[#7b2cbf]">
+                    {replySubmitting ? 'Posting...' : 'Post Reply'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setReplyTarget(null); setReplyText("") }} className="border-[#2d1b54] text-gray-400">Cancel</Button>
+                </div>
+              </div>
+            )}
+
+            {filteredComments.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">No comments yet</div>
+            ) : (
+              <div className="divide-y divide-[#2d1b54]/50">
+                {filteredComments.map((c: any) => (
+                  <div key={c.id} className="p-4 hover:bg-white/5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="text-white font-semibold text-sm">{c.author}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_COLORS[c.type] || ''} bg-[#9d4edd]/20 text-[#c77dff]`}>{c.type}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_COLORS[c.status] || ''}`}>{c.status}</span>
+                          <span className="text-gray-600 text-xs">on "{c.itemName}"</span>
+                        </div>
+                        <p className="text-gray-300 text-sm line-clamp-2">{c.content}</p>
+                        <p className="text-gray-600 text-xs mt-1">{formatDate(c.timestamp)}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button onClick={() => { setReplyTarget(c); setReplyText("") }} className="p-1.5 rounded text-gray-500 hover:text-[#9d4edd] hover:bg-[#9d4edd]/10 transition-colors" title="Reply">
+                          <Reply className="w-4 h-4" />
+                        </button>
+                        {c.status === 'new' ? (
+                          <button onClick={() => markComment(c.id, c.itemId, 'read')} className="p-1.5 rounded text-gray-500 hover:text-green-400 hover:bg-green-500/10 transition-colors" title="Mark read">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <button onClick={() => markComment(c.id, c.itemId, 'new')} className="p-1.5 rounded text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" title="Mark new">
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button onClick={() => deleteComment(c.id, c.itemId)} className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
 
-      {/* Message reply dialog (EmailJS) */}
-      <Dialog open={msgReplyDialogOpen} onOpenChange={setMsgReplyDialogOpen}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-[95vw] md:max-w-[600px] max-h-[80vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle className="text-sm md:text-lg pr-8">Reply to {msgReplyTarget?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <Input
-              placeholder="Subject"
-              value={msgReplySubject}
-              onChange={(e) => setMsgReplySubject(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
-            />
-            <Textarea
-              placeholder="Write your message..."
-              value={msgReplyBody}
-              onChange={(e) => setMsgReplyBody(e.target.value)}
-              rows={6}
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm"
-            />
-            <div className="flex flex-col gap-1 text-xs text-gray-400">
-              <span>Will send to: {msgReplyTarget?.email}</span>
-              <span>Powered by Resend (free tier: 100 emails/day)</span>
+        {/* REVIEWS TAB */}
+        <TabsContent value="reviews" className="mt-4">
+          <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-[#2d1b54] flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Input value={reviewSearch} onChange={e => setReviewSearch(e.target.value)} placeholder="Search reviews..."
+                  className="pl-9 bg-[#1a103c] border-[#2d1b54] text-white text-sm" />
+              </div>
+              <Button size="sm" variant="outline" onClick={loadReviews} className="border-[#2d1b54] text-gray-400">Refresh</Button>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-2">
-              <Button
-                onClick={() => setMsgReplyDialogOpen(false)}
-                variant="outline"
-                size="sm"
-                className="bg-gray-700 border-gray-600 text-gray-300 w-full sm:w-auto"
-                disabled={msgSending}
-              >
-                Cancel
-              </Button>
-              <Button onClick={sendEmailReply} className="bg-red-600 hover:bg-red-700 w-full sm:w-auto" disabled={msgSending} size="sm">
-                {msgSending ? "Sending..." : "Send Email"}
-              </Button>
-            </div>
+
+            {filteredReviews.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">No reviews yet</div>
+            ) : (
+              <div className="divide-y divide-[#2d1b54]/50">
+                {filteredReviews.map((r: any) => (
+                  <div key={r.id} className="p-4 hover:bg-white/5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="text-white font-semibold text-sm">{r.user_name}</span>
+                          <div className="flex gap-0.5">
+                            {[1,2,3,4,5].map(s => <Star key={s} className={`w-3 h-3 ${s <= r.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} />)}
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${STATUS_COLORS[r.status] || ''}`}>{r.status}</span>
+                          <span className="text-gray-600 text-xs">on "{r.game_title}"</span>
+                        </div>
+                        {r.content && <p className="text-gray-300 text-sm line-clamp-2">{r.content}</p>}
+                        <p className="text-gray-600 text-xs mt-1">{formatDate(r.created_at)}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {r.status !== 'approved' && (
+                          <button onClick={() => updateReview(r.id, 'approved')} className="p-1.5 rounded text-gray-500 hover:text-green-400 hover:bg-green-500/10 transition-colors" title="Approve">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {r.status !== 'rejected' && (
+                          <button onClick={() => updateReview(r.id, 'rejected')} className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Reject">
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button onClick={() => deleteReview(r.id)} className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

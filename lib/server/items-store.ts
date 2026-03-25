@@ -10,13 +10,25 @@ export interface Item {
   publisher?: string
   size: string
   releaseDate: string
+  publishedDate?: string
   image: string
+  landscapeImage?: string
   rating: string
   trending: boolean
   latest: boolean
   keyFeatures: string[]
   screenshots: string[]
   note?: string
+  trailerUrl?: string
+  steamUrl?: string
+  edition?: string
+  genres?: string[]
+  downloads?: number
+  views?: number
+  uploaderName?: string
+  uploaderId?: string
+  likes?: number
+  dislikes?: number
   systemRequirements: {
     recommended: {
       os: string
@@ -62,6 +74,7 @@ export async function getItems(): Promise<Item[]> {
       ...item,
       longDescription: item.long_description,
       releaseDate: item.release_date,
+      publishedDate: item.published_date,
       keyFeatures: item.key_features || [],
       screenshots: item.screenshots || [],
       note: item.note || "",
@@ -71,7 +84,18 @@ export async function getItems(): Promise<Item[]> {
       sharedRarPassword: item.shared_rar_password,
       cloudDownloads: item.cloud_downloads || [],
       uploadDate: item.upload_date,
-      updatedDate: item.updated_date
+      updatedDate: item.updated_date,
+      trailerUrl: item.trailer_url,
+      steamUrl: item.steam_url,
+      landscapeImage: item.landscape_image,
+      edition: item.edition,
+      genres: item.genres || [],
+      downloads: item.downloads || 0,
+      views: item.views || 0,
+      uploaderName: item.uploader_name,
+      uploaderId: item.uploader_id,
+      likes: item.likes || 0,
+      dislikes: item.dislikes || 0,
     }))
   } catch (error) {
     console.error('Error in getItems:', error)
@@ -81,6 +105,10 @@ export async function getItems(): Promise<Item[]> {
 
 export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'updatedDate'>): Promise<Item> {
   const now = new Date().toISOString()
+  // Random initial downloads (100-200) and views (500-1200) — only set once on creation
+  const initDownloads = itemData.downloads ?? (Math.floor(Math.random() * 101) + 100)
+  const initViews = itemData.views ?? (Math.floor(Math.random() * 701) + 500)
+
   const dbItem = {
     title: itemData.title,
     category: itemData.category,
@@ -90,13 +118,23 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'update
     publisher: itemData.publisher,
     size: itemData.size,
     release_date: itemData.releaseDate,
+    published_date: itemData.publishedDate || null,
     image: itemData.image,
+    landscape_image: itemData.landscapeImage,
     rating: itemData.rating,
     trending: itemData.trending,
     latest: itemData.latest,
     key_features: itemData.keyFeatures,
     screenshots: itemData.screenshots,
     note: itemData.note,
+    trailer_url: itemData.trailerUrl,
+    steam_url: itemData.steamUrl,
+    edition: itemData.edition,
+    genres: itemData.genres || [],
+    downloads: initDownloads,
+    views: initViews,
+    uploader_name: itemData.uploaderName,
+    uploader_id: itemData.uploaderId,
     system_requirements: itemData.systemRequirements,
     android_requirements: itemData.androidRequirements,
     shared_pin_code: itemData.sharedPinCode,
@@ -155,6 +193,7 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'update
     ...data,
     longDescription: data.long_description,
     releaseDate: data.release_date,
+    publishedDate: data.published_date,
     keyFeatures: data.key_features || [],
     screenshots: cleanedScreenshots,
     note: data.note || "",
@@ -164,7 +203,18 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'update
     sharedRarPassword: data.shared_rar_password,
     cloudDownloads: data.cloud_downloads || [],
     uploadDate: data.upload_date,
-    updatedDate: data.updated_date
+    updatedDate: data.updated_date,
+    trailerUrl: data.trailer_url,
+    steamUrl: data.steam_url,
+    landscapeImage: data.landscape_image,
+    edition: data.edition,
+    genres: data.genres || [],
+    downloads: data.downloads || 0,
+    views: data.views || 0,
+    uploaderName: data.uploader_name,
+    uploaderId: data.uploader_id,
+    likes: data.likes || 0,
+    dislikes: data.dislikes || 0,
   }
 }
 
@@ -179,6 +229,7 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
   if (itemData.publisher !== undefined) dbUpdate.publisher = itemData.publisher
   if (itemData.size !== undefined) dbUpdate.size = itemData.size
   if (itemData.releaseDate !== undefined) dbUpdate.release_date = itemData.releaseDate
+  if (itemData.publishedDate !== undefined) dbUpdate.published_date = itemData.publishedDate
   if (itemData.image !== undefined) dbUpdate.image = itemData.image
   if (itemData.rating !== undefined) dbUpdate.rating = itemData.rating
   if (itemData.trending !== undefined) dbUpdate.trending = itemData.trending
@@ -192,6 +243,14 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
   if (itemData.sharedRarPassword !== undefined) dbUpdate.shared_rar_password = itemData.sharedRarPassword
   if (itemData.cloudDownloads !== undefined) dbUpdate.cloud_downloads = itemData.cloudDownloads
   if (itemData.uploadDate !== undefined) dbUpdate.upload_date = itemData.uploadDate
+  if (itemData.trailerUrl !== undefined) dbUpdate.trailer_url = itemData.trailerUrl
+  if (itemData.steamUrl !== undefined) dbUpdate.steam_url = itemData.steamUrl
+  if (itemData.landscapeImage !== undefined) dbUpdate.landscape_image = itemData.landscapeImage
+  if (itemData.edition !== undefined) dbUpdate.edition = itemData.edition
+  if (itemData.genres !== undefined) dbUpdate.genres = itemData.genres
+  if (itemData.uploaderName !== undefined) dbUpdate.uploader_name = itemData.uploaderName
+  if (itemData.uploaderId !== undefined) dbUpdate.uploader_id = itemData.uploaderId
+  // NOTE: downloads and views are NOT updated here — they are managed separately
   
   // Automatically set updated_date to current timestamp whenever an item is edited
   dbUpdate.updated_date = new Date().toISOString()
@@ -213,6 +272,7 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
     ...data,
     longDescription: data.long_description,
     releaseDate: data.release_date,
+    publishedDate: data.published_date,
     keyFeatures: data.key_features || [],
     screenshots: data.screenshots || [],
     note: data.note || "",
@@ -222,7 +282,18 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
     sharedRarPassword: data.shared_rar_password,
     cloudDownloads: data.cloud_downloads || [],
     uploadDate: data.upload_date,
-    updatedDate: data.updated_date
+    updatedDate: data.updated_date,
+    trailerUrl: data.trailer_url,
+    steamUrl: data.steam_url,
+    landscapeImage: data.landscape_image,
+    edition: data.edition,
+    genres: data.genres || [],
+    downloads: data.downloads || 0,
+    views: data.views || 0,
+    uploaderName: data.uploader_name,
+    uploaderId: data.uploader_id,
+    likes: data.likes || 0,
+    dislikes: data.dislikes || 0,
   }
 }
 

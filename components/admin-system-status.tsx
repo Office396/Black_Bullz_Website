@@ -24,13 +24,18 @@ interface SystemStatus {
     lastDeployment?: string
   }
   usage: {
-    databaseSize: string
-    bandwidthUsed: string
+    storageUsed: string
+    storageBuckets: Array<{ name: string; size: string; sizeBytes: number }>
+    storagePercent: number
     tier: string
-    limits: {
-      databaseSize: string
-      bandwidth: string
-    }
+    quotas: Array<{
+      name: string
+      limit: string
+      used: string | null
+      percent: number | null
+      description: string
+      dashboardUrl?: string | null
+    }>
   }
 }
 
@@ -180,25 +185,66 @@ export default function AdminSystemStatus() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Usage Statistics
+            Free Tier Quotas
           </CardTitle>
-          <CardDescription>Current usage vs limits</CardDescription>
+          <CardDescription>Supabase free plan limits — storage is measured in real-time, others require the Supabase dashboard</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span>Tier:</span>
-            <Badge variant="outline">{status.usage.tier}</Badge>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Database Size:</span>
-              <span>{status.usage.databaseSize} / {status.usage.limits.databaseSize}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Bandwidth:</span>
-              <span>{status.usage.bandwidthUsed} / {status.usage.limits.bandwidth}</span>
-            </div>
+        <CardContent className="space-y-0 p-0">
+          <div className="divide-y divide-[#2d1b54]/50">
+            {status.usage.quotas.map(q => (
+              <div key={q.name} className="px-6 py-4">
+                <div className="flex items-start justify-between gap-4 mb-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-white font-semibold text-sm">{q.name}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#9d4edd]/20 text-[#c77dff] font-mono">{q.limit}</span>
+                    </div>
+                    <p className="text-gray-500 text-xs mt-0.5">{q.description}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    {q.used ? (
+                      <span className="text-sm font-semibold text-white">{q.used}</span>
+                    ) : q.dashboardUrl ? (
+                      <a
+                        href={q.dashboardUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-[#9d4edd] hover:text-[#c77dff] underline underline-offset-2 transition-colors"
+                      >
+                        View in Dashboard →
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-600 italic">unavailable</span>
+                    )}
+                  </div>
+                </div>
+                {q.percent !== null && (
+                  <div className="mt-2">
+                    <div className="w-full bg-[#1a103c] rounded-full h-2 overflow-hidden">
+                      <div
+                        className={`h-2 rounded-full transition-all ${q.percent > 80 ? 'bg-red-500' : q.percent > 50 ? 'bg-yellow-500' : 'bg-[#9d4edd]'}`}
+                        style={{ width: `${Math.max(q.percent, 0.5)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">{q.percent}% used</p>
+                  </div>
+                )}
+                {/* Storage bucket breakdown */}
+                {q.name === 'File Storage' && status.usage.storageBuckets.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {status.usage.storageBuckets.map(b => (
+                      <div key={b.name} className="flex justify-between text-xs text-gray-500 pl-2 border-l border-[#2d1b54]">
+                        <span className="font-mono">{b.name}</span>
+                        <span>{b.size}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {q.name === 'File Storage' && status.usage.storageBuckets.length === 0 && (
+                  <p className="text-xs text-gray-600 mt-1 pl-2">No storage buckets found</p>
+                )}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

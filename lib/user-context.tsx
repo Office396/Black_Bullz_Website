@@ -12,10 +12,15 @@ export interface AuthUser {
   bio: string
   role: 'user' | 'creator' | 'admin'
   subscription_plan: 'free' | 'fighter' | 'leader' | 'revolutionist'
+  subscription_status: 'free' | 'pending' | 'active' | 'rejected'
+  subscription_pending_plan: string | null
+  subscription_reject_reason: string | null
   subscription_expires_at: string | null
   is_creator: boolean
   badges: string[]
   created_at: string
+  creator_portal_id: string | null
+  creator_portal_password: string | null
 }
 
 interface UserContextType {

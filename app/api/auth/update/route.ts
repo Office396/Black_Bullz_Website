@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserByToken, updateUser, changePassword, deleteUser } from '@/lib/server/user-store'
+import { getUserByToken, updateUser, changePassword, changeCreatorPortalPassword, deleteUser } from '@/lib/server/user-store'
 
 async function getUser(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
@@ -21,6 +21,12 @@ export async function POST(req: NextRequest) {
   if (body.action === 'change_password') {
     const result = await changePassword(user.id, body.currentPassword, body.newPassword)
     if (result.error) return NextResponse.json({ error: result.error }, { status: 400 })
+    return NextResponse.json({ success: true })
+  }
+
+  if (body.action === 'change_creator_portal_password') {
+    if (!user.is_creator) return NextResponse.json({ error: 'Not a creator' }, { status: 403 })
+    await changeCreatorPortalPassword(user.id, body.newPassword)
     return NextResponse.json({ success: true })
   }
 

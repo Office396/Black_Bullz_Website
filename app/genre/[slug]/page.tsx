@@ -1,16 +1,10 @@
 import { getItems } from "@/lib/server/items-store"
+import { supabase } from "@/lib/supabase"
 import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
 import { Gamepad2 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-
-const allGenres = [
-  "Action", "Adventure", "Anime", "Classic", "Fighting", "Horror", "Indie",
-  "Multiplayer", "Open World", "Puzzle", "Racing", "RPG", "Simulation",
-  "Sports", "Survival", "VR", "FPS", "Strategy", "Platformer", "Stealth",
-  "Roguelike", "Sandbox", "Visual Novel", "Casual", "Educational", "Music"
-]
 
 interface GenrePageProps {
   params: { slug: string }
@@ -21,16 +15,26 @@ export default async function GenrePage({ params }: GenrePageProps) {
   const genreName = genreSlug.charAt(0).toUpperCase() + genreSlug.slice(1).replace(/-/g, " ")
 
   let items: any[] = []
+  let genres: any[] = []
   try {
-    items = await getItems()
+    [items, { data: genres }] = await Promise.all([
+      getItems(),
+      supabase.from('custom_genres').select('name, slug').order('name').limit(12),
+    ])
   } catch (error) {
     console.error("Error fetching items:", error)
   }
 
-  const filteredGames = items.filter(game =>
-    game.category.toLowerCase().includes(genreSlug.replace(/-/g, " ").toLowerCase()) ||
-    genreSlug === "all"
-  )
+  const filteredGames = items.filter(game => {
+    if (genreSlug === "all") return true
+    const genreMatch = genreSlug.replace(/-/g, " ").toLowerCase()
+    // Check genres array field first
+    if (Array.isArray(game.genres) && game.genres.length > 0) {
+      return game.genres.some((g: string) => g.toLowerCase() === genreMatch || g.toLowerCase().replace(/ /g, '-') === genreSlug)
+    }
+    // Fallback: category match
+    return game.category.toLowerCase().includes(genreMatch)
+  })
 
   return (
     <div className="min-h-screen bg-[#090514]">
@@ -48,18 +52,18 @@ export default async function GenrePage({ params }: GenrePageProps) {
             <Link href="/genres" className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-all">
               All Genres
             </Link>
-            {allGenres.slice(0, 10).map((genre) => (
+            {(genres || []).map((genre: any) => (
               <Link
-                key={genre}
-                href={`/genre/${genre.toLowerCase().replace(/ /g, "-")}`}
+                key={genre.slug}
+                href={`/genre/${genre.slug}`}
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                  genre.toLowerCase().replace(/ /g, "-") === genreSlug
+                  genre.slug === genreSlug
                     ? "bg-[#9d4edd] text-white"
                     : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
                 )}
               >
-                {genre}
+                {genre.name}
               </Link>
             ))}
           </div>

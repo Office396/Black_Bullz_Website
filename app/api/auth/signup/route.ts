@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
     const result = await createUser({ name, username, email, password })
     if ('error' in result) return NextResponse.json({ error: result.error }, { status: 400 })
     return NextResponse.json({ success: true, user: result.user, token: result.token })
-  } catch {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  } catch (e: any) {
+    console.error('[signup error]', e?.message || e)
+    return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
   }
 }

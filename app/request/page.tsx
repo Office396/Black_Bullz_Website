@@ -1,12 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
-import { MessageSquarePlus, ArrowRight, Shield, Clock, Users, LogIn, Send } from "lucide-react"
+import { MessageSquarePlus, ArrowRight, Shield, Send, LogIn, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useUser } from "@/lib/user-context"
 import { cn } from "@/lib/utils"
+
+const STATUS_STYLES: Record<string, string> = {
+  pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  processing: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  completed: "bg-green-500/20 text-green-400 border-green-500/30",
+  rejected: "bg-red-500/20 text-red-400 border-red-500/30",
+}
 
 export default function RequestPage() {
   const { user, token } = useUser()
@@ -16,11 +23,40 @@ export default function RequestPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState("")
+  const [myRequests, setMyRequests] = useState<any[]>([])
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const loadMyRequests = async () => {
+    if (!user) return
+    const res = await fetch(`/api/requests?user_id=${user.id}`)
+    const data = await res.json()
+    if (data.requests) {
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000
+      setMyRequests(data.requests.filter((r: any) => {
+        if (r.status === 'completed' && new Date(r.created_at).getTime() < oneDayAgo) return false
+        return true
+      }))
+    }
+  }
+
+  const deleteRequest = async (id: string) => {
+    if (!confirm("Delete this request?")) return
+    setDeletingId(id)
+    await fetch(`/api/requests?id=${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    setDeletingId(null)
+    loadMyRequests()
+  }
+
+  useEffect(() => { loadMyRequests() }, [user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!gameTitle.trim()) return
     setSubmitting(true)
+    setError("")
     try {
       const res = await fetch('/api/requests', {
         method: 'POST',
@@ -28,8 +64,12 @@ export default function RequestPage() {
         body: JSON.stringify({ gameTitle, platform, description, userName: user?.name })
       })
       const data = await res.json()
-      if (data.success) { setSubmitted(true); setGameTitle(""); setDescription("") }
-      else setError(data.error || "Failed to submit")
+      if (data.success) {
+        setSubmitted(true)
+        setGameTitle("")
+        setDescription("")
+        loadMyRequests()
+      } else setError(data.error || "Failed to submit")
     } catch { setError("Something went wrong") }
     setSubmitting(false)
   }
@@ -120,6 +160,40 @@ export default function RequestPage() {
                   {submitting ? "Submitting..." : "Submit Request"}
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* My Requests History */}
+          {user && myRequests.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-white font-bold mb-4 text-lg">My Requests</h2>
+              <div className="space-y-3">
+                {myRequests.map(r => (
+                  <div key={r.id} className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-semibold text-sm truncate">{r.game_title}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400">{r.platform}</span>
+                        <span className="text-gray-600 text-xs">{new Date(r.created_at).toLocaleDateString()}</span>
+                        {r.description && <span className="text-gray-500 text-xs truncate max-w-[200px]">{r.description}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={cn("text-xs font-bold px-3 py-1 rounded-full border capitalize", STATUS_STYLES[r.status] || "bg-gray-500/20 text-gray-400 border-gray-500/30")}>
+                        {r.status}
+                      </span>
+                      <button
+                        onClick={() => deleteRequest(r.id)}
+                        disabled={deletingId === r.id}
+                        className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                        title="Delete request"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

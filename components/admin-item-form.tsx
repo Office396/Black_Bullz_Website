@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,7 +26,9 @@ const cleanScreenshotUrl = (url: string): string => {
 
 interface FormData {
   title: string; category: string; description: string; longDescription: string
-  developer: string; publisher?: string; size: string; releaseDate: string; image: string
+  developer: string; publisher?: string; size: string; releaseDate: string; publishedDate?: string; image: string
+  landscapeImage?: string; trailerUrl?: string; steamUrl?: string; edition?: string
+  genres?: string[]
   rating: string; latest: boolean; keyFeatures: string[]; screenshots: string[]; note?: string
   systemRequirements: { recommended: { os: string; processor: string; memory: string; graphics: string; storage: string; directx: string; sound_card: string } }
   androidRequirements: { recommended: { os: string; ram: string; storage: string; processor: string } }
@@ -36,7 +38,8 @@ interface FormData {
 
 const initialFormData: FormData = {
   title: "", category: "", description: "", longDescription: "", developer: "", publisher: "",
-  size: "", releaseDate: "", image: "", rating: "4.0", latest: true, keyFeatures: [""],
+  size: "", releaseDate: "", publishedDate: "", image: "", landscapeImage: "", trailerUrl: "", steamUrl: "", edition: "",
+  genres: [], rating: "4.0", latest: true, keyFeatures: [""],
   screenshots: [], note: "",
   systemRequirements: { recommended: { os: "", processor: "", memory: "", graphics: "", storage: "", directx: "", sound_card: "" } },
   androidRequirements: { recommended: { os: "Android 12", ram: "8 GB", storage: "350 MB", processor: "Snapdragon / MediaTek (Average Processors)" } },
@@ -44,12 +47,26 @@ const initialFormData: FormData = {
   cloudDownloads: [{ cloudName: "", partsNumber: undefined, version: undefined, actualDownloadLinks: [{ name: "", url: "", size: "" }] }],
 }
 
-export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: () => void }) {
+export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHeaders, overrideMethod, overrideBody, onTitleChange }: {
+  editItem?: any
+  onSave?: () => void
+  overrideApiUrl?: string
+  overrideApiHeaders?: Record<string, string>
+  overrideMethod?: (isEdit: boolean) => string
+  overrideBody?: (isEdit: boolean, id: number | undefined, formData: any) => any
+  onTitleChange?: (title: string) => void
+}) {
   const [formData, setFormData] = useState<FormData>(() => {
     if (editItem) {
       return {
         ...editItem,
         publisher: editItem.publisher || "",
+        publishedDate: editItem.publishedDate || editItem.releaseDate || "",
+        landscapeImage: editItem.landscapeImage || "",
+        trailerUrl: editItem.trailerUrl || "",
+        steamUrl: editItem.steamUrl || "",
+        edition: editItem.edition || "",
+        genres: editItem.genres || [],
         screenshots: editItem.screenshots || [],
         note: editItem.note || "",
         sharedPinCode: editItem.sharedPinCode || "1234",
@@ -65,15 +82,22 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const url = "/api/items"
-      const method = editItem ? "PUT" : "POST"
-      const body = editItem ? { id: editItem.id, ...formData } : formData
-      const response = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      const isEdit = !!editItem
+      const url = overrideApiUrl || "/api/items"
+      const method = overrideMethod ? overrideMethod(isEdit) : (isEdit ? "PUT" : "POST")
+      const body = overrideBody
+        ? overrideBody(isEdit, editItem?.id, formData)
+        : (isEdit ? { id: editItem.id, ...formData } : formData)
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", ...(overrideApiHeaders || {}) },
+        body: JSON.stringify(body)
+      })
       const result = await response.json()
       if (response.ok && result.success) {
-        alert(editItem ? "Item updated successfully!" : "Item saved successfully!")
+        alert(isEdit ? "Item updated successfully!" : "Item saved successfully!")
         if (onSave) onSave()
-        if (!editItem) setFormData({ ...initialFormData, sharedPinCode: String(Math.floor(1000 + Math.random() * 9000)) })
+        if (!isEdit) setFormData({ ...initialFormData, sharedPinCode: String(Math.floor(1000 + Math.random() * 9000)) })
       } else { throw new Error(result.error || "Failed to save item.") }
     } catch (err) { console.error("Failed to save item", err); alert("Failed to save item. Please try again.") }
   }
@@ -109,6 +133,31 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
 
   const [sysReqTextMode, setSysReqTextMode] = useState(false)
   const [sysReqTextInput, setSysReqTextInput] = useState("")
+  const [availableGenres, setAvailableGenres] = useState<Array<{ name: string; slug: string }>>([])
+  const [newGenreInput, setNewGenreInput] = useState("")
+  const [addingGenre, setAddingGenre] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/genres').then(r => r.json()).then(d => { if (d.genres) setAvailableGenres(d.genres) }).catch(() => {})
+  }, [])
+
+  const addCustomGenre = async () => {
+    if (!newGenreInput.trim()) return
+    setAddingGenre(true)
+    const res = await fetch('/api/genres', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newGenreInput.trim() }) })
+    const data = await res.json()
+    if (data.genre) {
+      setAvailableGenres(prev => [...prev, data.genre].sort((a, b) => a.name.localeCompare(b.name)))
+      setFormData(fd => ({ ...fd, genres: [...(fd.genres || []), data.genre.name] }))
+    }
+    setNewGenreInput("")
+    setAddingGenre(false)
+  }
+
+  const toggleGenre = (name: string) => {
+    const current = formData.genres || []
+    setFormData({ ...formData, genres: current.includes(name) ? current.filter(g => g !== name) : [...current, name] })
+  }
 
   const parseSystemRequirements = useCallback((text: string) => {
     const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0)
@@ -184,7 +233,10 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="title" className="text-white text-sm">Title *</Label>
-                    <Input id="title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" required />
+                    <Input id="title" value={formData.title} onChange={e => {
+                      setFormData({ ...formData, title: e.target.value })
+                      if (onTitleChange) onTitleChange(e.target.value)
+                    }} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" required />
                   </div>
                   <div>
                     <Label htmlFor="category" className="text-white text-sm">Category *</Label>
@@ -231,6 +283,17 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="releaseDate" className="text-white text-sm">Release Date <span className="text-gray-500 text-xs">(original game release)</span></Label>
+                    <Input id="releaseDate" type="date" value={formData.releaseDate} onChange={e => setFormData({ ...formData, releaseDate: e.target.value })} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" />
+                  </div>
+                  <div>
+                    <Label htmlFor="publishedDate" className="text-white text-sm">Published Date <span className="text-gray-500 text-xs">(when you published on site)</span></Label>
+                    <Input id="publishedDate" type="date" value={formData.publishedDate || ""} onChange={e => setFormData({ ...formData, publishedDate: e.target.value })} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="size" className="text-white text-sm">File Size</Label>
@@ -241,10 +304,60 @@ export function AdminItemForm({ editItem, onSave }: { editItem?: any; onSave?: (
                     <Input id="rating" type="number" min="1" max="10" step="0.1" value={formData.rating} onChange={e => setFormData({ ...formData, rating: e.target.value })} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" />
                   </div>
                   <div>
-                    <Label htmlFor="image" className="text-white text-sm">Image URL</Label>
+                    <Label htmlFor="image" className="text-white text-sm">Image URL (Cover)</Label>
                     <Input id="image" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" placeholder="https://example.com/image.jpg" />
                   </div>
                 </div>
+
+                {/* New fields row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="landscapeImage" className="text-white text-sm">Landscape Image URL <span className="text-gray-500 text-xs">(profile background)</span></Label>
+                    <Input id="landscapeImage" value={formData.landscapeImage || ""} onChange={e => setFormData({ ...formData, landscapeImage: e.target.value })} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" placeholder="https://example.com/landscape.jpg" />
+                  </div>
+                  <div>
+                    <Label htmlFor="edition" className="text-white text-sm">Edition <span className="text-gray-500 text-xs">(optional, e.g. Deluxe, GOTY)</span></Label>
+                    <Input id="edition" value={formData.edition || ""} onChange={e => setFormData({ ...formData, edition: e.target.value })} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" placeholder="e.g. Deluxe Edition" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="trailerUrl" className="text-white text-sm">Trailer URL <span className="text-gray-500 text-xs">(YouTube link)</span></Label>
+                    <Input id="trailerUrl" value={formData.trailerUrl || ""} onChange={e => setFormData({ ...formData, trailerUrl: e.target.value })} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" placeholder="https://www.youtube.com/watch?v=..." />
+                  </div>
+                  <div>
+                    <Label htmlFor="steamUrl" className="text-white text-sm">Steam URL <span className="text-gray-500 text-xs">(leave empty to auto-search)</span></Label>
+                    <Input id="steamUrl" value={formData.steamUrl || ""} onChange={e => setFormData({ ...formData, steamUrl: e.target.value })} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" placeholder="https://store.steampowered.com/app/..." />
+                  </div>
+                </div>
+
+                {/* Genres */}
+                <div>
+                  <Label className="text-white text-sm mb-2 block">Genres</Label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {availableGenres.map(g => (
+                      <button key={g.slug} type="button" onClick={() => toggleGenre(g.name)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors border ${(formData.genres || []).includes(g.name) ? 'bg-[#9d4edd] border-[#9d4edd] text-white' : 'bg-[#1a103c] border-[#2d1b54] text-gray-400 hover:border-[#9d4edd]/50'}`}>
+                        {g.name}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input value={newGenreInput} onChange={e => setNewGenreInput(e.target.value)} placeholder="Add new genre..." className="bg-[#1a103c] border-[#2d1b54] text-white text-sm flex-1" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomGenre() } }} />
+                    <Button type="button" onClick={addCustomGenre} disabled={addingGenre || !newGenreInput.trim()} variant="outline" className="bg-[#1a103c] border-[#2d1b54] text-white whitespace-nowrap">
+                      <Plus className="w-4 h-4 mr-1" /> Add
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Upload date info (read-only display) */}
+                {editItem && (
+                  <div className="bg-[#1a103c]/50 border border-[#2d1b54] rounded-xl p-3 text-xs text-gray-500 space-y-1">
+                    {editItem.uploadDate && <p>📅 Uploaded: <span className="text-gray-300">{new Date(editItem.uploadDate).toLocaleString()}</span></p>}
+                    {editItem.updatedDate && <p>🔄 Last Updated: <span className="text-gray-300">{new Date(editItem.updatedDate).toLocaleString()}</span></p>}
+                  </div>
+                )}
 
                 <div>
                   <Label className="text-white text-sm">Short Description</Label>

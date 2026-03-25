@@ -73,12 +73,11 @@ export default function SubscribePage() {
     })
     const data = await res.json()
     setLoading(null)
-    if (data.success) {
-      await refreshUser()
-      setMsg("Subscription activated! Welcome to the team.")
-      setTimeout(() => router.push('/profile'), 2000)
+    if (data.error) {
+      setMsg(data.error)
     } else {
-      setMsg(data.error || "Something went wrong")
+      await refreshUser()
+      setMsg("Subscription request submitted! The admin will verify your payment and activate your plan shortly.")
     }
   }
 
@@ -107,8 +106,33 @@ export default function SubscribePage() {
             <div className="mb-8 p-4 rounded-xl text-center font-semibold text-green-400 border border-green-500/30 bg-green-500/10">{msg}</div>
           )}
 
+          {/* Pending verification banner */}
+          {user && user.subscription_status === 'pending' && (
+            <div className="mb-8 p-5 rounded-xl border" style={{ background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.4)" }}>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-yellow-400 text-sm">⏳</span>
+                </div>
+                <div>
+                  <p className="text-yellow-400 font-bold text-sm">Payment Verification Pending</p>
+                  <p className="text-gray-400 text-sm mt-1">Your <span className="text-white font-semibold">{user.subscription_pending_plan}</span> plan request is awaiting admin verification. You'll receive a notification once approved.</p>
+                  <p className="text-gray-500 text-xs mt-2">Please send your payment proof to the admin. Once verified, your plan will be activated automatically.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Rejected banner */}
+          {user && user.subscription_status === 'rejected' && (
+            <div className="mb-8 p-5 rounded-xl border" style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.4)" }}>
+              <p className="text-red-400 font-bold text-sm mb-1">❌ Subscription Not Verified</p>
+              <p className="text-gray-400 text-sm">{user.subscription_reject_reason || 'Your payment could not be verified.'}</p>
+              <p className="text-gray-500 text-xs mt-2">You can try subscribing again after resolving the issue.</p>
+            </div>
+          )}
+
           {/* Current plan indicator */}
-          {user && user.subscription_plan !== 'free' && (
+          {user && user.subscription_plan !== 'free' && user.subscription_status === 'active' && (
             <div className="mb-8 p-4 rounded-xl text-center border" style={{ background: "rgba(157,78,221,0.1)", borderColor: "rgba(157,78,221,0.3)" }}>
               <p className="text-[#c77dff] font-semibold">You are currently on the <span className="font-black">{user.subscription_plan}</span> plan {plans.find(p => p.id === user.subscription_plan)?.badge}</p>
             </div>
@@ -117,7 +141,8 @@ export default function SubscribePage() {
           {/* Plans */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             {plans.map(plan => {
-              const isCurrentPlan = user?.subscription_plan === plan.id
+              const isCurrentPlan = user?.subscription_plan === plan.id && user?.subscription_status === 'active'
+              const isPending = user?.subscription_status === 'pending'
               return (
                 <div key={plan.id} className={cn("relative rounded-2xl border p-6 flex flex-col transition-all", plan.popular && "scale-[1.02]")}
                   style={{ background: `linear-gradient(135deg, ${plan.gradient.replace('from-', '').replace('to-', '')})`, borderColor: plan.border, backgroundImage: `linear-gradient(135deg, rgba(18,11,34,0.95), rgba(9,5,20,0.95))` }}>
@@ -153,11 +178,11 @@ export default function SubscribePage() {
 
                   <button
                     onClick={() => subscribe(plan.id)}
-                    disabled={isCurrentPlan || loading === plan.id}
+                    disabled={isCurrentPlan || isPending || loading === plan.id}
                     className="w-full py-3 rounded-xl font-bold text-white transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                     style={{ background: isCurrentPlan ? "rgba(157,78,221,0.3)" : `linear-gradient(135deg, ${plan.color}, ${plan.color}cc)` }}
                   >
-                    {isCurrentPlan ? "Current Plan ✓" : loading === plan.id ? "Activating..." : "Subscribe"}
+                    {isCurrentPlan ? "Current Plan ✓" : isPending ? "Verification Pending..." : loading === plan.id ? "Submitting..." : "Subscribe"}
                   </button>
                 </div>
               )

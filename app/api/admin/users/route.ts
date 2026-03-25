@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllUsers } from '@/lib/server/user-store'
-import { sendNotification } from '@/lib/server/user-store'
+import { getAllUsers, sendNotification, approvePlan, rejectPlan } from '@/lib/server/user-store'
 import { supabase } from '@/lib/supabase'
 
 export async function GET() {
@@ -31,5 +30,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   }
 
+  if (body.action === 'approve_subscription') {
+    await approvePlan(body.user_id)
+    return NextResponse.json({ success: true })
+  }
+
+  if (body.action === 'reject_subscription') {
+    await rejectPlan(body.user_id, body.reason || 'Payment could not be verified.')
+    return NextResponse.json({ success: true })
+  }
+
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
 }
+

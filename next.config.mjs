@@ -9,6 +9,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  serverExternalPackages: ['crypto'],
   async redirects() {
     return [
       {

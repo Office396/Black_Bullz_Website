@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
 import { useUser } from "@/lib/user-context"
-import { User, History, Star, Settings, Crown, Camera, Save, AlertTriangle, Bell, Eye, EyeOff, Trash2 } from "lucide-react"
+import { User, History, Star, Settings, Crown, Camera, Save, AlertTriangle, Bell, Eye, EyeOff, Trash2, ThumbsUp } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
@@ -17,6 +17,7 @@ function ProfileContent() {
 
   const [favouriteGames, setFavouriteGames] = useState<any[]>([])
   const [historyGames, setHistoryGames] = useState<any[]>([])
+  const [likedGames, setLikedGames] = useState<any[]>([])
   const [allGames, setAllGames] = useState<any[]>([])
 
   // Profile edit
@@ -25,6 +26,10 @@ function ProfileContent() {
   const [bio, setBio] = useState("")
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState("")
+
+  // Creator portal password
+  const [portalPw, setPortalPw] = useState("")
+  const [portalPwMsg, setPortalPwMsg] = useState("")
 
   // Password
   const [currentPw, setCurrentPw] = useState("")
@@ -60,6 +65,11 @@ function ProfileContent() {
         const histIds = histData.history.map((h: any) => h.game_id)
         setHistoryGames(games.filter((g: any) => histIds.includes(g.id)))
       }
+      // Liked games — fetch from reactions
+      fetch('/api/reactions/user', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).then(d => {
+          if (d.likedGameIds) setLikedGames(games.filter((g: any) => d.likedGameIds.includes(g.id)))
+        }).catch(() => {})
     }).catch(() => {})
   }, [token])
 
@@ -96,6 +106,17 @@ function ProfileContent() {
     setTimeout(() => setPwMsg(""), 3000)
   }
 
+  const changeCreatorPortalPassword = async () => {
+    if (!portalPw || portalPw.length < 6) { setPortalPwMsg("Password must be at least 6 characters"); return }
+    const res = await fetch('/api/auth/update', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'change_creator_portal_password', newPassword: portalPw })
+    })
+    const data = await res.json()
+    if (data.error) { setPortalPwMsg(data.error) } else { setPortalPwMsg("Portal password updated!"); setPortalPw(""); refreshUser() }
+    setTimeout(() => setPortalPwMsg(""), 3000)
+  }
+
   const deleteAccount = async () => {
     if (!deleteChecked || !deleteConfirmPw) return
     await fetch('/api/auth/update', {
@@ -108,9 +129,9 @@ function ProfileContent() {
 
   const tabs = [
     { id: "overview", label: "Overview", icon: User },
-    { id: 
-"history", label: "Watch History", icon: History },
+    { id: "history", label: "Watch History", icon: History },
     { id: "favourites", label: "Favourites", icon: Star },
+    { id: "likes", label: "Likes", icon: ThumbsUp },
     { id: "settings", label: "Settings", icon: Settings },
   ]
 
@@ -118,9 +139,21 @@ function ProfileContent() {
 
   return (
     <div className="min-h-screen bg-[#090514]">
-      {/* Banner */}
-      <div className="relative h-40 sm:h-52" style={{ background: user.banner || "linear-gradient(135deg, #1a103c, #2d1b54, #9d4edd)" }}>
-        <div className="absolute inset-0 bg-black/20" />
+      {/* Banner — uses landscape image from most recent history/favourite game if available */}
+      <div className="relative h-40 sm:h-52 overflow-hidden">
+        {(() => {
+          // Find first game with a landscapeImage set
+          const bgGame = [...historyGames, ...favouriteGames].find(g => g.landscapeImage) || historyGames[0] || favouriteGames[0]
+          const bgImg = bgGame?.landscapeImage || null
+          return bgImg ? (
+            <>
+              <img src={bgImg} alt="" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/55" style={{ backdropFilter: "blur(0.5px)" }} />
+            </>
+          ) : (
+            <div className="w-full h-full" style={{ background: user.banner || "linear-gradient(135deg, #1a103c, #2d1b54, #9d4edd)" }} />
+          )
+        })()}
       </div>
 
       {/* Profile header */}
@@ -232,6 +265,26 @@ function ProfileContent() {
           </div>
         )}
 
+        {tab === "likes" && (
+          <div className="pb-12">
+            <h2 className="text-white font-bold mb-4">Liked Games</h2>
+            {likedGames.length === 0 ? (
+              <p className="text-gray-500 text-sm">No liked games yet. Like a game on its page to see it here.</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                {likedGames.map(g => (
+                  <Link key={g.id} href={`/game/${g.id}`} className="group">
+                    <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
+                      <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                    <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {tab === "settings" && (
           <div className="pb-12 max-w-2xl space-y-6">
             {/* Edit Profile */}
@@ -303,6 +356,29 @@ function ProfileContent() {
                 </button>
               </div>
             </div>
+
+            {/* Creator Portal Password */}
+            {user.is_creator && (
+              <div className="rounded-2xl border p-6" style={{ background: "rgba(18,11,34,0.8)", borderColor: "rgba(245,158,11,0.3)" }}>
+                <h3 className="text-white font-bold mb-1 flex items-center gap-2"><span className="text-yellow-400">👑</span> Creator Portal Password</h3>
+                <p className="text-gray-500 text-xs mb-4">Change the password used to log into your Creator Portal. Your Portal ID stays the same.</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-gray-400 text-sm mb-1 block">Portal ID (read-only)</label>
+                    <input value={user.creator_portal_id || ''} disabled className="w-full bg-[#1a103c]/50 border border-[#2d1b54] rounded-xl px-4 py-2.5 text-gray-400 outline-none text-sm font-mono cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-sm mb-1 block">New Portal Password</label>
+                    <input type="text" placeholder="New portal password" value={portalPw} onChange={e => setPortalPw(e.target.value)}
+                      className="w-full bg-[#1a103c] border border-[#2d1b54] focus:border-yellow-500/50 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 outline-none transition-colors text-sm" />
+                  </div>
+                  {portalPwMsg && <p className={cn("text-sm", portalPwMsg.includes("!") ? "text-green-400" : "text-red-400")}>{portalPwMsg}</p>}
+                  <button onClick={changeCreatorPortalPassword} className="px-5 py-2.5 rounded-xl font-semibold text-white text-sm transition-all hover:scale-[1.02]" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>
+                    Update Portal Password
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Delete Account */}
             <div className="rounded-2xl border p-6" style={{ background: "rgba(239,68,68,0.05)", borderColor: "rgba(239,68,68,0.3)" }}>

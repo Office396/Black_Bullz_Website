@@ -305,11 +305,20 @@ export function Header() {
   const handleRandomGame = async () => {
     setIsSpinning(true)
     try {
-      const response = await fetch("/api/items")
-      const result = await response.json()
-      if (result.success && result.data.length > 0) {
-        const randomIndex = Math.floor(Math.random() * result.data.length)
-        const gameId = result.data[randomIndex].id
+      // Use cached games if available — much faster
+      let games = allGamesRef.current
+      if (!games.length) {
+        const response = await fetch("/api/items?limit=1000")
+        const result = await response.json()
+        if (result.success && result.data) {
+          games = result.data
+          allGamesRef.current = games
+          gamesCachedRef.current = true
+        }
+      }
+      if (games.length > 0) {
+        const randomIndex = Math.floor(Math.random() * games.length)
+        const gameId = games[randomIndex].id
         spinningTargetRef.current = `/game/${gameId}`
         router.push(`/game/${gameId}`)
       } else {
@@ -622,12 +631,19 @@ export function Header() {
 
             {user ? (
               <>
-                {/* Become a Creator button */}
-                {!user.is_creator && (
+                {/* Become a Creator / Verifying / Creator Mode button */}
+                {!user.is_creator && user.subscription_status !== 'pending' && (
                   <Link href="/subscribe" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-105 border"
                     style={{ background: "linear-gradient(135deg, rgba(157,78,221,0.2), rgba(199,125,255,0.1))", borderColor: "rgba(157,78,221,0.5)", color: "#c77dff" }}>
                     <Sparkles className="w-3.5 h-3.5" />
                     <span className="hidden md:block">Become a Creator</span>
+                  </Link>
+                )}
+                {!user.is_creator && user.subscription_status === 'pending' && (
+                  <Link href="/subscribe" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border animate-pulse"
+                    style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.1))", borderColor: "rgba(245,158,11,0.5)", color: "#fbbf24" }}>
+                    <span className="w-3.5 h-3.5 text-center">⏳</span>
+                    <span className="hidden md:block">Verifying...</span>
                   </Link>
                 )}
                 {user.is_creator && (

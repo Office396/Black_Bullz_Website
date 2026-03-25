@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserByToken, upgradePlan } from '@/lib/server/user-store'
-import { sendNotification } from '@/lib/server/user-store'
+import { getUserByToken, requestPlanUpgrade } from '@/lib/server/user-store'
 
 export async function POST(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
@@ -12,15 +11,12 @@ export async function POST(req: NextRequest) {
   const validPlans = ['fighter', 'leader', 'revolutionist']
   if (!validPlans.includes(plan)) return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
 
-  await upgradePlan(user.id, plan)
+  // Don't allow if already pending or active on same plan
+  if (user.subscription_status === 'pending') {
+    return NextResponse.json({ error: 'You already have a pending subscription awaiting verification.' }, { status: 400 })
+  }
 
-  const planNames: Record<string, string> = { fighter: 'Freedom Fighter', leader: 'Revolution Leader', revolutionist: 'Revolutionist' }
-  await sendNotification({
-    user_id: user.id,
-    title: 'Subscription Activated!',
-    message: `Welcome to ${planNames[plan]}! Your subscription is now active.`,
-    type: 'success'
-  })
+  await requestPlanUpgrade(user.id, plan)
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, pending: true })
 }

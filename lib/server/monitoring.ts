@@ -78,72 +78,140 @@ export async function checkSystemStatus(): Promise<SystemStatus> {
   return status
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+}
+
+async function getBucketSize(bucketName: string): Promise<number> {
+  let totalBytes = 0
+  const listFolder = async (prefix: string) => {
+    const { data, error } = await supabase.storage.from(bucketName).list(prefix, { limit: 1000 })
+    if (error || !data) return
+    for (const item of data) {
+      if (item.metadata?.size) {
+        totalBytes += item.metadata.size
+      } else if (!item.id) {
+        // It's a folder — recurse
+        await listFolder(prefix ? `${prefix}/${item.name}` : item.name)
+      }
+    }
+  }
+  await listFolder('')
+  return totalBytes
+}
+
 export async function getSupabaseUsage(): Promise<{
-  databaseSize: string
-  bandwidthUsed: string
+  storageUsed: string
+  storageBuckets: Array<{ name: string; size: string; sizeBytes: number }>
+  storagePercent: number
   tier: string
-  limits: {
-    databaseSize: string
-    bandwidth: string
-  }
+  quotas: Array<{
+    name: string
+    limit: string
+    used: string | null
+    percent: number | null
+    description: string
+  }>
 }> {
+  const STORAGE_LIMIT_BYTES = 1 * 1024 * 1024 * 1024 // 1 GB free tier
+
+  let totalStorageBytes = 0
+  const bucketStats: Array<{ name: string; size: string; sizeBytes: number }> = []
+
   try {
-    // Get actual database size by querying the items table
-    const { data: itemsData, error: itemsError } = await supabase
-      .from('items')
-      .select('*')
-
-    let databaseSizeBytes = 0
-    if (!itemsError && itemsData) {
-      // Estimate size based on number of items and average item size
-      // Each item has multiple fields, estimate ~2KB per item
-      databaseSizeBytes = itemsData.length * 2048
-
-      // Add comments table size
-      const { data: commentsData, error: commentsError } = await supabase
-        .from('comments')
-        .select('*')
-      if (!commentsError && commentsData) {
-        databaseSizeBytes += commentsData.length * 512 // ~512 bytes per comment
-      }
-
-      // Add download pages table size
-      const { data: downloadPagesData, error: downloadPagesError } = await supabase
-        .from('download_pages')
-        .select('*')
-      if (!downloadPagesError && downloadPagesData) {
-        databaseSizeBytes += downloadPagesData.length * 1024 // ~1KB per download page
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets()
+    if (!bucketsError && buckets && buckets.length > 0) {
+      for (const bucket of buckets) {
+        const sizeBytes = await getBucketSize(bucket.name)
+        totalStorageBytes += sizeBytes
+        bucketStats.push({ name: bucket.name, size: formatBytes(sizeBytes), sizeBytes })
       }
     }
+  } catch {}
 
-    // Convert bytes to MB
-    const databaseSizeMB = Math.round(databaseSizeBytes / (1024 * 1024) * 100) / 100
+  const storagePercent = Math.min(100, Math.round((totalStorageBytes / STORAGE_LIMIT_BYTES) * 1000) / 10)
+  const storageUsed = formatBytes(totalStorageBytes)
 
-    // For bandwidth, we can't get real data from Supabase API without authentication
-    // This would require Supabase service role key and REST API access
-    // For now, return estimated bandwidth based on Vercel analytics or static data
-    const bandwidthUsed = '0 GB' // This would need to be tracked separately
+  // Count users for Auth MAU estimate
+  let userCount = 0
+  try {
+    const { count } = await supabase.from('users').select('*', { count: 'exact', head: true })
+    userCount = count || 0
+  } catch {}
 
-    return {
-      databaseSize: `${databaseSizeMB} MB`,
-      bandwidthUsed: bandwidthUsed,
-      tier: 'Free',
-      limits: {
-        databaseSize: '500 MB',
-        bandwidth: '50 GB'
-      }
+  const authPercent = Math.min(100, Math.round((userCount / 50000) * 1000) / 10)
+
+  // Get real database size via pg_database_size()
+  let dbSizeStr = 'run add_get_db_size_fn.sql first'
+  let dbPercent: number | null = null
+  try {
+    const { data: dbSize } = await supabase.rpc('get_db_size')
+    if (dbSize) {
+      const dbSizeBytes = Number(dbSize)
+      dbSizeStr = formatBytes(dbSizeBytes)
+      dbPercent = Math.min(100, Math.round((dbSizeBytes / (500 * 1024 * 1024)) * 1000) / 10)
     }
-  } catch (error) {
-    console.error('Error getting Supabase usage:', error)
-    // Fallback to static data
-    return {
-      databaseSize: '0 MB',
-      bandwidthUsed: '0 GB',
-      tier: 'Free',
-      limits: {
-        databaseSize: '500 MB',
-        bandwidth: '50 GB'
-      }
-    }
-  }
+  } catch {}
+
+  // Supabase free tier does NOT expose bandwidth/edge/realtime via any public API.
+  // These metrics are only visible inside the Supabase dashboard (internal systems).
+  const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https:\/\/([^.]+)\./)?.[1] ?? ''
+  const dashboardUrl = `https://supabase.com/dashboard/project/${projectRef}/reports`
+
+  const quotas = [
+    {
+      name: 'Database',
+      limit: '500 MB',
+      used: dbSizeStr,
+      percent: dbPercent,
+      description: 'Full Postgres database storage for your tables and data.',
+      dashboardUrl: null,
+    },
+    {
+      name: 'File Storage',
+      limit: '1 GB',
+      used: storageUsed,
+      percent: storagePercent,
+      description: 'Dedicated space for images, videos, and documents.',
+      dashboardUrl: null,
+    },
+    {
+      name: 'Auth (Users)',
+      limit: '50,000 MAU',
+      used: `${userCount.toLocaleString()} registered`,
+      percent: authPercent,
+      description: 'Monthly Active Users who log in or refresh tokens.',
+      dashboardUrl: null,
+    },
+    {
+      name: 'Bandwidth',
+      limit: '5 GB egress',
+      used: null,
+      percent: null,
+      description: 'Total data transfer out of your project per month.',
+      dashboardUrl,
+    },
+    {
+      name: 'Edge Functions',
+      limit: '500,000 invocations',
+      used: null,
+      percent: null,
+      description: 'Total serverless function invocations per month.',
+      dashboardUrl,
+    },
+    {
+      name: 'Realtime',
+      limit: '2 million messages',
+      used: null,
+      percent: null,
+      description: 'Total messages sent via WebSockets per month.',
+      dashboardUrl,
+    },
+  ]
+
+  return { storageUsed, storageBuckets: bucketStats, storagePercent, tier: 'Free', quotas }
 }

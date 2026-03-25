@@ -109,7 +109,7 @@ export function HeroCarousel({ games, modifiers = [] }: HeroCarouselProps) {
                                 alt={(itemGame as GameItem)?.title || 'Game'}
                                 fill
                                 className="object-cover object-center"
-                                priority={i === 0}
+                                priority={i < 3}
                                 sizes="100vw"
                             />
                         </div>

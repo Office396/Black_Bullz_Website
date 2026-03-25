@@ -6,9 +6,9 @@ import Image from "next/image"
 import {
   Star, Download, ExternalLink, Heart, Flag, MessageCircle,
   Monitor, Cpu, MemoryStick, HardDrive, Clock, User,
-  Calendar, ChevronLeft, Play, ThumbsUp, Share2, Shield,
+  Calendar, ChevronLeft, Play, ThumbsUp, ThumbsDown, Share2, Shield,
   AlertTriangle, CheckCircle, Info, Package, Wrench,
-  ChevronDown, ChevronUp, Cloud, Building2
+  ChevronDown, ChevronUp, Cloud, Building2, X, Maximize2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -31,12 +31,18 @@ interface GameData {
   title: string
   category: string
   image: string
+  landscapeImage?: string
+  trailerUrl?: string
+  steamUrl?: string
+  edition?: string
   rating?: number | string
   size?: string
   description: string
   longDescription?: string
   releaseDate?: string
+  publishedDate?: string
   uploadDate?: string
+  updatedDate?: string
   developer?: string
   publisher?: string
   screenshots?: string[]
@@ -57,7 +63,11 @@ interface GameData {
   genres?: string[]
   views?: number
   downloads?: number
+  likes?: number
+  dislikes?: number
   uploader?: string
+  uploaderName?: string
+  uploaderId?: string
   version?: string
   note?: string
   sharedPinCode?: string
@@ -101,6 +111,24 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [installTab, setInstallTab] = useState<"pre-installed" | "installable">("pre-installed")
   const [expandedCloud, setExpandedCloud] = useState<number | null>(null)
+  const [trailerOpen, setTrailerOpen] = useState(false)
+  const [shareCopied, setShareCopied] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportType, setReportType] = useState("error")
+  const [reportDesc, setReportDesc] = useState("")
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+  const [reportDone, setReportDone] = useState(false)
+  const [userReaction, setUserReaction] = useState<string | null>(null)
+  const [likes, setLikes] = useState(game?.likes || 0)
+  const [dislikes, setDislikes] = useState(game?.dislikes || 0)
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewHover, setReviewHover] = useState(0)
+  const [reviewContent, setReviewContent] = useState("")
+  const [reviewSubmitting, setReviewSubmitting] = useState(false)
+  const [reviewDone, setReviewDone] = useState(false)
+  const [reviews, setReviews] = useState<any[]>([])
+  const [showReactionLoginPrompt, setShowReactionLoginPrompt] = useState(false)
 
   // User context for favourites + watch history
   const userCtx = useUser()
@@ -112,30 +140,80 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
 
   const averageRating = typeof game?.rating === 'number' ? game.rating : parseFloat(String(game?.rating || '4.5'))
   const recommendPercent = Math.min(95, Math.max(70, averageRating * 20))
-  const views = game?.views || 1250
-  const downloads = game?.downloads || 15000
+  const views = game?.views ?? 0
+  const downloads = game?.downloads ?? 0
 
   const features = game?.keyFeatures?.filter(Boolean) || game?.features || []
   const genres = game?.genres || []
   const cloudDownloads = game?.cloudDownloads || []
 
+  // Get YouTube embed ID from trailer URL
+  const getYouTubeId = (url: string) => {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)
+    return match ? match[1] : null
+  }
+  const trailerYtId = game?.trailerUrl ? getYouTubeId(game.trailerUrl) : null
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxOpen(false)
+      if (e.key === 'Escape') { setLightboxOpen(false); setTrailerOpen(false); setShowReportModal(false) }
     }
-    if (lightboxOpen) {
-      document.addEventListener('keydown', handleKeyDown)
-      return () => document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [lightboxOpen])
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
-  // Load favourite state + track watch history
+  // Load favourite state + reactions + track watch history
   useEffect(() => {
     if (!token || !game?.id) return
     fetch('/api/user/favourites', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => { if (d.favourites) setIsFavorite(d.favourites.includes(game.id)) }).catch(() => {})
     fetch('/api/user/history', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ gameId: game.id }) }).catch(() => {})
+    fetch(`/api/reactions?game_id=${game.id}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => { setLikes(d.likes || 0); setDislikes(d.dislikes || 0); setUserReaction(d.userReaction) }).catch(() => {})
   }, [token, game?.id])
+
+  // Load approved reviews (no auth needed)
+  useEffect(() => {
+    if (!game?.id) return
+    fetch(`/api/reviews?game_id=${game.id}`)
+      .then(r => r.json()).then(d => { if (d.reviews) setReviews(d.reviews) }).catch(() => {})
+  }, [game?.id])
+
+  const handleReaction = async (reaction: 'like' | 'dislike') => {
+    if (!user) { setShowReactionLoginPrompt(true); setTimeout(() => setShowReactionLoginPrompt(false), 3000); return }
+    const res = await fetch('/api/reactions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ gameId: game.id, reaction }) })
+    const data = await res.json()
+    if (data.success) {
+      setUserReaction(data.userReaction)
+      fetch(`/api/reactions?game_id=${game.id}`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).then(d => { setLikes(d.likes || 0); setDislikes(d.dislikes || 0) }).catch(() => {})
+    }
+  }
+
+  const handleShare = () => {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    navigator.clipboard.writeText(url).then(() => { setShareCopied(true); setTimeout(() => setShareCopied(false), 2000) }).catch(() => {})
+  }
+
+  const submitReview = async () => {
+    if (!reviewRating || !user) return
+    setReviewSubmitting(true)
+    const res = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ gameId: game.id, gameTitle: game.title, rating: reviewRating, content: reviewContent }) })
+    const data = await res.json()
+    setReviewSubmitting(false)
+    if (data.error) { alert(data.error); return }
+    setReviewDone(true)
+    setTimeout(() => { setShowReviewModal(false); setReviewDone(false); setReviewRating(0); setReviewContent("") }, 2500)
+  }
+
+  const submitReport = async () => {
+    if (!reportDesc.trim()) return
+    setReportSubmitting(true)
+    await fetch('/api/reports', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ gameId: game.id, gameTitle: game.title, reportType, description: reportDesc }) })
+    setReportSubmitting(false)
+    setReportDone(true)
+    setTimeout(() => { setShowReportModal(false); setReportDone(false); setReportDesc("") }, 2000)
+  }
 
   if (!game) return null
 
@@ -193,7 +271,14 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
 
             {/* Title & Rating */}
             <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-3">{game.title}</h1>
+              <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-1">{game.title}
+                {game.edition && (
+                  <span className="ml-3 text-sm font-bold px-3 py-1.5 rounded-lg align-middle inline-flex items-center gap-1.5 animate-pulse" style={{ background: "linear-gradient(135deg, rgba(157,78,221,0.4), rgba(199,125,255,0.25))", border: "1px solid rgba(157,78,221,0.6)", color: "#c77dff", boxShadow: "0 0 12px rgba(157,78,221,0.4)" }}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#c77dff] animate-ping inline-block" />
+                    {game.edition}
+                  </span>
+                )}
+              </h1>
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -240,8 +325,15 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                 </div>
               )}
               <div>
-                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1"><Clock className="w-3 h-3" />Published</div>
-                <p className="text-foreground text-sm font-medium">{formatDate(game.uploadDate)}</p>
+                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
+                  <Clock className="w-3 h-3" />
+                  {game.updatedDate && game.updatedDate !== game.uploadDate ? 'Updated' : 'Published'}
+                </div>
+                <p className="text-foreground text-sm font-medium">
+                  {game.updatedDate && game.updatedDate !== game.uploadDate
+                    ? formatDate(game.updatedDate)
+                    : formatDate(game.publishedDate || game.uploadDate)}
+                </p>
               </div>
             </div>
 
@@ -252,7 +344,13 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">Uploaded by</p>
-                <p className="text-foreground text-sm font-medium">{game.uploader || 'BullzGamez Team'}</p>
+                {(game.uploaderName || game.uploader) ? (
+                  <Link href={`/profile`} className="text-[#9d4edd] hover:text-[#c77dff] text-sm font-medium transition-colors">
+                    {game.uploaderName || game.uploader}
+                  </Link>
+                ) : (
+                  <p className="text-foreground text-sm font-medium">BullzGamez Team</p>
+                )}
               </div>
             </div>
 
@@ -275,10 +373,12 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                 <Download className="w-5 h-5" />
                 Download Now
               </button>
-              <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10">
-                <Play className="w-4 h-4 mr-2" />
-                Trailer
-              </Button>
+              {(trailerYtId || game.trailerUrl) && (
+                <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10" onClick={() => setTrailerOpen(true)}>
+                  <Play className="w-4 h-4 mr-2" />
+                  Trailer
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className={`border-white/20 ${isFavorite ? 'text-red-500 border-red-500/50' : 'text-white'} relative group`}
@@ -297,15 +397,18 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                   </div>
                 )}
               </Button>
-              <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10">
+              <Button variant="outline" className={`border-white/20 transition-colors ${shareCopied ? 'text-green-400 border-green-500/50' : 'text-foreground hover:bg-white/10'}`} onClick={handleShare}>
                 <Share2 className="w-4 h-4 mr-2" />
-                Share
+                {shareCopied ? 'Copied!' : 'Share'}
               </Button>
-            </div>
+              <Button variant="outline" className="border-white/20 text-foreground hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30" onClick={() => setShowReportModal(true)}>
+                <Flag className="w-4 h-4 mr-2" />
+                Report
+              </Button>            </div>
 
             {/* Steam Link */}
             <a
-              href={`https://store.steampowered.com/search/?term=${encodeURIComponent(game.title)}`}
+              href={game.steamUrl || `https://store.steampowered.com/search/?term=${encodeURIComponent(game.title)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-[#9d4edd] hover:underline text-sm"
@@ -319,9 +422,9 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
               <div className="flex flex-wrap gap-2">
                 {genres.map((genre) => (
                   <Link key={genre} href={`/genre/${genre.toLowerCase().replace(/ /g, '-')}`}>
-                    <Badge className="bg-white/5 hover:bg-[#9d4edd]/20 text-muted-foreground border border-white/10 cursor-pointer transition-colors hover:text-[#9d4edd] hover:border-[#9d4edd]/30">
+                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold cursor-pointer transition-all border bg-white/5 text-gray-300 border-white/10 hover:bg-[#9d4edd]/20 hover:text-[#c77dff] hover:border-[#9d4edd]/40">
                       {genre}
-                    </Badge>
+                    </span>
                   </Link>
                 ))}
               </div>
@@ -387,7 +490,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
               <Monitor className="w-5 h-5 text-[#9d4edd]" />
-              System Requirements
+              System Requirements <span className="text-muted-foreground text-sm font-normal">(Recommended)</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -451,6 +554,10 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                     alt={`${game.title} screenshot ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
+                  {/* Watermark */}
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-bold text-white/70 select-none pointer-events-none" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }}>
+                    BullzGamez
+                  </div>
                 </div>
               ))}
             </div>
@@ -471,6 +578,9 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                   className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
                   onClick={(e) => e.stopPropagation()}
                 />
+                <div className="absolute top-4 left-4 px-2 py-1 rounded text-xs font-bold text-white/60 select-none pointer-events-none" style={{ background: "rgba(0,0,0,0.6)" }}>
+                  BullzGamez
+                </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex + 1) % game.screenshots!.length) }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl z-[101] w-12 h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80"
@@ -854,21 +964,39 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
               <div className="text-muted-foreground text-sm">Views</div>
             </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-3 mt-4">
-            <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10">
-              <ThumbsUp className="w-4 h-4 mr-2" />
-              Recommend
+          <div className="flex flex-wrap justify-center gap-3 mt-4 relative">
+            <div className="relative">
+              <Button
+                variant="outline"
+                className={`border-white/20 transition-colors ${userReaction === 'like' ? 'text-green-400 border-green-500/50 bg-green-500/10' : 'text-foreground hover:bg-white/10'}`}
+                onClick={() => handleReaction('like')}
+              >
+                <ThumbsUp className={`w-4 h-4 mr-2 ${userReaction === 'like' ? 'fill-green-400' : ''}`} />
+                Like {likes > 0 && <span className="ml-1 text-xs">{likes}</span>}
+              </Button>
+              {showReactionLoginPrompt && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#120b22] border border-[#9d4edd]/40 rounded-lg text-xs text-white whitespace-nowrap shadow-xl z-50">
+                  <a href="/login" className="text-[#9d4edd] font-semibold hover:underline">Login</a> or <a href="/signup" className="text-[#9d4edd] font-semibold hover:underline">Sign up</a> to react
+                </div>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              className={`border-white/20 transition-colors ${userReaction === 'dislike' ? 'text-red-400 border-red-500/50 bg-red-500/10' : 'text-foreground hover:bg-white/10'}`}
+              onClick={() => handleReaction('dislike')}
+            >
+              <ThumbsDown className={`w-4 h-4 mr-2 ${userReaction === 'dislike' ? 'fill-red-400' : ''}`} />
+              Dislike {dislikes > 0 && <span className="ml-1 text-xs">{dislikes}</span>}
             </Button>
-            <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10">
+            <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10" onClick={() => setShowReviewModal(true)}>
               <MessageCircle className="w-4 h-4 mr-2" />
               Write Review
             </Button>
-            <Button variant="outline" className="border-white/20 text-foreground hover:bg-white/10">
+            <Button variant="outline" className="border-white/20 text-foreground hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30" onClick={() => setShowReportModal(true)}>
               <Flag className="w-4 h-4 mr-2" />
               Report
             </Button>
-          </div>
-        </CardContent>
+          </div>        </CardContent>
       </Card>
 
       {/* Note */}
@@ -970,8 +1098,205 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
         )
       })()}
 
+      {/* Approved Reviews */}
+      {reviews.length > 0 && (
+        <Card className="bg-card border border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+              Ratings & Reviews
+              <span className="text-muted-foreground text-sm font-normal">({reviews.length})</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Average */}
+            <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl">
+              <div className="text-center">
+                <p className="text-4xl font-black text-white">{(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)}</p>
+                <div className="flex gap-0.5 mt-1 justify-center">
+                  {[1,2,3,4,5].map(s => <Star key={s} className={`w-4 h-4 ${s <= Math.round(reviews.reduce((a, r) => a + r.rating, 0) / reviews.length) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} />)}
+                </div>
+                <p className="text-gray-500 text-xs mt-1">{reviews.length} review{reviews.length !== 1 ? 's' : ''}</p>
+              </div>
+              <div className="flex-1 space-y-1">
+                {[5,4,3,2,1].map(star => {
+                  const count = reviews.filter(r => r.rating === star).length
+                  const pct = reviews.length ? Math.round((count / reviews.length) * 100) : 0
+                  return (
+                    <div key={star} className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-400 w-3">{star}</span>
+                      <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                      <div className="flex-1 bg-[#1a103c] rounded-full h-1.5 overflow-hidden">
+                        <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="text-gray-500 w-6 text-right">{count}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            {/* Individual reviews */}
+            <div className="space-y-3">
+              {reviews.map(r => (
+                <div key={r.id} className="bg-[#1a103c] border border-[#2d1b54] rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-[#9d4edd]/30 flex items-center justify-center text-white text-xs font-bold">{r.user_name?.charAt(0)}</div>
+                      <div>
+                        <p className="text-white text-sm font-semibold">{r.user_name}</p>
+                        <div className="flex gap-0.5">
+                          {[1,2,3,4,5].map(s => <Star key={s} className={`w-3 h-3 ${s <= r.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} />)}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-gray-600 text-xs">{new Date(r.created_at).toLocaleDateString()}</span>
+                  </div>
+                  {r.content && <p className="text-gray-300 text-sm leading-relaxed">{r.content}</p>}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Comments */}
       <Comments gameId={game.id} itemName={game.title} />
+
+      {/* Review Modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" onClick={() => setShowReviewModal(false)}>
+          <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-white font-bold text-lg flex items-center gap-2"><Star className="w-5 h-5 text-yellow-500" /> Rate & Review</h3>
+              <button onClick={() => setShowReviewModal(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+            {!user ? (
+              <div className="text-center py-4 space-y-3">
+                <Star className="w-10 h-10 text-yellow-500 mx-auto" />
+                <p className="text-gray-300 text-sm">Sign in to write a review</p>
+                <div className="flex gap-3 justify-center">
+                  <a href="/login" className="px-4 py-2 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">Log in</a>
+                  <a href="/signup" className="px-4 py-2 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-semibold transition-colors">Sign up</a>
+                </div>
+              </div>
+            ) : reviewDone ? (
+              <div className="text-center py-6">
+                <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                <p className="text-green-400 font-bold text-lg">Review submitted!</p>
+                <p className="text-gray-500 text-sm mt-1">It will appear after admin approval.</p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div>
+                  <p className="text-gray-400 text-sm mb-3 text-center">How would you rate this game?</p>
+                  <div className="flex justify-center gap-2">
+                    {[1,2,3,4,5].map(s => (
+                      <button key={s} type="button"
+                        onMouseEnter={() => setReviewHover(s)} onMouseLeave={() => setReviewHover(0)}
+                        onClick={() => setReviewRating(s)}
+                        className="transition-transform hover:scale-125">
+                        <Star className={`w-10 h-10 transition-colors ${s <= (reviewHover || reviewRating) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} />
+                      </button>
+                    ))}
+                  </div>
+                  {reviewRating > 0 && (
+                    <p className="text-center text-sm mt-2 font-semibold" style={{ color: ['','#ef4444','#f97316','#eab308','#84cc16','#22c55e'][reviewRating] }}>
+                      {['','Terrible','Poor','Average','Good','Excellent'][reviewRating]}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-gray-400 text-sm mb-1.5 block">Share your experience <span className="text-gray-600">(optional)</span></label>
+                  <textarea value={reviewContent} onChange={e => setReviewContent(e.target.value)} rows={4}
+                    placeholder="What did you think about this game? Any tips for other players?"
+                    className="w-full bg-[#1a103c] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none transition-colors text-sm resize-none" />
+                </div>
+                <button onClick={submitReview} disabled={reviewSubmitting || !reviewRating}
+                  className="w-full py-3 rounded-xl font-bold text-white transition-all disabled:opacity-40 hover:scale-[1.01]"
+                  style={{ background: "linear-gradient(135deg, #9d4edd, #7b2cbf)" }}>
+                  {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
+                </button>
+                <p className="text-gray-600 text-xs text-center">Reviews are shown after admin approval</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Trailer Modal */}
+      {trailerOpen && (
+        <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4" onClick={() => setTrailerOpen(false)}>
+          <div className="relative w-full max-w-4xl" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setTrailerOpen(false)} className="absolute -top-10 right-0 text-white/80 hover:text-white text-2xl font-bold z-10 flex items-center gap-2">
+              <X className="w-6 h-6" /> Close
+            </button>
+            <div className="relative aspect-video rounded-xl overflow-hidden bg-black shadow-2xl">
+              {trailerYtId ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${trailerYtId}?autoplay=1`}
+                  className="w-full h-full"
+                  allow="autoplay; fullscreen"
+                  allowFullScreen
+                />
+              ) : (
+                <video src={game.trailerUrl} controls autoPlay className="w-full h-full" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" onClick={() => setShowReportModal(false)}>
+          <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold flex items-center gap-2"><Flag className="w-4 h-4 text-red-400" /> Report Issue</h3>
+              <button onClick={() => setShowReportModal(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+            {!user ? (
+              <div className="text-center py-4 space-y-3">
+                <Flag className="w-10 h-10 text-red-400 mx-auto" />
+                <p className="text-gray-300 text-sm">You need to be logged in to report an issue.</p>
+                <div className="flex gap-3 justify-center">
+                  <a href="/login" className="px-4 py-2 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">Log in</a>
+                  <a href="/signup" className="px-4 py-2 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-semibold transition-colors">Sign up</a>
+                </div>
+              </div>
+            ) : reportDone ? (
+              <div className="text-center py-4">
+                <CheckCircle className="w-10 h-10 text-green-400 mx-auto mb-2" />
+                <p className="text-green-400 font-semibold">Report submitted!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-gray-400 text-sm mb-1 block">Report Type</label>
+                  <select value={reportType} onChange={e => setReportType(e.target.value)}
+                    className="w-full bg-[#1a103c] border border-[#2d1b54] text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#9d4edd]">
+                    <option value="error">Download Error</option>
+                    <option value="broken_link">Broken Link</option>
+                    <option value="wrong_game">Wrong Game</option>
+                    <option value="virus">Virus/Malware</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-gray-400 text-sm mb-1 block">Description *</label>
+                  <textarea value={reportDesc} onChange={e => setReportDesc(e.target.value)} rows={3}
+                    placeholder="Describe the issue..."
+                    className="w-full bg-[#1a103c] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl px-4 py-2.5 text-white placeholder-gray-500 outline-none transition-colors text-sm resize-none" />
+                </div>
+                <button onClick={submitReport} disabled={reportSubmitting || !reportDesc.trim()}
+                  className="w-full py-2.5 rounded-xl font-bold text-white transition-all disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg, #9d4edd, #7b2cbf)" }}>
+                  {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

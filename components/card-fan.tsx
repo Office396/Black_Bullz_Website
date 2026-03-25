@@ -76,11 +76,13 @@ export function CardFan({ images, count, name }: CardFanProps) {
       style={{ paddingTop: "100%", cursor: "pointer" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onPointerDown={() => setHovered(true)}
+      onPointerUp={() => setHovered(false)}
+      onPointerLeave={() => setHovered(false)}
     >
       {/* Card stack anchored to vertical center of the box */}
       <div
         className="absolute inset-0 flex items-center justify-center"
-        style={{ pointerEvents: "none" }}
       >
         {cardImages.map((src, i) => (
           <div

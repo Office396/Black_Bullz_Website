@@ -13,7 +13,10 @@ import { AdminPageModifier } from "@/components/admin-page-modifier"
 import { AdminDonateEditor } from "@/components/admin-donate-editor"
 import AdminSystemStatus from "@/components/admin-system-status"
 import AdminDetailsAutomation from "@/components/admin-details-automation"
-import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow, Heart, Users, Bell, GamepadIcon } from "lucide-react"
+import AdminPublishersPanel from "@/components/admin-publishers-panel"
+import AdminReportsPanel from "@/components/admin-reports-panel"
+import AdminGenresPanel from "@/components/admin-genres-panel"
+import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow, Heart, Users, Bell, GamepadIcon, Building2, Flag, Tag } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -103,6 +106,18 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <GamepadIcon className="h-4 w-4" />
                 Requests
               </TabsTrigger>
+              <TabsTrigger value="publishers" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Building2 className="h-4 w-4" />
+                Publishers
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Flag className="h-4 w-4" />
+                Reports
+              </TabsTrigger>
+              <TabsTrigger value="genres" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Tag className="h-4 w-4" />
+                Genres
+              </TabsTrigger>
             </TabsList>
 
             {activeTab === "list" && (
@@ -167,6 +182,18 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <TabsContent value="requests" className="mt-0 outline-none">
             <AdminRequestsPanel />
           </TabsContent>
+
+          <TabsContent value="publishers" className="mt-0 outline-none">
+            <AdminPublishersPanel />
+          </TabsContent>
+
+          <TabsContent value="reports" className="mt-0 outline-none">
+            <AdminReportsPanel />
+          </TabsContent>
+
+          <TabsContent value="genres" className="mt-0 outline-none">
+            <AdminGenresPanel />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
@@ -180,6 +207,8 @@ function AdminUsersPanel() {
   const [notifMsg, setNotifMsg] = useState("")
   const [notifTarget, setNotifTarget] = useState<string>("all")
   const [sending, setSending] = useState(false)
+  const [rejectReason, setRejectReason] = useState<Record<string, string>>({})
+  const [expandedUser, setExpandedUser] = useState<string | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -209,8 +238,56 @@ function AdminUsersPanel() {
     load()
   }
 
+  const approveSubscription = async (id: string) => {
+    await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_subscription', user_id: id }) })
+    load()
+  }
+
+  const rejectSubscription = async (id: string) => {
+    const reason = rejectReason[id] || 'Payment could not be verified.'
+    await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reject_subscription', user_id: id, reason }) })
+    load()
+  }
+
+  const pendingUsers = users.filter(u => u.subscription_status === 'pending')
+
   return (
     <div className="space-y-6">
+      {/* Pending Subscriptions */}
+      {pendingUsers.length > 0 && (
+        <div className="bg-[#120b22] border border-yellow-500/30 rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-yellow-500/20 flex items-center gap-2" style={{ background: "rgba(245,158,11,0.08)" }}>
+            <span className="text-yellow-400">⏳</span>
+            <h3 className="text-yellow-400 font-bold">Pending Subscriptions ({pendingUsers.length})</h3>
+          </div>
+          <div className="divide-y divide-[#2d1b54]/50">
+            {pendingUsers.map(u => (
+              <div key={u.id} className="p-4">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div>
+                    <p className="text-white font-semibold">{u.name} <span className="text-gray-500 text-sm">@{u.username}</span></p>
+                    <p className="text-gray-400 text-sm">{u.email}</p>
+                    <p className="text-yellow-400 text-xs mt-1">Requested plan: <span className="font-bold">{u.subscription_pending_plan}</span></p>
+                  </div>
+                  <div className="flex flex-col gap-2 min-w-[200px]">
+                    <input
+                      placeholder="Reject reason (optional)"
+                      value={rejectReason[u.id] || ''}
+                      onChange={e => setRejectReason(prev => ({ ...prev, [u.id]: e.target.value }))}
+                      className="bg-[#1a103c] border border-[#2d1b54] text-white text-xs rounded-lg px-3 py-1.5 outline-none focus:border-[#9d4edd]"
+                    />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => approveSubscription(u.id)} className="flex-1 bg-green-600 hover:bg-green-700 text-xs">✓ Approve</Button>
+                      <Button size="sm" onClick={() => rejectSubscription(u.id)} variant="outline" className="flex-1 border-red-500/40 text-red-400 hover:bg-red-500/10 text-xs">✗ Reject</Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Send Notification */}
       <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl p-5">
         <h3 className="text-white font-bold mb-4 flex items-center gap-2"><Bell className="w-4 h-4 text-[#9d4edd]" /> Send Notification</h3>
@@ -238,45 +315,50 @@ function AdminUsersPanel() {
         ) : users.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No users yet</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#2d1b54] text-gray-400 text-xs uppercase">
-                  <th className="text-left px-4 py-3">User</th>
-                  <th className="text-left px-4 py-3">Email</th>
-                  <th className="text-left px-4 py-3">Role</th>
-                  <th className="text-left px-4 py-3">Plan</th>
-                  <th className="text-left px-4 py-3">Joined</th>
-                  <th className="px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(u => (
-                  <tr key={u.id} className="border-b border-[#2d1b54]/50 hover:bg-white/5">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#9d4edd]/30 flex items-center justify-center text-white text-xs font-bold">{u.name?.charAt(0)}</div>
+          <div className="divide-y divide-[#2d1b54]/50">
+            {users.map(u => (
+              <div key={u.id}>
+                <div className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer" onClick={() => setExpandedUser(expandedUser === u.id ? null : u.id)}>
+                  <div className="w-8 h-8 rounded-full bg-[#9d4edd]/30 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{u.name?.charAt(0)}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-white font-medium text-sm">{u.name}</p>
+                      <span className="text-gray-500 text-xs">@{u.username}</span>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'creator' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'}`}>{u.role}</span>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${u.subscription_status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : u.subscription_status === 'active' ? 'bg-green-500/20 text-green-400' : u.subscription_status === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-500'}`}>
+                        {u.subscription_status === 'pending' ? '⏳ pending' : u.subscription_plan}
+                      </span>
+                    </div>
+                    <p className="text-gray-500 text-xs">{u.email}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-gray-600 text-xs">{new Date(u.created_at).toLocaleDateString()}</span>
+                    <Button size="sm" variant="outline" onClick={e => { e.stopPropagation(); deleteUser(u.id) }} className="border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs">Delete</Button>
+                  </div>
+                </div>
+                {expandedUser === u.id && u.is_creator && (
+                  <div className="px-4 pb-4 bg-[#0d0820]">
+                    <div className="rounded-xl border p-4 space-y-2" style={{ borderColor: "rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.05)" }}>
+                      <p className="text-yellow-400 text-xs font-bold uppercase tracking-wider mb-2">Creator Portal Credentials</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                         <div>
-                          <p className="text-white font-medium">{u.name}</p>
-                          <p className="text-gray-500 text-xs">@{u.username}</p>
+                          <p className="text-gray-500 mb-0.5">Portal URL</p>
+                          <p className="text-[#9d4edd] font-mono break-all">/creator/portal</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 mb-0.5">Portal ID</p>
+                          <p className="text-white font-mono">{u.creator_portal_id || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 mb-0.5">Portal Password</p>
+                          <p className="text-white font-mono">{u.creator_portal_password || '—'}</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-400">{u.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${u.role === 'creator' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'}`}>{u.role}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${u.subscription_plan !== 'free' ? 'bg-[#9d4edd]/20 text-[#c77dff]' : 'bg-gray-500/20 text-gray-500'}`}>{u.subscription_plan}</span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-center">
-                      <Button size="sm" variant="outline" onClick={() => deleteUser(u.id)} className="border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs">Delete</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -300,6 +382,12 @@ function AdminRequestsPanel() {
 
   const updateStatus = async (id: string, status: string) => {
     await fetch('/api/requests', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) })
+    load()
+  }
+
+  const deleteRequest = async (id: string) => {
+    if (!confirm("Delete this request?")) return
+    await fetch(`/api/requests?id=${id}`, { method: 'DELETE' })
     load()
   }
 
@@ -340,9 +428,18 @@ function AdminRequestsPanel() {
                   <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-bold ${statusColor[r.status] || ''}`}>{r.status}</span></td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{new Date(r.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
-                    <select value={r.status} onChange={e => updateStatus(r.id, e.target.value)} className="bg-[#1a103c] border border-[#2d1b54] text-white rounded px-2 py-1 text-xs">
-                      {['pending','processing','completed','rejected'].map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                    <div className="flex items-center gap-2">
+                      <select value={r.status} onChange={e => updateStatus(r.id, e.target.value)} className="bg-[#1a103c] border border-[#2d1b54] text-white rounded px-2 py-1 text-xs">
+                        {['pending','processing','completed','rejected'].map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <button
+                        onClick={() => deleteRequest(r.id)}
+                        className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        title="Delete request"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
