@@ -27,7 +27,6 @@ export function AdminFeedback() {
       if (json.success) setComments(json.data || [])
     } catch {}
   }
-
   const loadReviews = async () => {
     try {
       const res = await fetch('/api/reviews?all=1', { cache: 'no-store' })
@@ -37,6 +36,11 @@ export function AdminFeedback() {
   }
 
   useEffect(() => { loadComments(); loadReviews() }, [])
+
+  const approveComment = async (id: number, approvalStatus: string) => {
+    await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve', targetId: id, approvalStatus, adminToken: getAdminToken() }) })
+    loadComments()
+  }
 
   const deleteComment = async (id: number, itemId: number) => {
     if (!confirm('Delete this comment?')) return
@@ -153,6 +157,7 @@ export function AdminFeedback() {
                           <span className="text-white font-semibold text-sm">{c.author}</span>
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_COLORS[c.type] || ''} bg-[#9d4edd]/20 text-[#c77dff]`}>{c.type}</span>
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_COLORS[c.status] || ''}`}>{c.status}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${c.approval_status === 'approved' ? 'bg-green-500/20 text-green-400' : c.approval_status === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}`}>{c.approval_status || 'pending'}</span>
                           <span className="text-gray-600 text-xs">on "{c.itemName}"</span>
                         </div>
                         <p className="text-gray-300 text-sm line-clamp-2">{c.content}</p>
@@ -162,15 +167,21 @@ export function AdminFeedback() {
                         <button onClick={() => { setReplyTarget(c); setReplyText("") }} className="p-1.5 rounded text-gray-500 hover:text-[#9d4edd] hover:bg-[#9d4edd]/10 transition-colors" title="Reply">
                           <Reply className="w-4 h-4" />
                         </button>
-                        {c.status === 'new' ? (
-                          <button onClick={() => markComment(c.id, c.itemId, 'read')} className="p-1.5 rounded text-gray-500 hover:text-green-400 hover:bg-green-500/10 transition-colors" title="Mark read">
+                        {(!c.approval_status || c.approval_status === 'pending') && (
+                          <button onClick={() => approveComment(c.id, 'approved')} className="p-1.5 rounded text-gray-500 hover:text-green-400 hover:bg-green-500/10 transition-colors" title="Approve">
                             <CheckCircle2 className="w-4 h-4" />
                           </button>
-                        ) : (
-                          <button onClick={() => markComment(c.id, c.itemId, 'new')} className="p-1.5 rounded text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" title="Mark new">
-                            <Eye className="w-4 h-4" />
+                        )}
+                        {c.approval_status === 'approved' && (
+                          <button onClick={() => approveComment(c.id, 'rejected')} className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Reject">
+                            <XCircle className="w-4 h-4" />
                           </button>
                         )}
+                        {c.status === 'new' ? (
+                          <button onClick={() => markComment(c.id, c.itemId, 'read')} className="p-1.5 rounded text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" title="Mark read">
+                            <CheckCircle2 className="w-4 h-4 text-blue-400" />
+                          </button>
+                        ) : null}
                         <button onClick={() => deleteComment(c.id, c.itemId)} className="p-1.5 rounded text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -186,13 +197,21 @@ export function AdminFeedback() {
         {/* REVIEWS TAB */}
         <TabsContent value="reviews" className="mt-4">
           <div className="bg-[#120b22] border border-[#2d1b54] rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-[#2d1b54] flex items-center gap-3">
-              <div className="relative flex-1">
+            <div className="p-4 border-b border-[#2d1b54] flex items-center gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <Input value={reviewSearch} onChange={e => setReviewSearch(e.target.value)} placeholder="Search reviews..."
                   className="pl-9 bg-[#1a103c] border-[#2d1b54] text-white text-sm" />
               </div>
               <Button size="sm" variant="outline" onClick={loadReviews} className="border-[#2d1b54] text-gray-400">Refresh</Button>
+              <Button size="sm" onClick={async () => {
+                const res = await fetch('/api/admin/backfill-reviews', { method: 'POST' })
+                const data = await res.json()
+                alert(data.message || 'Done')
+                loadReviews()
+              }} className="bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-xs">
+                ⚡ Backfill Missing Reviews
+              </Button>
             </div>
 
             {filteredReviews.length === 0 ? (

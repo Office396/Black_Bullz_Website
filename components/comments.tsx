@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { MessageSquare, ThumbsUp, ThumbsDown, Reply, LogIn, Star } from "lucide-react"
+import { MessageSquare, ThumbsUp, ThumbsDown, Reply, LogIn, Send } from "lucide-react"
 import { useUser } from "@/lib/user-context"
+import { PLAN_BADGES } from "@/lib/usernames"
 import Link from "next/link"
 
 interface Comment {
@@ -12,6 +13,8 @@ interface Comment {
   timestamp: string
   likes: number
   dislikes: number
+  user_badge?: string
+  user_badge_color?: string
   replies?: Comment[]
 }
 
@@ -30,15 +33,26 @@ function formatTimestamp(ts: string) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+function UserBadge({ badge, color }: { badge?: string; color?: string }) {
+  if (!badge) return null
+  return (
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${color || 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
+      {badge}
+    </span>
+  )
+}
+
 export function Comments({ gameId, itemName }: CommentsProps) {
   const { user, token } = useUser() || {}
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [replyContent, setReplyContent] = useState("")
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+
+  const planBadge = user ? PLAN_BADGES[(user as any).subscription_plan || 'free'] : null
 
   useEffect(() => {
     try { setIsAdmin(localStorage.getItem("admin_token") === "authenticated") } catch {}
@@ -56,14 +70,24 @@ export function Comments({ gameId, itemName }: CommentsProps) {
   const handleSubmit = async () => {
     if (!newComment.trim() || !user) return
     setSubmitting(true)
-    await apiPost({ action: 'add', itemId: gameId, itemName, author: user.name, email: user.email || '', content: newComment.trim() })
+    await apiPost({
+      action: 'add', itemId: gameId, itemName,
+      author: user.name, email: (user as any).email || '', content: newComment.trim(),
+      userBadge: planBadge?.label, userBadgeColor: planBadge?.color,
+    })
     setNewComment("")
     setSubmitting(false)
+    setSubmitted(true)
+    setTimeout(() => setSubmitted(false), 4000)
   }
 
   const handleReply = async (parentId: number) => {
     if (!replyContent.trim() || !user) return
-    await apiPost({ action: 'reply', itemId: gameId, parentId, itemName, author: user.name, email: user.email || '', content: replyContent.trim() })
+    await apiPost({
+      action: 'reply', itemId: gameId, parentId, itemName,
+      author: user.name, email: (user as any).email || '', content: replyContent.trim(),
+      userBadge: planBadge?.label, userBadgeColor: planBadge?.color,
+    })
     setReplyContent("")
     setReplyingTo(null)
   }
@@ -78,30 +102,30 @@ export function Comments({ gameId, itemName }: CommentsProps) {
   }
 
   const CommentCard = ({ c, isReply = false }: { c: Comment; isReply?: boolean }) => (
-    <div className={`flex gap-3 ${isReply ? 'ml-8 mt-3' : ''}`}>
-      <div className={`${isReply ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm'} rounded-full bg-[#9d4edd]/30 flex items-center justify-center text-white font-bold flex-shrink-0`}>
+    <div className={`flex gap-3 ${isReply ? 'ml-10 mt-3' : ''}`}>
+      <div className={`${isReply ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm'} rounded-full bg-gradient-to-br from-[#9d4edd]/40 to-[#7b2cbf]/40 flex items-center justify-center text-white font-bold flex-shrink-0 ring-1 ring-[#9d4edd]/30`}>
         {c.author.charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="bg-[#1a103c] border border-[#2d1b54] rounded-xl p-3">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-white font-semibold text-sm">{c.author}</span>
-            <span className="text-gray-600 text-xs">{formatTimestamp(c.timestamp)}</span>
+        <div className="bg-[#1a103c] border border-[#2d1b54] rounded-xl p-3.5 hover:border-[#9d4edd]/30 transition-colors">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-white font-semibold text-sm">{c.author}</span>
+              <UserBadge badge={c.user_badge} color={c.user_badge_color} />
+            </div>
+            <span className="text-gray-600 text-xs flex-shrink-0">{formatTimestamp(c.timestamp)}</span>
           </div>
           <p className="text-gray-300 text-sm leading-relaxed">{c.content}</p>
         </div>
-        <div className="flex items-center gap-3 mt-1.5 px-1">
-          <button onClick={() => handleReact(c.id, 'like')} className="flex items-center gap-1 text-gray-500 hover:text-green-400 transition-colors text-xs">
-            <ThumbsUp className="w-3.5 h-3.5" /> {c.likes}
+        <div className="flex items-center gap-4 mt-1.5 px-1">
+          <button onClick={() => handleReact(c.id, 'like')} className="flex items-center gap-1 text-gray-500 hover:text-green-400 transition-colors text-xs group">
+            <ThumbsUp className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" /> {c.likes > 0 && c.likes}
           </button>
-          <button onClick={() => handleReact(c.id, 'dislike')} className="flex items-center gap-1 text-gray-500 hover:text-red-400 transition-colors text-xs">
-            <ThumbsDown className="w-3.5 h-3.5" /> {c.dislikes}
+          <button onClick={() => handleReact(c.id, 'dislike')} className="flex items-center gap-1 text-gray-500 hover:text-red-400 transition-colors text-xs group">
+            <ThumbsDown className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" /> {c.dislikes > 0 && c.dislikes}
           </button>
-          {!isReply && (
-            <button onClick={() => {
-              if (!user) { setShowLoginPrompt(true); setTimeout(() => setShowLoginPrompt(false), 3000); return }
-              setReplyingTo(replyingTo === c.id ? null : c.id)
-            }} className="flex items-center gap-1 text-gray-500 hover:text-[#9d4edd] transition-colors text-xs">
+          {!isReply && user && (
+            <button onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)} className="flex items-center gap-1 text-gray-500 hover:text-[#9d4edd] transition-colors text-xs">
               <Reply className="w-3.5 h-3.5" /> Reply
             </button>
           )}
@@ -110,11 +134,10 @@ export function Comments({ gameId, itemName }: CommentsProps) {
           )}
         </div>
 
-        {/* Reply form */}
         {replyingTo === c.id && (
           <div className="mt-2 flex gap-2">
             <textarea value={replyContent} onChange={e => setReplyContent(e.target.value)} rows={2} placeholder="Write a reply..."
-              className="flex-1 bg-[#1a103c] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl px-3 py-2 text-white placeholder-gray-500 outline-none text-sm resize-none transition-colors" />
+              className="flex-1 bg-[#120b22] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl px-3 py-2 text-white placeholder-gray-500 outline-none text-sm resize-none transition-colors" />
             <div className="flex flex-col gap-1">
               <button onClick={() => handleReply(c.id)} disabled={!replyContent.trim()}
                 className="px-3 py-1.5 rounded-lg bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-xs font-semibold disabled:opacity-40 transition-colors">Post</button>
@@ -123,57 +146,79 @@ export function Comments({ gameId, itemName }: CommentsProps) {
           </div>
         )}
 
-        {/* Replies */}
         {c.replies?.map(r => <CommentCard key={r.id} c={r} isReply />)}
       </div>
     </div>
   )
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white flex items-center gap-2">
-        <MessageSquare className="w-5 h-5 text-[#9d4edd]" />
-        Comments <span className="text-gray-500 font-normal text-base">({comments.length})</span>
-      </h2>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-[#9d4edd]" />
+          Join the discussion
+          <span className="text-gray-500 font-normal text-sm">({comments.length})</span>
+        </h2>
+        {comments.length > 0 && <span className="text-gray-500 text-xs">Share your thoughts</span>}
+      </div>
 
       {/* Comment input */}
-      <div className="relative">
-        {!user ? (
-          <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-5 text-center">
-            <LogIn className="w-8 h-8 text-[#9d4edd] mx-auto mb-2" />
-            <p className="text-gray-400 text-sm mb-3">Sign in to join the conversation</p>
-            <div className="flex gap-3 justify-center">
-              <Link href="/login" className="px-4 py-2 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">Log in</Link>
-              <Link href="/signup" className="px-4 py-2 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-semibold transition-colors">Sign up</Link>
-            </div>
+      {!user ? (
+        <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-6 text-center">
+          <LogIn className="w-8 h-8 text-[#9d4edd] mx-auto mb-2" />
+          <p className="text-white font-semibold mb-1">Join the conversation</p>
+          <p className="text-gray-400 text-sm mb-4">Sign in to comment and interact with the community</p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/login" className="px-5 py-2.5 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">Log in</Link>
+            <Link href="/signup" className="px-5 py-2.5 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-semibold transition-colors">Sign up</Link>
           </div>
-        ) : (
-          <div className="flex gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#9d4edd]/30 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+        </div>
+      ) : (
+        <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-[#2d1b54] flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#9d4edd]/40 to-[#7b2cbf]/40 flex items-center justify-center text-white text-sm font-bold ring-1 ring-[#9d4edd]/30">
               {user.name.charAt(0).toUpperCase()}
             </div>
-            <div className="flex-1">
-              <textarea value={newComment} onChange={e => setNewComment(e.target.value)} rows={3}
-                placeholder="Share your thoughts..."
-                className="w-full bg-[#1a103c] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none text-sm resize-none transition-colors"
-                onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleSubmit() }} />
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-gray-600 text-xs">Ctrl+Enter to post</span>
-                <button onClick={handleSubmit} disabled={submitting || !newComment.trim()}
-                  className="px-4 py-2 rounded-xl font-semibold text-white text-sm transition-all hover:scale-[1.02] disabled:opacity-40"
-                  style={{ background: "linear-gradient(135deg, #9d4edd, #7b2cbf)" }}>
-                  {submitting ? 'Posting...' : 'Post Comment'}
-                </button>
-              </div>
+            <div>
+              <p className="text-white text-sm font-semibold">{user.name}</p>
+              {planBadge && <UserBadge badge={planBadge.label} color={planBadge.color} />}
             </div>
           </div>
-        )}
-      </div>
+          <div className="p-4">
+            <label className="text-gray-400 text-xs mb-2 block">Your comment <span className="text-red-400">*</span></label>
+            <textarea
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              rows={4}
+              placeholder="Your message here..."
+              className="w-full bg-[#0d0820] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl px-4 py-3 text-white placeholder-gray-600 outline-none text-sm resize-none transition-colors"
+              onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleSubmit() }}
+            />
+          </div>
+          <div className="px-4 pb-4 flex items-center justify-between">
+            <span className="text-gray-600 text-xs">
+              {submitted ? (
+                <span className="text-yellow-400">✓ Comment submitted — awaiting approval</span>
+              ) : 'Ready to share your thoughts?'}
+            </span>
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || !newComment.trim()}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white text-sm transition-all hover:scale-[1.02] disabled:opacity-40"
+              style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)" }}
+            >
+              <Send className="w-4 h-4" />
+              {submitting ? 'Posting...' : 'Post Comment'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Comments list */}
       <div className="space-y-4">
         {comments.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-6">No comments yet. Be the first!</p>
+          <div className="text-center py-8 text-gray-500 text-sm">No comments yet. Be the first to share your thoughts!</div>
         ) : (
           comments.map(c => <CommentCard key={c.id} c={c} />)
         )}

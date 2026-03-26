@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
   const { error } = await supabase.from('game_reviews').insert({
     game_id: gameId, game_title: gameTitle, user_id: user.id,
     user_name: user.name, rating, content: content?.trim() || null,
+    user_badge: (user as any).subscription_plan ? (user as any).subscription_plan : null,
   })
   if (error) return NextResponse.json({ error: 'Failed to submit review' }, { status: 500 })
   return NextResponse.json({ success: true })

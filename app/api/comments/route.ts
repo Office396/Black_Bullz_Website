@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { supabase } from "@/lib/supabase"
 import {
   addComment,
   addReply,
@@ -49,9 +50,9 @@ export async function POST(req: NextRequest) {
 
     switch (action) {
       case "add": {
-        const { itemId, itemName, author, email, content, avatar } = body || {}
+        const { itemId, itemName, author, email, content, avatar, userBadge, userBadgeColor } = body || {}
         if (!itemId || !itemName || !author || !content) return badRequest("Missing required fields")
-        const updated = await addComment({ itemId: Number(itemId), itemName, author, email, content, avatar })
+        const updated = await addComment({ itemId: Number(itemId), itemName, author, email, content, avatar, userBadge, userBadgeColor })
         return NextResponse.json({ success: true, data: updated })
       }
       case "reply": {
@@ -79,6 +80,13 @@ export async function POST(req: NextRequest) {
         if (!itemId || !targetId || (status !== "new" && status !== "read")) return badRequest("Missing or invalid fields")
         const updated = await setCommentStatus(Number(itemId), Number(targetId), status)
         return NextResponse.json({ success: true, data: updated })
+      }
+      case "approve": {
+        const { targetId, approvalStatus, adminToken } = body || {}
+        if (adminToken !== "authenticated") return forbidden("Admin token required")
+        if (!targetId) return badRequest("Missing targetId")
+        await supabase.from('comments').update({ approval_status: approvalStatus }).eq('id', targetId)
+        return NextResponse.json({ success: true })
       }
       default:
         return badRequest("Unknown action")

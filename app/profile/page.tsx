@@ -159,8 +159,22 @@ function ProfileContent() {
       {/* Profile header */}
       <div className="max-w-5xl mx-auto px-4 relative">
         <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12 mb-6">
-          <div className="relative w-24 h-24 rounded-full ring-4 ring-[#090514] overflow-hidden bg-gradient-to-br from-[#9d4edd] to-[#7b2cbf] flex items-center justify-center text-white text-3xl font-black flex-shrink-0">
-            {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative w-24 h-24 rounded-full ring-4 ring-[#090514] overflow-hidden bg-gradient-to-br from-[#9d4edd] to-[#7b2cbf] flex items-center justify-center text-white text-3xl font-black flex-shrink-0">
+              {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
+            </div>
+            {/* Like/Dislike counts below avatar */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 text-xs text-gray-400">
+                <ThumbsUp className="w-3.5 h-3.5 text-green-400" />
+                <span className="font-semibold text-white">{likedGames.length}</span>
+              </div>
+              <div className="w-px h-3 bg-gray-700" />
+              <div className="flex items-center gap-1 text-xs text-gray-400">
+                <span className="font-semibold text-white">{favouriteGames.length}</span>
+                <span>❤️</span>
+              </div>
+            </div>
           </div>
           <div className="flex-1 pb-2">
             <div className="flex items-center gap-2 flex-wrap">
@@ -179,10 +193,11 @@ function ProfileContent() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-4 gap-3 mb-6">
           {[
             { label: "Games Viewed", value: historyGames.length },
             { label: "Favourites", value: favouriteGames.length },
+            { label: "Liked Games", value: likedGames.length },
             { label: "Member Since", value: new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) },
           ].map(s => (
             <div key={s.label} className="rounded-xl p-4 text-center border" style={{ background: "rgba(157,78,221,0.06)", borderColor: "rgba(157,78,221,0.15)" }}>
@@ -218,6 +233,9 @@ function ProfileContent() {
                       <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     </div>
                     <p className="text-gray-300 text-xs mt-1.5 line-clamp-1 group-hover:text-white transition-colors">{g.title}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {[1,2,3,4,5].map(s => <Star key={s} className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />)}
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -233,12 +251,18 @@ function ProfileContent() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {historyGames.map(g => (
-                  <Link key={g.id} href={`/game/${g.id}`} className="group">
-                    <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                      <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    </div>
-                    <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
-                  </Link>
+                  <div key={g.id} className="group">
+                    <Link href={`/game/${g.id}`}>
+                      <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
+                        <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      </div>
+                      <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
+                    </Link>
+                    <Link href={`/game/${g.id}#reviews`} className="flex items-center gap-1 mt-0.5 hover:opacity-80 transition-opacity">
+                      {[1,2,3,4,5].map(s => <Star key={s} className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />)}
+                      <span className="text-[#9d4edd] text-[10px] ml-1">Review</span>
+                    </Link>
+                  </div>
                 ))}
               </div>
             )}
@@ -253,12 +277,18 @@ function ProfileContent() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {favouriteGames.map(g => (
-                  <Link key={g.id} href={`/game/${g.id}`} className="group">
-                    <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                      <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    </div>
-                    <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
-                  </Link>
+                  <div key={g.id} className="group">
+                    <Link href={`/game/${g.id}`}>
+                      <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
+                        <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      </div>
+                      <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
+                    </Link>
+                    <Link href={`/game/${g.id}#reviews`} className="flex items-center gap-1 mt-0.5 hover:opacity-80 transition-opacity">
+                      {[1,2,3,4,5].map(s => <Star key={s} className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />)}
+                      <span className="text-[#9d4edd] text-[10px] ml-1">Review</span>
+                    </Link>
+                  </div>
                 ))}
               </div>
             )}

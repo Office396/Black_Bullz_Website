@@ -31,19 +31,26 @@ export interface FlattenedComment {
 }
 
 export async function getComments(itemId: number): Promise<SiteCommentRecord[]> {
-  // Get all comments for this item (both top-level and replies)
+  // Get all approved comments for this item (both top-level and replies)
   const { data, error } = await supabase
     .from('comments')
     .select('*')
     .eq('item_id', itemId)
+    .in('approval_status', ['approved', null as any])  // show approved or legacy (no approval_status)
     .order('timestamp', { ascending: false })
 
   if (error) {
-    console.error('Error fetching comments:', error)
-    return []
+    // Fallback: try without approval_status filter (column may not exist yet)
+    const { data: fallback } = await supabase
+      .from('comments').select('*').eq('item_id', itemId).order('timestamp', { ascending: false })
+    if (!fallback) return []
+    return buildCommentTree(fallback)
   }
 
-  // Group comments by parent_id to reconstruct the nested structure
+  return buildCommentTree(data || [])
+}
+
+function buildCommentTree(data: any[]): SiteCommentRecord[] {
   const topLevelComments: SiteCommentRecord[] = []
   const repliesMap: Record<number, SiteCommentRecord[]> = {}
 
@@ -90,8 +97,10 @@ export async function addComment(params: {
   email?: string
   content: string
   avatar?: string
+  userBadge?: string
+  userBadgeColor?: string
 }): Promise<SiteCommentRecord[]> {
-  const { itemId, itemName, author, email, content, avatar } = params
+  const { itemId, itemName, author, email, content, avatar, userBadge, userBadgeColor } = params
 
   const { data, error } = await supabase
     .from('comments')
@@ -106,6 +115,9 @@ export async function addComment(params: {
       likes: 0,
       dislikes: 0,
       status: 'new',
+      approval_status: 'pending',
+      user_badge: userBadge || null,
+      user_badge_color: userBadgeColor || null,
       parent_id: null
     })
     .select()
@@ -116,7 +128,6 @@ export async function addComment(params: {
     throw error
   }
 
-  // Return updated comments list
   return await getComments(itemId)
 }
 

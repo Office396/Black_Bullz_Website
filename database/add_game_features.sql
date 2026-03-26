@@ -96,3 +96,12 @@ CREATE TABLE IF NOT EXISTS game_reviews (
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add badge columns to game_reviews
+ALTER TABLE game_reviews ADD COLUMN IF NOT EXISTS user_badge TEXT;
+ALTER TABLE game_reviews ADD COLUMN IF NOT EXISTS user_badge_color TEXT;
+
+-- Add status + badge to comments table (if it exists)
+ALTER TABLE comments ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+ALTER TABLE comments ADD COLUMN IF NOT EXISTS user_badge TEXT;
+ALTER TABLE comments ADD COLUMN IF NOT EXISTS user_badge_color TEXT;
