@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
@@ -30,7 +30,7 @@ const quickFilters = [
   { label: "2026 Games", value: "2026" },
 ]
 
-export function AllGamesClient({ initialItems }: { initialItems: GameItem[] }) {
+function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialLetter = searchParams.get("letter") || ""
@@ -290,5 +290,13 @@ export function AllGamesClient({ initialItems }: { initialItems: GameItem[] }) {
         <SiteFooter />
       </div>
     </div>
+  )
+}
+
+export function AllGamesClient({ initialItems }: { initialItems: GameItem[] }) {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#090514]"><div className="pt-20 p-8 text-center text-white">Loading...</div></div>}>
+      <AllGamesContent initialItems={initialItems} />
+    </Suspense>
   )
 }

@@ -373,7 +373,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
             <div className="relative">
               <Button
                 variant="outline"
-                className={`h-9 px-3 border-white/20 transition-colors ${userReaction === 'like' ? 'text-green-400 border-green-500/50 bg-green-500/10' : 'text-foreground hover:bg-white/10 hover:text-green-400'}`}
+                className={`h-9 px-3 border-white/20 transition-colors keep-white ${userReaction === 'like' ? 'text-green-400 border-green-500/50 bg-green-500/10' : 'text-white hover:bg-white/10 hover:text-green-400'}`}
                 onClick={() => handleReaction('like')}
               >
                 <ThumbsUp className={`w-4 h-4 ${userReaction === 'like' ? 'fill-green-400' : ''}`} />
@@ -388,7 +388,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
             </div>
             <Button
               variant="outline"
-              className={`h-9 px-3 border-white/20 transition-colors ${userReaction === 'dislike' ? 'text-red-400 border-red-500/50 bg-red-500/10' : 'text-foreground hover:bg-white/10 hover:text-red-400'}`}
+              className={`h-9 px-3 border-white/20 transition-colors keep-white ${userReaction === 'dislike' ? 'text-red-400 border-red-500/50 bg-red-500/10' : 'text-white hover:bg-white/10 hover:text-red-400'}`}
               onClick={() => handleReaction('dislike')}
             >
               <ThumbsDown className={`w-4 h-4 ${userReaction === 'dislike' ? 'fill-red-400' : ''}`} />
@@ -397,7 +397,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
             </Button>
             <Button
               variant="outline"
-              className="h-9 px-3 border-white/20 text-foreground hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
+              className="h-9 px-3 border-white/20 text-white hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 keep-white"
               onClick={() => setShowReportModal(true)}
             >
               <Flag className="w-4 h-4" />

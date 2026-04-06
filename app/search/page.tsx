@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
@@ -22,7 +22,7 @@ interface GameItem {
 
 const POPULAR_SEARCHES = ["GTA V", "Call of Duty", "FIFA", "Minecraft", "Cyberpunk", "Red Dead"]
 
-export default function SearchPage() {
+function SearchPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialQuery = searchParams.get("q") || ""
@@ -377,5 +377,13 @@ export default function SearchPage() {
 
       <SiteFooter />
     </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#090514]"><div className="pt-20 p-8 text-center text-white">Loading...</div></div>}>
+      <SearchPageContent />
+    </Suspense>
   )
 }

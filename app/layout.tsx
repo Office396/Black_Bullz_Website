@@ -26,25 +26,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                var theme = localStorage.getItem('bullzgamez-theme');
-                if (theme === 'light') {
-                  document.documentElement.classList.remove('dark');
-                } else {
-                  document.documentElement.classList.add('dark');
-                }
-              })();
-            `,
-          }}
-        />
       </head>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-[#090514] dark:bg-[#090514]`}>
+      <body className="font-sans" style={{ backgroundColor: "#090514", minHeight: "100vh" }}>
         <UserProvider>
         <ThemeProvider
           attribute="class"
