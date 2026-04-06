@@ -65,8 +65,8 @@ export default async function GamePage({ params }: GamePageProps) {
             backgroundRepeat: 'no-repeat',
           }}
         >
-          {/* Dark overlay only in dark mode - lighter so image shows more */}
-          <div className="hidden dark:block absolute inset-0 bg-[#090514]/50" />
+          {/* Dark overlay - always visible for text readability */}
+          <div className="absolute inset-0 bg-[#090514]/75 dark:bg-[#090514]/50" />
         </div>
       )}
 

@@ -4,7 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { UserProvider } from "@/lib/user-context"
-import { LoadingScreen } from "@/components/loading-screen"
+import { ThemeProvider } from "@/components/theme-provider"
 import { PageLoader } from "@/components/page-loader"
 import "./globals.css"
 
@@ -26,29 +26,36 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              try {
-                if (localStorage.getItem('bullzgamez-theme') === 'light') {
+              (function() {
+                var theme = localStorage.getItem('bullzgamez-theme');
+                if (theme === 'light') {
                   document.documentElement.classList.remove('dark');
                 } else {
                   document.documentElement.classList.add('dark');
                 }
-              } catch (e) {
-                document.documentElement.classList.add('dark');
-              }
+              })();
             `,
           }}
         />
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-[#090514] dark:bg-[#090514]`}>
         <UserProvider>
-        <PageLoader />
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+          storageKey="bullzgamez-theme"
+        >
+          <PageLoader />
+          {children}
+        </ThemeProvider>
         <Analytics />
         </UserProvider>
       </body>

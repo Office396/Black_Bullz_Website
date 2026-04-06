@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import Lottie from "lottie-react"
 import diceAnimation from "@/Dice roll.json"
+import { useTheme } from "next-themes"
 import { useUser } from "@/lib/user-context"
 const genres = [
   { name: "Action", href: "/genre/action", letter: "A" },
@@ -80,10 +81,11 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [collections, setCollections] = useState<Collection[]>([])
-  const [theme, setTheme] = useState<"dark" | "light">("dark")
+  const { theme, setTheme } = useTheme()
   const [isSpinning, setIsSpinning] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotifOpen, setIsNotifOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const spinningTargetRef = useRef<string | null>(null)
   const genreRef = useRef<HTMLDivElement>(null)
   const collectionsRef = useRef<HTMLDivElement>(null)
@@ -124,16 +126,7 @@ export function Header() {
     fetchCollections()
     // Pre-warm the games cache on mount so search is instant when popup opens
     prefetchGames()
-  }, [])
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("bullzgamez-theme") as "dark" | "light" | null
-    if (savedTheme === "light") {
-      setTheme("light")
-      document.documentElement.classList.remove("dark")
-    } else {
-      document.documentElement.classList.add("dark")
-    }
+    setMounted(true)
   }, [])
 
   useEffect(() => {
@@ -297,10 +290,8 @@ export function Header() {
     }
 
   const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark"
+    const newTheme = (!theme || theme === "dark") ? "light" : "dark"
     setTheme(newTheme)
-    localStorage.setItem("bullzgamez-theme", newTheme)
-    document.documentElement.classList.toggle("dark", newTheme === "dark")
   }
 
   const handleRandomGame = async () => {
@@ -618,12 +609,16 @@ export function Header() {
             <button
               onClick={toggleTheme}
               className="p-2 transition-colors rounded-full hidden sm:flex overflow-hidden text-gray-400 hover:text-[#9d4edd] hover:bg-[#9d4edd]/10 dark:hover:bg-[#9d4edd]/10"
-              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              title={!mounted ? "Loading..." : (!theme || theme === "dark") ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
-              <div className="relative w-5 h-5 flex items-center justify-center">
-                <Sun className={`absolute h-5 w-5 transition-all duration-500 ease-in-out ${theme === "dark" ? "opacity-0 rotate-90 scale-0" : "opacity-100 rotate-0 scale-100"}`} />
-                <Moon className={`absolute h-5 w-5 transition-all duration-500 ease-in-out ${theme === "dark" ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-0"}`} />
-              </div>
+              {!mounted ? (
+                <div className="w-5 h-5" />
+              ) : (
+                <div className="relative w-5 h-5 flex items-center justify-center">
+                  <Sun className={`absolute h-5 w-5 transition-all duration-500 ease-in-out ${(!theme || theme === "dark") ? "opacity-0 rotate-90 scale-0" : "opacity-100 rotate-0 scale-100"}`} />
+                  <Moon className={`absolute h-5 w-5 transition-all duration-500 ease-in-out ${(!theme || theme === "dark") ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-0"}`} />
+                </div>
+              )}
             </button>
 
             {user ? (

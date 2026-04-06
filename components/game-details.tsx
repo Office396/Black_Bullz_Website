@@ -349,7 +349,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
         <ChevronLeft className="w-4 h-4 rotate-180" />
         <Link href="/games" className="hover:text-[#9d4edd] transition-colors">Games</Link>
         <ChevronLeft className="w-4 h-4 rotate-180" />
-        <span className="text-white">{game.title}</span>
+        <span className="text-gray-900 dark:text-white">{game.title}</span>
       </nav>
 
       {/* Hero Section */}
@@ -425,7 +425,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
 
           {/* Title & Rating */}
           <div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-white mb-1">{game.title}
+            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-1">{game.title}
               {game.edition && (
                 <span className="ml-3 text-sm font-bold px-3 py-1.5 rounded-lg align-middle inline-flex items-center gap-1.5 animate-pulse" style={{ background: "linear-gradient(135deg, rgba(157,78,221,0.4), rgba(199,125,255,0.25))", border: "1px solid rgba(157,78,221,0.6)", color: "#c77dff", boxShadow: "0 0 12px rgba(157,78,221,0.4)" }}>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#c77dff] animate-ping inline-block" />
@@ -489,11 +489,11 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
               </div>
             )}
             <div>
-              <div className="flex items-center gap-2 text-gray-400 text-xs mb-1">
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-xs mb-1">
                 <Clock className="w-3 h-3" />
                 {game.updatedDate && game.updatedDate !== game.uploadDate ? 'Updated' : 'Published'}
               </div>
-              <p className="text-white text-sm font-medium">
+              <p className="text-gray-900 dark:text-white text-sm font-medium">
                 {game.updatedDate && game.updatedDate !== game.uploadDate
                   ? formatDate(game.updatedDate)
                   : formatDate(game.publishedDate || game.uploadDate)}
@@ -507,7 +507,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
               <User className="w-4 h-4 text-[#9d4edd]" />
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">Uploaded by</p>
+              <p className="text-muted-foreground dark:text-muted-foreground text-xs">Uploaded by</p>
               {(game.uploaderName || game.uploader) ? (
                 <Link href={`/profile`} className="text-[#9d4edd] hover:text-[#c77dff] text-sm font-medium transition-colors">
                   {game.uploaderName || game.uploader}
@@ -520,7 +520,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
 
           {/* Short Description */}
           {game.description && (
-            <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">{game.description}</p>
+            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed line-clamp-3">{game.description}</p>
           )}
 
           {/* Action Buttons */}
@@ -959,9 +959,9 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                           </div>
                           <div>
                             <h3 className="text-white font-bold text-lg">Pre-installed Version</h3>
-                            <p className="text-green-400 text-xs">Recommended • No installation needed, just extract & play!</p>
+                            <p className="text-green-300 dark:text-green-400 text-xs">Recommended • No installation needed, just extract & play!</p>
                           </div>
-                          <Badge className="ml-auto bg-green-500/30 text-green-400 border border-green-500/40">RECOMMENDED</Badge>
+                          <Badge className="ml-auto bg-green-500/30 text-green-300 dark:text-green-400 border border-green-500/40">RECOMMENDED</Badge>
                         </div>
                         <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {allLinks.map((cloud, ci) => {
@@ -996,7 +996,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                                       >
                                         <div className="flex items-center gap-2 min-w-0">
                                           <Download className={`w-3.5 h-3.5 ${style.color} flex-shrink-0`} />
-                                          <span className="text-white text-sm truncate">{link.name || `Part ${li + 1}`}</span>
+                                          <span className="text-white dark:text-white text-sm truncate">{link.name || `Part ${li + 1}`}</span>
                                         </div>
                                         {link.size && <span className="text-gray-400 text-xs flex-shrink-0">{link.size}</span>}
                                       </a>
@@ -1020,14 +1020,14 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                           </div>
                           <div>
                             <h3 className="text-white font-bold text-lg">Installable Version</h3>
-                            <p className="text-purple-400 text-xs">Traditional installer • Run setup.exe to install</p>
+                            <p className="text-purple-300 dark:text-purple-400 text-xs">Traditional installer • Run setup.exe to install</p>
                           </div>
-                          <Badge className="ml-auto bg-purple-500/30 text-purple-400 border border-purple-500/40">INSTALLER</Badge>
+                          <Badge className="ml-auto bg-purple-500/30 text-purple-300 dark:text-purple-400 border border-purple-500/40">INSTALLER</Badge>
                         </div>
                         <div className="p-4 flex items-center justify-center text-gray-500 py-8">
                           <div className="text-center">
                             <Package className="w-10 h-10 mx-auto mb-2 text-gray-600" />
-                            <p className="text-sm">Use the same links above — select your preferred version</p>
+                            <p className="text-gray-700 dark:text-gray-500 text-sm">Use the same links above — select your preferred version</p>
                           </div>
                         </div>
                       </div>
@@ -1076,7 +1076,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                                     >
                                       <div className="flex items-center gap-2 min-w-0">
                                         <Download className={`w-3.5 h-3.5 ${style.color} flex-shrink-0`} />
-                                        <span className="text-white text-sm truncate">{link.name || `Download ${li + 1}`}</span>
+                                          <span className="text-white dark:text-white text-sm truncate">{link.name || `Download ${li + 1}`}</span>
                                       </div>
                                       {link.size && <span className="text-gray-400 text-xs flex-shrink-0">{link.size}</span>}
                                     </a>
