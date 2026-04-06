@@ -1,22 +1,33 @@
 import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
 import { GameDetails } from "@/components/game-details"
-import { getItems } from "@/lib/server/items-store"
+import { getItemById, getRelatedGames, getPopularGameIds } from "@/lib/server/items-store"
 import Link from "next/link"
 
 interface GamePageProps {
   params: { id: string }
 }
 
+export async function generateStaticParams() {
+  try {
+    const ids = await getPopularGameIds(20)
+    return ids.map((id) => ({ id: String(id) }))
+  } catch {
+    return []
+  }
+}
+
 export default async function GamePage({ params }: GamePageProps) {
   const gameId = Number.parseInt(params.id)
 
   let game = null
-  let allGames: any[] = []
+  let relatedGames: any[] = []
   try {
-    const items = await getItems()
-    game = items.find((item) => item.id === gameId) || null
-    allGames = items
+    game = await getItemById(gameId)
+    
+    if (game) {
+      relatedGames = await getRelatedGames(game.category, gameId)
+    }
   } catch (error) {
     console.error("Error fetching game:", error)
   }
@@ -42,24 +53,29 @@ export default async function GamePage({ params }: GamePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Ambient glowing background */}
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Full page background image - visible in both modes */}
       {game.landscapeImage && (
-        <div className="absolute top-0 left-0 w-full h-[600px] z-0 pointer-events-none opacity-30 dark:opacity-20 flex item-start justify-center">
-          <div
-            className="absolute inset-0 bg-cover bg-top blur-[60px] transform scale-110 opacity-70"
-            style={{ backgroundImage: `url(${game.landscapeImage})` }}
-          />
-          {/* Fades into background color at the bottom */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background" />
+        <div 
+          className="fixed inset-0 z-0"
+          style={{
+            backgroundImage: `url(${game.landscapeImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center top',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          {/* Dark overlay only in dark mode - lighter so image shows more */}
+          <div className="hidden dark:block absolute inset-0 bg-[#090514]/50" />
         </div>
       )}
 
+      {/* Content wrapper */}
       <div className="relative z-10">
         <Header />
         <div className="pt-16">
           <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
-            <GameDetails game={game} allGames={allGames} />
+            <GameDetails game={game} allGames={relatedGames} />
           </div>
         </div>
         <SiteFooter />

@@ -51,6 +51,12 @@ export function Comments({ gameId, itemName }: CommentsProps) {
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [replyContent, setReplyContent] = useState("")
   const [isAdmin, setIsAdmin] = useState(false)
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' } | null>(null)
+
+  const showToast = (msg: string, type: 'success' | 'info' = 'info') => {
+    setToast({ msg, type })
+    setTimeout(() => setToast(null), 4000)
+  }
 
   const planBadge = user ? PLAN_BADGES[(user as any).subscription_plan || 'free'] : null
 
@@ -68,7 +74,11 @@ export function Comments({ gameId, itemName }: CommentsProps) {
   }
 
   const handleSubmit = async () => {
-    if (!newComment.trim() || !user) return
+    if (!user) {
+      setToast({ msg: 'Please login to join the discussion', type: 'info' })
+      return
+    }
+    if (!newComment.trim()) return
     setSubmitting(true)
     await apiPost({
       action: 'add', itemId: gameId, itemName,
@@ -78,11 +88,16 @@ export function Comments({ gameId, itemName }: CommentsProps) {
     setNewComment("")
     setSubmitting(false)
     setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 4000)
+    setToast({ msg: 'Your comment has been submitted and is pending approval!', type: 'info' })
+    setTimeout(() => { setSubmitted(false); setToast(null) }, 4000)
   }
 
   const handleReply = async (parentId: number) => {
-    if (!replyContent.trim() || !user) return
+    if (!user) {
+      setToast({ msg: 'Please login to reply', type: 'info' })
+      return
+    }
+    if (!replyContent.trim()) return
     await apiPost({
       action: 'reply', itemId: gameId, parentId, itemName,
       author: user.name, email: (user as any).email || '', content: replyContent.trim(),
@@ -90,6 +105,8 @@ export function Comments({ gameId, itemName }: CommentsProps) {
     })
     setReplyContent("")
     setReplyingTo(null)
+    setToast({ msg: 'Your reply has been submitted!', type: 'success' })
+    setTimeout(() => setToast(null), 4000)
   }
 
   const handleReact = async (targetId: number, reaction: 'like' | 'dislike') => {
@@ -137,7 +154,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
         {replyingTo === c.id && (
           <div className="mt-2 flex gap-2">
             <textarea value={replyContent} onChange={e => setReplyContent(e.target.value)} rows={2} placeholder="Write a reply..."
-              className="flex-1 bg-[#120b22] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl px-3 py-2 text-white placeholder-gray-500 outline-none text-sm resize-none transition-colors" />
+              className="flex-1 bg-[#f0f0f5] dark:bg-[#120b22] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl px-3 py-2 text-white placeholder-gray-500 outline-none text-sm resize-none transition-colors" />
             <div className="flex flex-col gap-1">
               <button onClick={() => handleReply(c.id)} disabled={!replyContent.trim()}
                 className="px-3 py-1.5 rounded-lg bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-xs font-semibold disabled:opacity-40 transition-colors">Post</button>
@@ -153,6 +170,42 @@ export function Comments({ gameId, itemName }: CommentsProps) {
 
   return (
     <div className="space-y-5">
+      {/* Toast notification - same style as game-details */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-[300] animate-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-[#1a103c] border border-[#2d1b54] rounded-xl shadow-2xl overflow-hidden w-80" style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 1px rgba(157,78,221,0.5)" }}>
+            <div className="p-4 flex items-start gap-3">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${toast.type === 'success' ? 'bg-green-500/20' : 'bg-[#9d4edd]/20'}`}>
+                {toast.type === 'success' ? (
+                  <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                ) : (
+                  <svg className="w-4 h-4 text-[#9d4edd]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-semibold">{toast.type === 'success' ? 'Success' : 'Info'}</p>
+                <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">{toast.msg}</p>
+              </div>
+              <button onClick={() => setToast(null)} className="text-gray-500 hover:text-white transition-colors">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            {/* Progress bar */}
+            <div className="h-1 bg-[#2d1b54]">
+              <div 
+                className={`h-full transition-all duration-[4000ms] ease-linear ${toast.type === 'success' ? 'bg-green-500' : 'bg-[#9d4edd]'}`}
+                style={{ animation: 'commentToastShrink 4s linear forwards' }}
+              />
+            </div>
+          </div>
+          <style jsx>{`
+            @keyframes commentToastShrink {
+              from { width: 100%; }
+              to { width: 0%; }
+            }
+          `}</style>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -192,7 +245,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
               onChange={e => setNewComment(e.target.value)}
               rows={4}
               placeholder="Your message here..."
-              className="w-full bg-[#0d0820] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl px-4 py-3 text-white placeholder-gray-600 outline-none text-sm resize-none transition-colors"
+              className="w-full bg-[#f0f0f5] dark:bg-[#0d0820] border border-[#2d1b54] focus:border-[#9d4edd] rounded-xl px-4 py-3 text-white placeholder-gray-600 outline-none text-sm resize-none transition-colors"
               onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleSubmit() }}
             />
           </div>

@@ -257,6 +257,9 @@ export async function flattenCommentsForAdmin(): Promise<FlattenedComment[]> {
     type: comment.parent_id ? 'reply' : 'comment',
     parentId: comment.parent_id,
     timestamp: comment.timestamp,
-    status: comment.status
+    status: comment.status,
+    approval_status: comment.approval_status,
+    likes: comment.likes,
+    dislikes: comment.dislikes,
   }))
 }

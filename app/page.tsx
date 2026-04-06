@@ -8,7 +8,7 @@ import { CategoriesSection } from "@/components/categories-section"
 import { FeaturedGame } from "@/components/featured-game"
 import { EpicCollections } from "@/components/epic-collections"
 import { SiteFooter } from "@/components/site-footer"
-import { getItems } from "@/lib/server/items-store"
+import { getItemsLight } from "@/lib/server/items-store"
 import { getPageModifierData, type PageModifierData } from "@/lib/server/page-modifier-store"
 
 export default async function HomePage() {
@@ -17,7 +17,7 @@ export default async function HomePage() {
 
   try {
     const [itemsData, modifiersData] = await Promise.all([
-      getItems(),
+      getItemsLight(),
       getPageModifierData()
     ])
     items = itemsData
@@ -57,32 +57,34 @@ export default async function HomePage() {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="pt-16">
-        <div className="max-w-full mx-auto px-4 lg:px-6 pt-6">
-          <HeroCarousel games={carouselGames} modifiers={pageModifiers.carousel} />
-        </div>
-        <div className="max-w-full mx-auto px-4 lg:px-6">
-          <SocialBar />
-        </div>
-        <div className="max-w-full mx-auto px-4 lg:px-6">
-          <TrendingSection games={trendingGames.length > 0 ? trendingGames : items} />
-        </div>
-        <div className="max-w-full mx-auto px-4 lg:px-6">
-          <UpcomingGames games={items} />
-        </div>
-        <div className="max-w-full mx-auto px-4 lg:px-6">
-          <LatestSection games={items} />
-        </div>
-        <div className="max-w-full mx-auto px-4 lg:px-6">
-          <FeaturedGame
-            game={featuredGame}
-            trailerUrl={pageModifiers.gameOfTheDay?.trailerUrl}
-          />
-        </div>
-        <div className="max-w-full mx-auto px-4 lg:px-6">
-          <EpicCollections collections={pageModifiers.collections} allGames={items} />
-        </div>
-        <div className="max-w-full mx-auto px-4 lg:px-6">
-          <CategoriesSection games={items} />
+        <div className="bg-[#090514]">
+          <div className="max-w-full mx-auto px-4 lg:px-6 pt-6">
+            <HeroCarousel games={carouselGames} modifiers={pageModifiers.carousel} />
+          </div>
+          <div className="max-w-full mx-auto px-4 lg:px-6">
+            <SocialBar />
+          </div>
+          <div className="max-w-full mx-auto px-4 lg:px-6">
+            <TrendingSection games={trendingGames.length > 0 ? trendingGames : items} />
+          </div>
+          <div className="max-w-full mx-auto px-4 lg:px-6">
+            <UpcomingGames games={items} />
+          </div>
+          <div className="max-w-full mx-auto px-4 lg:px-6">
+            <LatestSection games={items} />
+          </div>
+          <div className="max-w-full mx-auto px-4 lg:px-6">
+            <FeaturedGame
+              game={featuredGame}
+              trailerUrl={pageModifiers.gameOfTheDay?.trailerUrl}
+            />
+          </div>
+          <div className="max-w-full mx-auto px-4 lg:px-6">
+            <EpicCollections collections={pageModifiers.collections} allGames={items} />
+          </div>
+          <div className="max-w-full mx-auto px-4 lg:px-6">
+            <CategoriesSection games={items} />
+          </div>
         </div>
         <SiteFooter />
       </div>

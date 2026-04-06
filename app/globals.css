@@ -355,6 +355,14 @@ html:not(.dark) [class*="bg-[#1a103c]"] {
   background-image: none !important;
 }
 
+/* Keep dark backgrounds inside .keep-white */
+html:not(.dark) .keep-white [class*="bg-[#090514]"] {
+  background-color: #090514 !important;
+}
+html:not(.dark) .keep-white [class*="bg-[#1a103c]"] {
+  background-color: #1a103c !important;
+}
+
 /* Override hardcoded border colors */
 html:not(.dark) [class*="border-[#2d1b54]"] {
   border-color: #e0e0e8 !important;
@@ -375,6 +383,27 @@ html:not(.dark) .text-gray-400 {
 
 html:not(.dark) .text-gray-500 {
   color: #999 !important;
+}
+
+/* Add a keep-white class to override globals in light mode for dark sections */
+html:not(.dark) .keep-white .text-white,
+html:not(.dark) .keep-white.text-white {
+  color: #ffffff !important;
+}
+
+html:not(.dark) .keep-white .text-gray-300,
+html:not(.dark) .keep-white.text-gray-300 {
+  color: #d1d5db !important;
+}
+
+html:not(.dark) .keep-white .text-gray-400,
+html:not(.dark) .keep-white.text-gray-400 {
+  color: #9ca3af !important;
+}
+
+html:not(.dark) .keep-white .text-gray-500,
+html:not(.dark) .keep-white.text-gray-500 {
+  color: #6b7280 !important;
 }
 
 /* Header/Footer special handling */
@@ -415,4 +444,10 @@ main {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

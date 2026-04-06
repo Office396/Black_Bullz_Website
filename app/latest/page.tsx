@@ -2,7 +2,6 @@ import { Header } from "@/components/header"
 import { Sidebar } from "@/components/sidebar"
 import { GameGrid } from "@/components/game-grid"
 import { LoadingSpinner } from "@/components/loading-spinner"
-import { PageLoader } from "@/components/page-loader"
 import { Suspense } from "react"
 
 export default function LatestPage() {
@@ -13,7 +12,6 @@ export default function LatestPage() {
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}>
-      <PageLoader />
       <Header />
       <div className="container mx-auto px-4 py-6">
         <div className="flex gap-6">

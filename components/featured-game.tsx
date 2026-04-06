@@ -82,7 +82,7 @@ export function FeaturedGame({ game, trailerUrl }: FeaturedGameProps) {
 
     return (
         <section className="py-6">
-            <div className="relative bg-[#120b22]/40 border border-[#2d1b54]/50 rounded-2xl overflow-hidden backdrop-blur-sm min-h-[400px]">
+            <div className="relative bg-[#120b22]/40 dark:bg-[#120b22]/40 border border-[#2d1b54]/50 rounded-2xl overflow-hidden backdrop-blur-sm min-h-[400px] keep-white">
                 {/* Video Background - Supports YouTube, direct video files, and other platforms */}
                 {videoConfig && (
                     <div className="absolute inset-0 z-0">

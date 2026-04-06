@@ -90,10 +90,12 @@ export function HeroCarousel({ games, modifiers = [] }: HeroCarouselProps) {
             Change these pixel numbers (e.g., h-[600px]) to instantly resize the slideshow.
         */}
 
-            <section className="relative w-full h-[600px] sm:h-[800px] md:h-[600px] overflow-hidden rounded-xl" style={{ backgroundColor: '#090514', background: '#090514' }}>
+            <section className="relative w-full h-[600px] sm:h-[800px] md:h-[600px] overflow-hidden rounded-xl keep-white" style={{ backgroundColor: '#090514' }}>
 
-                {/* Background Image */}
+                {/* Background Image - Only load current and preload next */}
                 {featured.map((item, i) => {
+                    if (i !== current && i !== (current + 1) % featured.length) return null
+                    
                     const isModifier = 'landscapeImage' in item
                     const imageUrl = isModifier ? (item as CarouselModifier).landscapeImage : (item as GameItem).image
                     const itemGame = isModifier ? games.find(g => g.id === (item as CarouselModifier).gameId) : item
@@ -104,26 +106,40 @@ export function HeroCarousel({ games, modifiers = [] }: HeroCarouselProps) {
                             className={`absolute inset-0 transition-opacity duration-700 ${i === current ? "opacity-100" : "opacity-0"
                                 }`}
                         >
-                            <Image
+                            <img
                                 src={imageUrl || "/placeholder.svg"}
                                 alt={(itemGame as GameItem)?.title || 'Game'}
-                                fill
-                                className="object-cover object-center"
-                                priority={i < 3}
-                                sizes="100vw"
+                                className="w-full h-full object-cover"
                             />
                         </div>
                     )
                 })}
 
-                {/* Gradient overlays for smoke fade effect - Dramatically strengthened */}
-                <div className="absolute inset-0 !bg-[#090514]/40" />
-                {/* <div className="absolute inset-0 bg-gradient-to-r from-[#090514] via-[#090514]/90 to-transparent" /> */}
-                <div className="absolute inset-x-0 bottom-0 h-48 !bg-gradient-to-t from-[#090514] via-[#090514]/70 to-transparent z-10" />
-                <div className="absolute inset-0 !bg-gradient-to-t from-[#090514] via-transparent to-transparent opacity-80" />
-                <div className="absolute inset-x-0 top-0 h-24 !bg-gradient-to-b from-[#090514] to-transparent pointer-events-none" />
-                <div className="absolute inset-y-0 right-0 w-60 !bg-gradient-to-l from-[#090514] via-[#090514]/20 to-transparent pointer-events-none" />
-                <div className="absolute inset-y-0 left-0 w-60 !bg-gradient-to-r from-[#090514] via-[#090514]/40 to-transparent pointer-events-none" />
+                {/* Gradient overlays */}
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/70 via-black/50 to-transparent z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black to-transparent pointer-events-none" />
+                <div className="absolute inset-y-0 right-0 w-60 bg-gradient-to-l from-black/80 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute inset-y-0 left-0 w-60 bg-gradient-to-r from-black/80 via-black/40 to-transparent pointer-events-none" />
+
+                {/* Brighten effect - four corner lights when bulb is on */}
+                {lightOn && (
+                  <>
+                    {/* Top Right corner light */}
+                    <div className="absolute top-0 right-0 w-[50%] h-[50%] pointer-events-none z-20"
+                      style={{ background: 'radial-gradient(ellipse at top right, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 50%, transparent 80%)' }} />
+                    {/* Top Left corner light */}
+                    <div className="absolute top-0 left-0 w-[50%] h-[50%] pointer-events-none z-20"
+                      style={{ background: 'radial-gradient(ellipse at top left, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.15) 50%, transparent 80%)' }} />
+                    {/* Bottom Right corner light */}
+                    <div className="absolute bottom-0 right-0 w-[50%] h-[50%] pointer-events-none z-20"
+                      style={{ background: 'radial-gradient(ellipse at bottom right, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 80%)' }} />
+                    {/* Bottom Left corner light */}
+                    <div className="absolute bottom-0 left-0 w-[50%] h-[50%] pointer-events-none z-20"
+                      style={{ background: 'radial-gradient(ellipse at bottom left, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 80%)' }} />
+                  </>
+                )}
 
                 {/* Content - Elevated z-index to stay on top of all gradients/glows */}
                 <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8 md:p-12 max-w-2xl z-30" key={current}>

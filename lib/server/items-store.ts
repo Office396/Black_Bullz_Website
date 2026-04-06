@@ -29,6 +29,7 @@ export interface Item {
   uploaderId?: string
   likes?: number
   dislikes?: number
+  reviews?: any[]
   systemRequirements: {
     recommended: {
       os: string
@@ -99,6 +100,192 @@ export async function getItems(): Promise<Item[]> {
     }))
   } catch (error) {
     console.error('Error in getItems:', error)
+    return []
+  }
+}
+
+export async function getItemById(id: number): Promise<Item | null> {
+  try {
+    const { data, error } = await supabase
+      .from('items')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      console.error('Error fetching item by id:', error)
+      return null
+    }
+
+    // Fetch approved reviews for this game
+    const { data: reviewsData } = await supabase
+      .from('game_reviews')
+      .select('*')
+      .eq('game_id', id)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+
+    return {
+      ...data,
+      longDescription: data.long_description,
+      releaseDate: data.release_date,
+      publishedDate: data.published_date,
+      keyFeatures: data.key_features || [],
+      screenshots: data.screenshots || [],
+      note: data.note || "",
+      systemRequirements: data.system_requirements,
+      androidRequirements: data.android_requirements,
+      sharedPinCode: data.shared_pin_code,
+      sharedRarPassword: data.shared_rar_password,
+      cloudDownloads: data.cloud_downloads || [],
+      uploadDate: data.upload_date,
+      updatedDate: data.updated_date,
+      trailerUrl: data.trailer_url,
+      steamUrl: data.steam_url,
+      landscapeImage: data.landscape_image,
+      edition: data.edition,
+      genres: data.genres || [],
+      downloads: data.downloads || 0,
+      views: data.views || 0,
+      uploaderName: data.uploader_name,
+      uploaderId: data.uploader_id,
+      likes: data.likes || 0,
+      dislikes: data.dislikes || 0,
+      reviews: reviewsData || [],
+    }
+  } catch (error) {
+    console.error('Error in getItemById:', error)
+    return null
+  }
+}
+
+export async function getRelatedGames(category: string, excludeId: number): Promise<Item[]> {
+  try {
+    const { data, error } = await supabase
+      .from('items')
+      .select('id,title,category,description,image,landscape_image,rating,trending,latest,size,release_date,upload_date,downloads,views,genres')
+      .eq('category', category)
+      .neq('id', excludeId)
+      .order('downloads', { ascending: false })
+      .limit(10)
+
+    if (error) {
+      console.error('Error fetching related games:', error)
+      return []
+    }
+
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      title: item.title,
+      category: item.category,
+      description: item.description,
+      image: item.image,
+      landscapeImage: item.landscape_image,
+      rating: item.rating,
+      trending: item.trending,
+      latest: item.latest,
+      size: item.size,
+      releaseDate: item.release_date,
+      uploadDate: item.upload_date,
+      downloads: item.downloads || 0,
+      views: item.views || 0,
+      genres: item.genres || [],
+      longDescription: "",
+      developer: "",
+      publisher: "",
+      keyFeatures: [],
+      screenshots: [],
+      note: "",
+      trailerUrl: "",
+      steamUrl: "",
+      edition: "",
+      systemRequirements: { recommended: { os: "", processor: "", memory: "", graphics: "", storage: "" } },
+      androidRequirements: { recommended: { os: "", ram: "", storage: "", processor: "" } },
+      sharedPinCode: "",
+      sharedRarPassword: "",
+      cloudDownloads: [],
+      updatedDate: "",
+      uploaderName: "",
+      uploaderId: "",
+      likes: 0,
+      dislikes: 0,
+    }))
+  } catch (error) {
+    console.error('Error in getRelatedGames:', error)
+    return []
+  }
+}
+
+export async function getPopularGameIds(limit: number = 20): Promise<number[]> {
+  try {
+    const { data, error } = await supabase
+      .from('items')
+      .select('id')
+      .order('downloads', { ascending: false })
+      .limit(limit)
+
+    if (error) {
+      console.error('Error fetching popular game ids:', error)
+      return []
+    }
+
+    return (data || []).map((item) => item.id)
+  } catch (error) {
+    console.error('Error in getPopularGameIds:', error)
+    return []
+  }
+}
+
+export async function getItemsLight(): Promise<Item[]> {
+  try {
+    const { data, error } = await supabase
+      .from('items')
+      .select('id,title,category,description,image,landscape_image,rating,trending,latest,size,release_date,upload_date,downloads,views,genres')
+      .order('upload_date', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching items (light):', error)
+      return []
+    }
+
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      title: item.title,
+      category: item.category,
+      description: item.description,
+      image: item.image,
+      landscapeImage: item.landscape_image,
+      rating: item.rating,
+      trending: item.trending,
+      latest: item.latest,
+      size: item.size,
+      releaseDate: item.release_date,
+      uploadDate: item.upload_date,
+      downloads: item.downloads || 0,
+      views: item.views || 0,
+      genres: item.genres || [],
+      longDescription: "",
+      developer: "",
+      publisher: "",
+      keyFeatures: [],
+      screenshots: [],
+      note: "",
+      trailerUrl: "",
+      steamUrl: "",
+      edition: "",
+      systemRequirements: { recommended: { os: "", processor: "", memory: "", graphics: "", storage: "" } },
+      androidRequirements: { recommended: { os: "", ram: "", storage: "", processor: "" } },
+      sharedPinCode: "",
+      sharedRarPassword: "",
+      cloudDownloads: [],
+      updatedDate: "",
+      uploaderName: "",
+      uploaderId: "",
+      likes: 0,
+      dislikes: 0,
+    }))
+  } catch (error) {
+    console.error('Error in getItemsLight:', error)
     return []
   }
 }

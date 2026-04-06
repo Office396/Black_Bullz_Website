@@ -69,16 +69,7 @@ interface GameData {
   uploaderId?: string
   version?: string
   note?: string
-  sharedPinCode?: string
-  sharedRarPassword?: string
-  cloudDownloads?: Array<{
-    cloudName: string
-    actualProvider?: string
-    customProvider?: string
-    partsNumber?: number
-    version?: string
-    actualDownloadLinks?: Array<{ name: string; url: string; size: string }>
-  }>
+  reviews?: any[]
 }
 
 interface GameDetailsProps {
@@ -127,11 +118,25 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const [reviewSubmitting, setReviewSubmitting] = useState(false)
   const [reviewDone, setReviewDone] = useState(false)
   const [reviews, setReviews] = useState<any[]>([])
+  const [myReview, setMyReview] = useState<any>(null)
   const [showReactionLoginPrompt, setShowReactionLoginPrompt] = useState(false)
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' } | null>(null)
+  const [calculatedRating, setCalculatedRating] = useState<number>(0)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   const showToast = (msg: string, type: 'success' | 'info' = 'info') => {
     setToast({ msg, type })
+    setTimeout(() => setToast(null), 4000)
+  }
+
+  // Function to trigger toast with auto-scroll message
+  const showReviewToast = () => {
+    const msg = "Awesome! Your review has been submitted and is now pending approval. Check it out below!"
+    setToast({ msg, type: 'info' })
+    setTimeout(() => {
+      const el = document.getElementById('pending-review-section')
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 500)
     setTimeout(() => setToast(null), 4000)
   }
 
@@ -177,12 +182,44 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
       .then(r => r.json()).then(d => { setLikes(d.likes || 0); setDislikes(d.dislikes || 0); setUserReaction(d.userReaction) }).catch(() => { })
   }, [token, game?.id])
 
-  // Load approved reviews (no auth needed)
+  // Initialize reviews from server data (instant display)
+  useEffect(() => {
+    if (game?.reviews && game.reviews.length > 0) {
+      setReviews(game.reviews)
+      const total = game.reviews.reduce((sum: number, r: any) => sum + r.rating, 0)
+      setCalculatedRating(total / game.reviews.length)
+      setIsLoaded(true)
+    } else {
+      setIsLoaded(true)
+    }
+  }, [game?.reviews])
+
+  // Load approved reviews + user's pending review (fallback/fresh data)
   useEffect(() => {
     if (!game?.id) return
     fetch(`/api/reviews?game_id=${game.id}`)
-      .then(r => r.json()).then(d => { if (d.reviews) setReviews(d.reviews) }).catch(() => { })
-  }, [game?.id])
+      .then(r => r.json()).then(d => { 
+        if (d.reviews) {
+          setReviews(d.reviews)
+          if (d.reviews.length > 0) {
+            const total = d.reviews.reduce((sum: number, r: any) => sum + r.rating, 0)
+            setCalculatedRating(total / d.reviews.length)
+          }
+        }
+        setIsLoaded(true)
+      }).catch(() => { setIsLoaded(true) })
+    // Load user's own pending review
+    if (token) {
+      fetch(`/api/reviews?game_id=${game.id}&mine=1`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).then(d => { if (d.myReview) setMyReview(d.myReview) }).catch(() => { })
+    }
+  }, [game?.id, token])
+
+  // Mark as loaded after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   const handleReaction = async (reaction: 'like' | 'dislike') => {
     if (!user) { setShowReactionLoginPrompt(true); setTimeout(() => setShowReactionLoginPrompt(false), 3000); return }
@@ -203,13 +240,51 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const submitReview = async () => {
     if (!reviewRating || !user) return
     setReviewSubmitting(true)
+    
+    // If editing existing pending review
+    if (myReview && myReview.status === 'pending') {
+      await fetch(`/api/reviews?id=${myReview.id}`, { 
+        method: 'PATCH', 
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, 
+        body: JSON.stringify({ rating: reviewRating, content: reviewContent }) 
+      })
+      setReviewSubmitting(false)
+      setShowReviewModal(false)
+      setReviewRating(0)
+      setReviewContent("")
+      // Show toast and scroll
+      setToast({ msg: "Your review has been updated successfully!", type: 'success' })
+      setTimeout(() => {
+        const el = document.getElementById('pending-review-section')
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 500)
+      setTimeout(() => setToast(null), 4000)
+      // Refresh my review
+      fetch(`/api/reviews?game_id=${game.id}&mine=1`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).then(d => { if (d.myReview) setMyReview(d.myReview) }).catch(() => { })
+      return
+    }
+    
+    // New review submission
     const res = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ gameId: game.id, gameTitle: game.title, rating: reviewRating, content: reviewContent }) })
     const data = await res.json()
     setReviewSubmitting(false)
     if (data.error) { alert(data.error); return }
-    setReviewDone(true)
-    showToast('Your review has been submitted and is awaiting approval.', 'info')
-    setTimeout(() => { setShowReviewModal(false); setReviewDone(false); setReviewRating(0); setReviewContent("") }, 2500)
+    setShowReviewModal(false)
+    setReviewRating(0)
+    setReviewContent("")
+    // Show toast and scroll to pending review
+    showReviewToast()
+    // Refresh my review and scroll to it
+    fetch(`/api/reviews?game_id=${game.id}&mine=1`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => { if (d.myReview) setMyReview(d.myReview) }).catch(() => { })
+  }
+
+  const scrollToPendingReview = () => {
+    setTimeout(() => {
+      const el = document.getElementById('pending-review-section')
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
   }
 
   const submitReport = async () => {
@@ -232,12 +307,40 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Toast notification */}
+      {/* Enhanced Toast notification - Windows/macOS style */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-[300] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-white text-sm font-semibold transition-all animate-in slide-in-from-bottom-4 ${toast.type === 'success' ? 'bg-green-600' : 'bg-[#9d4edd]'}`}
-          style={{ border: "1px solid rgba(255,255,255,0.15)" }}>
-          <span>{toast.type === 'success' ? '✓' : '⏳'}</span>
-          {toast.msg}
+        <div className="fixed bottom-6 right-6 z-[300] animate-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-[#1a103c] border border-[#2d1b54] rounded-xl shadow-2xl overflow-hidden w-80" style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 1px rgba(157,78,221,0.5)" }}>
+            <div className="p-4 flex items-start gap-3">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${toast.type === 'success' ? 'bg-green-500/20' : 'bg-[#9d4edd]/20'}`}>
+                {toast.type === 'success' ? (
+                  <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                ) : (
+                  <svg className="w-4 h-4 text-[#9d4edd]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-semibold">{toast.type === 'success' ? 'Success' : 'Info'}</p>
+                <p className="text-gray-400 text-xs mt-0.5 line-clamp-2">{toast.msg}</p>
+              </div>
+              <button onClick={() => setToast(null)} className="text-gray-500 hover:text-white transition-colors">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            {/* Progress bar that shrinks */}
+            <div className="h-1 bg-[#2d1b54]">
+              <div 
+                className={`h-full transition-all duration-[4000ms] ease-linear ${toast.type === 'success' ? 'bg-green-500' : 'bg-[#9d4edd]'}`}
+                style={{ animation: 'shrink 4s linear forwards' }}
+              />
+            </div>
+          </div>
+          <style jsx>{`
+            @keyframes shrink {
+              from { width: 100%; }
+              to { width: 0%; }
+            }
+          `}</style>
         </div>
       )}
       {/* Breadcrumbs */}
@@ -246,11 +349,13 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
         <ChevronLeft className="w-4 h-4 rotate-180" />
         <Link href="/games" className="hover:text-[#9d4edd] transition-colors">Games</Link>
         <ChevronLeft className="w-4 h-4 rotate-180" />
-        <span className="text-foreground">{game.title}</span>
+        <span className="text-white">{game.title}</span>
       </nav>
 
       {/* Hero Section */}
-      <div className="bg-card rounded-2xl flex flex-col lg:flex-row gap-6 p-6 lg:p-8">
+      <div className="relative rounded-2xl overflow-hidden keep-white">
+        {/* Content Container - transparent to show background */}
+        <div className="relative z-10 flex flex-col lg:flex-row gap-6 p-6 lg:p-8">
         {/* Game Cover */}
         <div className="relative w-full lg:w-72 flex-shrink-0">
           <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-2xl">
@@ -262,6 +367,42 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
             <div className="absolute top-3 right-3 px-2 py-1 bg-yellow-500/90 text-black text-xs font-bold rounded">
               v{game.version || '1.0'}
             </div>
+          </div>
+          {/* Like/Dislike/Report buttons below game cover */}
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <div className="relative">
+              <Button
+                variant="outline"
+                className={`h-9 px-3 border-white/20 transition-colors ${userReaction === 'like' ? 'text-green-400 border-green-500/50 bg-green-500/10' : 'text-foreground hover:bg-white/10 hover:text-green-400'}`}
+                onClick={() => handleReaction('like')}
+              >
+                <ThumbsUp className={`w-4 h-4 ${userReaction === 'like' ? 'fill-green-400' : ''}`} />
+                <span className="ml-1.5 text-xs font-medium">Like</span>
+                <span className="ml-1 text-xs opacity-70">{likes}</span>
+              </Button>
+              {showReactionLoginPrompt && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-card border border-[#9d4edd]/40 rounded-lg text-xs text-white whitespace-nowrap shadow-xl z-50">
+                  <a href="/login" className="text-[#9d4edd] font-semibold hover:underline">Login</a> or <a href="/signup" className="text-[#9d4edd] font-semibold hover:underline">Sign up</a> to react
+                </div>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              className={`h-9 px-3 border-white/20 transition-colors ${userReaction === 'dislike' ? 'text-red-400 border-red-500/50 bg-red-500/10' : 'text-foreground hover:bg-white/10 hover:text-red-400'}`}
+              onClick={() => handleReaction('dislike')}
+            >
+              <ThumbsDown className={`w-4 h-4 ${userReaction === 'dislike' ? 'fill-red-400' : ''}`} />
+              <span className="ml-1.5 text-xs font-medium">Dislike</span>
+              <span className="ml-1 text-xs opacity-70">{dislikes}</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-9 px-3 border-white/20 text-foreground hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
+              onClick={() => setShowReportModal(true)}
+            >
+              <Flag className="w-4 h-4" />
+              <span className="ml-1.5 text-xs font-medium">Report</span>
+            </Button>
           </div>
         </div>
 
@@ -284,7 +425,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
 
           {/* Title & Rating */}
           <div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-1">{game.title}
+            <h1 className="text-3xl lg:text-4xl font-bold text-white mb-1">{game.title}
               {game.edition && (
                 <span className="ml-3 text-sm font-bold px-3 py-1.5 rounded-lg align-middle inline-flex items-center gap-1.5 animate-pulse" style={{ background: "linear-gradient(135deg, rgba(157,78,221,0.4), rgba(199,125,255,0.25))", border: "1px solid rgba(157,78,221,0.6)", color: "#c77dff", boxShadow: "0 0 12px rgba(157,78,221,0.4)" }}>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#c77dff] animate-ping inline-block" />
@@ -316,7 +457,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
           </div>
 
           {/* Meta Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-y border-border">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-y border-white/20">
             {game.developer && (
               <div>
                 <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1"><User className="w-3 h-3" />Developer</div>
@@ -325,7 +466,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
             )}
             {(game as any).publisher && (
               <div>
-                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1"><Building2 className="w-3 h-3" />Publisher</div>
+                <div className="flex items-center gap-2 text-gray-400 text-xs mb-1"><Building2 className="w-3 h-3" />Publisher</div>
                 <Link href={`/publishers/${(game as any).publisher.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
                   className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-semibold transition-all hover:scale-[1.02]"
                   style={{ background: "rgba(157,78,221,0.15)", border: "1px solid rgba(157,78,221,0.4)", color: "#c77dff" }}>
@@ -348,11 +489,11 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
               </div>
             )}
             <div>
-              <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
+              <div className="flex items-center gap-2 text-gray-400 text-xs mb-1">
                 <Clock className="w-3 h-3" />
                 {game.updatedDate && game.updatedDate !== game.uploadDate ? 'Updated' : 'Published'}
               </div>
-              <p className="text-foreground text-sm font-medium">
+              <p className="text-white text-sm font-medium">
                 {game.updatedDate && game.updatedDate !== game.uploadDate
                   ? formatDate(game.updatedDate)
                   : formatDate(game.publishedDate || game.uploadDate)}
@@ -361,8 +502,8 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
           </div>
 
           {/* Uploader */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#9d4edd]/20 flex items-center justify-center">
+          <div className="flex items-center gap-3 bg-[#120b22]/60 rounded-xl p-3">
+            <div className="w-9 h-9 rounded-full bg-[#9d4edd]/30 flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-[#9d4edd]" />
             </div>
             <div>
@@ -379,7 +520,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
 
           {/* Short Description */}
           {game.description && (
-            <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3">{game.description}</p>
+            <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">{game.description}</p>
           )}
 
           {/* Action Buttons */}
@@ -454,20 +595,25 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
           )}
         </div>
       </div>
+      </div>
 
       {/* Stats Bar */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-card rounded-xl p-4 text-center">
+        <div className="bg-card/80 rounded-xl p-4 text-center backdrop-blur-sm">
           <p className="text-2xl font-bold text-foreground">{DownloadsFormatter(downloads)}</p>
           <p className="text-muted-foreground text-sm">Downloads</p>
         </div>
-        <div className="bg-card rounded-xl p-4 text-center">
+        <div className="bg-card/80 rounded-xl p-4 text-center backdrop-blur-sm">
           <p className="text-2xl font-bold text-foreground">{views.toLocaleString()}</p>
           <p className="text-muted-foreground text-sm">Views</p>
         </div>
-        <div className="bg-card rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-foreground">{averageRating.toFixed(1)}</p>
-          <p className="text-muted-foreground text-sm">Score</p>
+        <div className="bg-card/80 rounded-xl p-4 text-center backdrop-blur-sm">
+          <p className="text-2xl font-bold text-foreground">
+            {!isLoaded ? averageRating.toFixed(1) : (reviews.length > 0 ? calculatedRating.toFixed(1) : averageRating.toFixed(1))}
+          </p>
+          <p className="text-muted-foreground text-sm">
+            {!isLoaded ? 'Score' : (reviews.length > 0 ? `Based on ${reviews.length} review${reviews.length !== 1 ? 's' : ''}` : 'Score')}
+          </p>
         </div>
       </div>
 
@@ -806,16 +952,16 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                   {isPCGame ? (
                     <div className="space-y-4">
                       {/* Pre-installed section */}
-                      <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/30 rounded-2xl overflow-hidden">
-                        <div className="flex items-center gap-3 p-4 border-b border-green-500/20">
-                          <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                      <div className="bg-green-900/60 border border-green-500/40 rounded-2xl overflow-hidden keep-white">
+                        <div className="flex items-center gap-3 p-4 border-b border-green-500/30">
+                          <div className="w-10 h-10 rounded-xl bg-green-500/30 flex items-center justify-center">
                             <Package className="w-5 h-5 text-green-400" />
                           </div>
                           <div>
                             <h3 className="text-white font-bold text-lg">Pre-installed Version</h3>
                             <p className="text-green-400 text-xs">Recommended • No installation needed, just extract & play!</p>
                           </div>
-                          <Badge className="ml-auto bg-green-500/20 text-green-400 border border-green-500/30">RECOMMENDED</Badge>
+                          <Badge className="ml-auto bg-green-500/30 text-green-400 border border-green-500/40">RECOMMENDED</Badge>
                         </div>
                         <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {allLinks.map((cloud, ci) => {
@@ -867,16 +1013,16 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                       </div>
 
                       {/* Installable section */}
-                      <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/30 rounded-2xl overflow-hidden">
-                        <div className="flex items-center gap-3 p-4 border-b border-purple-500/20">
-                          <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                      <div className="bg-purple-900/60 border border-purple-500/40 rounded-2xl overflow-hidden keep-white">
+                        <div className="flex items-center gap-3 p-4 border-b border-purple-500/30">
+                          <div className="w-10 h-10 rounded-xl bg-purple-500/30 flex items-center justify-center">
                             <Wrench className="w-5 h-5 text-purple-400" />
                           </div>
                           <div>
                             <h3 className="text-white font-bold text-lg">Installable Version</h3>
                             <p className="text-purple-400 text-xs">Traditional installer • Run setup.exe to install</p>
                           </div>
-                          <Badge className="ml-auto bg-purple-500/20 text-purple-400 border border-purple-500/30">INSTALLER</Badge>
+                          <Badge className="ml-auto bg-purple-500/30 text-purple-400 border border-purple-500/40">INSTALLER</Badge>
                         </div>
                         <div className="p-4 flex items-center justify-center text-gray-500 py-8">
                           <div className="text-center">
@@ -888,9 +1034,9 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                     </div>
                   ) : (
                     /* Android - single download section */
-                    <div className="bg-gradient-to-br from-[#9d4edd]/10 to-[#9d4edd]/5 border border-[#9d4edd]/30 rounded-2xl overflow-hidden">
-                      <div className="flex items-center gap-3 p-4 border-b border-[#9d4edd]/20">
-                        <div className="w-10 h-10 rounded-xl bg-[#9d4edd]/20 flex items-center justify-center">
+                    <div className="bg-[#9d4edd]/40 border border-[#9d4edd]/40 rounded-2xl overflow-hidden keep-white">
+                      <div className="flex items-center gap-3 p-4 border-b border-[#9d4edd]/30">
+                        <div className="w-10 h-10 rounded-xl bg-[#9d4edd]/30 flex items-center justify-center">
                           <Download className="w-5 h-5 text-[#9d4edd]" />
                         </div>
                         <div>
@@ -959,8 +1105,12 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
         <div className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-3xl font-bold text-foreground mb-1">{averageRating.toFixed(1)}</div>
-              <div className="text-muted-foreground text-sm">Average Score</div>
+              <div className="text-3xl font-bold text-foreground mb-1">
+                {!isLoaded ? averageRating.toFixed(1) : (reviews.length > 0 ? calculatedRating.toFixed(1) : averageRating.toFixed(1))}
+              </div>
+              <div className="text-muted-foreground text-sm">
+                {!isLoaded ? 'Average Score' : (reviews.length > 0 ? `Based on ${reviews.length} review${reviews.length !== 1 ? 's' : ''}` : 'Average Score')}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-400 mb-1">{recommendPercent}%</div>
@@ -975,39 +1125,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
               <div className="text-muted-foreground text-sm">Views</div>
             </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-3 mt-4 relative">
-            <div className="relative">
-              <Button
-                variant="outline"
-                className={`border-white/20 transition-colors ${userReaction === 'like' ? 'text-green-400 border-green-500/50 bg-green-500/10' : 'text-foreground hover:bg-white/10'}`}
-                onClick={() => handleReaction('like')}
-              >
-                <ThumbsUp className={`w-4 h-4 mr-2 ${userReaction === 'like' ? 'fill-green-400' : ''}`} />
-                Like {likes > 0 && <span className="ml-1 text-xs">{likes}</span>}
-              </Button>
-              {showReactionLoginPrompt && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#120b22] border border-[#9d4edd]/40 rounded-lg text-xs text-white whitespace-nowrap shadow-xl z-50">
-                  <a href="/login" className="text-[#9d4edd] font-semibold hover:underline">Login</a> or <a href="/signup" className="text-[#9d4edd] font-semibold hover:underline">Sign up</a> to react
-                </div>
-              )}
-            </div>
-            <Button
-              variant="outline"
-              className={`border-white/20 transition-colors ${userReaction === 'dislike' ? 'text-red-400 border-red-500/50 bg-red-500/10' : 'text-foreground hover:bg-white/10'}`}
-              onClick={() => handleReaction('dislike')}
-            >
-              <ThumbsDown className={`w-4 h-4 mr-2 ${userReaction === 'dislike' ? 'fill-red-400' : ''}`} />
-              Dislike {dislikes > 0 && <span className="ml-1 text-xs">{dislikes}</span>}
-            </Button>
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10" onClick={() => setShowReviewModal(true)}>
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Write Review
-            </Button>
-            <Button variant="outline" className="border-white/20 text-white hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30" onClick={() => setShowReportModal(true)}>
-              <Flag className="w-4 h-4 mr-2" />
-              Report
-            </Button>
-          </div>        </div>
+        </div>
       </div>
 
       {/* Note */}
@@ -1113,6 +1231,88 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
         })()
       }
 
+      {/* My Pending Review */}
+      {myReview && myReview.status === 'pending' && (
+        <div id="pending-review-section" className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl">
+          <div className="p-6 pb-4">
+            <h3 className="text-yellow-400 font-bold text-lg flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Your Review is Pending Approval
+            </h3>
+            <p className="text-gray-400 text-sm mt-1">Thanks for sharing your experience! Your review will go live once our team approves it.</p>
+          </div>
+          <div className="px-6 pb-6">
+            <div className="bg-[#1a103c] border border-[#2d1b54] rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-[#9d4edd]/30 flex items-center justify-center text-white text-xs font-bold">{user?.name?.charAt(0)}</div>
+                  <div>
+                    <p className="text-white text-sm font-semibold">{user?.name}</p>
+                    <div className="flex gap-0.5 mt-0.5">
+                      {[1, 2, 3, 4, 5].map(s => <Star key={s} className={`w-3 h-3 ${s <= myReview.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} />)}
+                    </div>
+                  </div>
+                </div>
+                <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-yellow-500/20 text-yellow-400">PENDING APPROVAL</span>
+              </div>
+              {myReview.content && <p className="text-gray-300 text-sm leading-relaxed">{myReview.content}</p>}
+              <p className="text-gray-600 text-xs mt-3">Submitted on {new Date(myReview.created_at).toLocaleDateString()}</p>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Button size="sm" variant="outline" className="border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10"
+                onClick={async () => {
+                  if (!confirm('Are you sure you want to withdraw your review?')) return
+                  await fetch(`/api/reviews?id=${myReview.id}`, { method: 'DELETE' })
+                  setMyReview(null)
+                }}>
+                Withdraw Review
+              </Button>
+              <Button size="sm" variant="outline" className="border-[#2d1b54] text-gray-400 hover:bg-white/5"
+                onClick={() => { setReviewRating(myReview.rating); setReviewContent(myReview.content || ''); setShowReviewModal(true) }}>
+                Edit Review
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* My Rejected Review */}
+      {myReview && myReview.status === 'rejected' && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-2xl">
+          <div className="p-6 pb-4">
+            <h3 className="text-red-400 font-bold text-lg flex items-center gap-2">
+              <X className="w-5 h-5" />
+              Your Review Was Not Approved
+            </h3>
+            <p className="text-gray-400 text-sm mt-1">Unfortunately, your review didn't meet our community guidelines. You can delete it and submit a new one.</p>
+          </div>
+          <div className="px-6 pb-6">
+            <div className="bg-[#1a103c] border border-[#2d1b54] rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-full bg-[#9d4edd]/30 flex items-center justify-center text-white text-xs font-bold">{user?.name?.charAt(0)}</div>
+                <div>
+                  <p className="text-white text-sm font-semibold">{user?.name}</p>
+                  <div className="flex gap-0.5 mt-0.5">
+                    {[1, 2, 3, 4, 5].map(s => <Star key={s} className={`w-3 h-3 ${s <= myReview.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} />)}
+                  </div>
+                </div>
+              </div>
+              {myReview.content && <p className="text-gray-300 text-sm leading-relaxed">{myReview.content}</p>}
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Button size="sm" variant="outline" className="border-red-500/40 text-red-400 hover:bg-red-500/10"
+                onClick={async () => {
+                  if (!confirm('Delete this review and submit a new one?') ) return
+                  await fetch(`/api/reviews?id=${myReview.id}`, { method: 'DELETE' })
+                  setMyReview(null)
+                }}>
+                Delete & Write New Review
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Approved Reviews */}
       {
         reviews.length > 0 && (
@@ -1190,7 +1390,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
       {
         showReviewModal && (
           <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" onClick={() => setShowReviewModal(false)}>
-            <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="bg-card border border-[#2d1b54] rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-white font-bold text-lg flex items-center gap-2"><Star className="w-5 h-5 text-yellow-500" /> Rate & Review</h3>
                 <button onClick={() => setShowReviewModal(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
@@ -1203,12 +1403,6 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                     <a href="/login" className="px-4 py-2 rounded-xl border border-white/10 text-white text-sm font-semibold hover:bg-white/5 transition-colors">Log in</a>
                     <a href="/signup" className="px-4 py-2 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-semibold transition-colors">Sign up</a>
                   </div>
-                </div>
-              ) : reviewDone ? (
-                <div className="text-center py-6">
-                  <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                  <p className="text-green-400 font-bold text-lg">Review submitted!</p>
-                  <p className="text-gray-500 text-sm mt-1">It will appear after admin approval.</p>
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -1278,7 +1472,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
       {
         showReportModal && (
           <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" onClick={() => setShowReportModal(false)}>
-            <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="bg-card border border-[#2d1b54] rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-bold flex items-center gap-2"><Flag className="w-4 h-4 text-red-400" /> Report Issue</h3>
                 <button onClick={() => setShowReportModal(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>

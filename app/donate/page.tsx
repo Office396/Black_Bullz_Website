@@ -161,9 +161,9 @@ export default function DonatePage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#090514" }}>
+    <div className="min-h-screen bg-[#090514]">
       <Header />
-      <div className="pt-16">
+      <div className="pt-16 bg-[#090514]">
 
         {/* ── HERO ── */}
         <section className="relative overflow-hidden py-20 px-4">
@@ -183,7 +183,7 @@ export default function DonatePage() {
                   Free Gaming
                 </span>
               </h1>
-              <p className="text-gray-400 text-lg mb-8 leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-8 leading-relaxed">
                 No subscriptions. No paywalls. No corporate gatekeeping. Your support keeps this platform alive and independent — forever.
               </p>
               <div className="flex flex-wrap gap-3 mb-8">

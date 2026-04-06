@@ -9,6 +9,7 @@ import {
   Sparkles, Crown, ChevronRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import Lottie from "lottie-react"
 import diceAnimation from "@/Dice roll.json"
@@ -338,22 +339,18 @@ export function Header() {
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           isScrolled
-            ? "bg-[#090514]/95 backdrop-blur-md shadow-lg shadow-black/20"
-            : "bg-[#090514]/80 backdrop-blur-sm"
+            ? "bg-[#090514] dark:bg-[#090514]/95 backdrop-blur-md shadow-lg"
+            : "bg-[#090514] dark:bg-[#090514]/80 backdrop-blur-sm"
         )}
       >
       <div className="max-w-full mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-2.5 flex-shrink-0">
-            <Link href="/" className="group">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center relative overflow-hidden ring-2 ring-[#9d4edd]/50 shadow-[0_0_15px_rgba(157,78,221,0.5)] group-hover:scale-110 transition-transform duration-200">
-                <img src="/bull-logo.png" alt="BullzGamez Logo" className="w-full h-full object-cover rounded-full" />
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full ring-4 ring-[#9d4edd] ring-offset-2 ring-offset-[#090514]">
+                <img src="/bull-logo.png" alt="Bull" className="w-full h-full object-cover rounded-full" />
               </div>
-            </Link>
-            <Link href="/" className="group">
-              <span className="text-xl hidden sm:block font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#9d4edd] via-[#c77dff] to-[#00bcd4] group-hover:from-[#00bcd4] group-hover:via-[#c77dff] group-hover:to-[#9d4edd] transition-all duration-500">
-                BULLZGAMEZ
-              </span>
+              <img src="/logo.png" alt="BullzGamez" className="h-10 w-auto" />
             </Link>
           </div>
 

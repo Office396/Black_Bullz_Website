@@ -64,7 +64,8 @@ export function AdminFeedback() {
   }
 
   const updateReview = async (id: number, status: string) => {
-    await fetch('/api/reviews', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) })
+    const adminToken = typeof window !== 'undefined' ? localStorage.getItem('admin_token') || '' : ''
+    await fetch('/api/reviews', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken }, body: JSON.stringify({ id, status }) })
     loadReviews()
   }
 
