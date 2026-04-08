@@ -49,6 +49,39 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [notifications, setNotifications] = useState<any[]>([])
 
+  // Instant load from localStorage on mount
+  useEffect(() => {
+    try {
+      const tok = localStorage.getItem('user_token')
+      const cachedUser = localStorage.getItem('user_data')
+      if (tok && cachedUser) {
+        setToken(tok)
+        setUser(JSON.parse(cachedUser))
+        setLoading(false)
+        // Verify with API in background
+        const verifyUser = async () => {
+          try {
+            const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${tok}` } })
+            const data = await res.json()
+            if (data.user) {
+              setUser(data.user)
+              localStorage.setItem('user_data', JSON.stringify(data.user))
+              fetchNotifications(tok)
+            } else {
+              localStorage.removeItem('user_token')
+              localStorage.removeItem('user_data')
+              setUser(null)
+              setToken(null)
+            }
+          } catch {}
+        }
+        verifyUser()
+        return
+      }
+    } catch {}
+    setLoading(false)
+  }, [])
+
   const fetchNotifications = useCallback(async (tok: string) => {
     try {
       const res = await fetch('/api/user/notifications', { headers: { Authorization: `Bearer ${tok}` } })
@@ -93,6 +126,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json()
     if (data.error) return { error: data.error }
     localStorage.setItem('user_token', data.token)
+    localStorage.setItem('user_data', JSON.stringify(data.user))
     setUser(data.user)
     setToken(data.token)
     fetchNotifications(data.token)
@@ -107,6 +141,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json()
     if (data.error) return { error: data.error }
     localStorage.setItem('user_token', data.token)
+    localStorage.setItem('user_data', JSON.stringify(data.user))
     setUser(data.user)
     setToken(data.token)
     return {}
@@ -117,6 +152,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       await fetch('/api/auth/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } })
     }
     localStorage.removeItem('user_token')
+    localStorage.removeItem('user_data')
     setUser(null)
     setToken(null)
     setNotifications([])
