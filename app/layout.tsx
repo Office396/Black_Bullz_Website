@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { UserProvider } from "@/lib/user-context"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PageLoader } from "@/components/page-loader"
+import { BFCacheFix } from "@/components/bfcache-fix"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -39,6 +40,7 @@ export default function RootLayout({
           disableTransitionOnChange
           storageKey="bullzgamez-theme"
         >
+          <BFCacheFix />
           <PageLoader />
           {children}
         </ThemeProvider>
