@@ -17,11 +17,11 @@ export async function GET(req: NextRequest) {
 
   if (!gameId) return NextResponse.json({ reviews: [] })
   
-  // If user wants their own pending review
+  // If user wants their own review (pending, rejected, or approved)
   if (mine === '1' && user) {
     const { data } = await supabase.from('game_reviews').select('*')
-      .eq('game_id', gameId).eq('user_id', user.id).in('status', ['pending', 'rejected']).single()
-    return NextResponse.json({ success: true, myReview: data || null })
+      .eq('game_id', gameId).eq('user_id', user.id).in('status', ['pending', 'rejected', 'approved']).order('created_at', { ascending: false })
+    return NextResponse.json({ success: true, myReview: data?.[0] || null, reviews: data || [] })
   }
   
   // Only return approved reviews for public
@@ -56,24 +56,25 @@ export async function PATCH(req: NextRequest) {
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
   const user = token ? await getUserByToken(token) : null
   const { searchParams } = new URL(req.url)
-  const id = searchParams.get('id')
+  const idFromQuery = searchParams.get('id')
   const adminToken = req.headers.get('x-admin-token')
   const isAdmin = adminToken === 'authenticated'
   
   const body = await req.json()
-  const { rating, content, status } = body
+  const { rating, content, status, id } = body
+  const reviewId = idFromQuery || id
 
   // If updating own review (edit)
-  if (id && user && rating !== undefined) {
-    const { data: existing } = await supabase.from('game_reviews').select('user_id').eq('id', id).single()
+  if (reviewId && user && rating !== undefined) {
+    const { data: existing } = await supabase.from('game_reviews').select('user_id').eq('id', reviewId).single()
     if (existing?.user_id !== user.id) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
-    await supabase.from('game_reviews').update({ rating, content: content?.trim() || null }).eq('id', id)
+    await supabase.from('game_reviews').update({ rating, content: content?.trim() || null }).eq('id', reviewId)
     return NextResponse.json({ success: true })
   }
 
   // Admin status update
-  if (status && id && isAdmin) {
-    await supabase.from('game_reviews').update({ status }).eq('id', id)
+  if (status && reviewId && isAdmin) {
+    await supabase.from('game_reviews').update({ status }).eq('id', reviewId)
     return NextResponse.json({ success: true })
   }
   

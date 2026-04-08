@@ -194,11 +194,11 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
     }
   }, [game?.reviews])
 
-  // Load approved reviews + user's pending review (fallback/fresh data)
+// Load approved reviews + user's pending review (fallback/fresh data)
   useEffect(() => {
     if (!game?.id) return
     fetch(`/api/reviews?game_id=${game.id}`)
-      .then(r => r.json()).then(d => { 
+      .then(r => r.json()).then(d => {
         if (d.reviews) {
           setReviews(d.reviews)
           if (d.reviews.length > 0) {
@@ -208,12 +208,14 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
         }
         setIsLoaded(true)
       }).catch(() => { setIsLoaded(true) })
-    // Load user's own pending review
-    if (token) {
+    // Load user's own review (pending, rejected, or approved)
+    if (token && user) {
       fetch(`/api/reviews?game_id=${game.id}&mine=1`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.json()).then(d => { if (d.myReview) setMyReview(d.myReview) }).catch(() => { })
+        .then(r => r.json()).then(d => { 
+          if (d.myReview) setMyReview(d.myReview)
+        }).catch(() => { })
     }
-  }, [game?.id, token])
+  }, [game?.id, token, user])
 
   // Mark as loaded after initial render
   useEffect(() => {
@@ -252,16 +254,20 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
       setShowReviewModal(false)
       setReviewRating(0)
       setReviewContent("")
-      // Show toast and scroll
+      // Show toast
       setToast({ msg: "Your review has been updated successfully!", type: 'success' })
-      setTimeout(() => {
-        const el = document.getElementById('pending-review-section')
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }, 500)
       setTimeout(() => setToast(null), 4000)
-      // Refresh my review
+      // Refresh my review and scroll after data is set
       fetch(`/api/reviews?game_id=${game.id}&mine=1`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.json()).then(d => { if (d.myReview) setMyReview(d.myReview) }).catch(() => { })
+        .then(r => r.json()).then(d => { 
+          if (d.myReview) {
+            setMyReview(d.myReview)
+            setTimeout(() => {
+              const el = document.getElementById('pending-review-section')
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }, 100)
+          }
+        }).catch(() => { })
       return
     }
     
@@ -273,11 +279,18 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
     setShowReviewModal(false)
     setReviewRating(0)
     setReviewContent("")
-    // Show toast and scroll to pending review
-    showReviewToast()
-    // Refresh my review and scroll to it
+    // Refresh my review and scroll after data is set
     fetch(`/api/reviews?game_id=${game.id}&mine=1`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(d => { if (d.myReview) setMyReview(d.myReview) }).catch(() => { })
+      .then(r => r.json()).then(d => { 
+        if (d.myReview) {
+          setMyReview(d.myReview)
+          setTimeout(() => {
+            const el = document.getElementById('pending-review-section')
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }, 100)
+        }
+      }).catch(() => { })
+    showReviewToast()
   }
 
   const scrollToPendingReview = () => {
@@ -450,9 +463,15 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                   <span className="text-muted-foreground text-xs ml-1">No reviews yet</span>
                 </div>
               )}
-              <button onClick={() => setShowReviewModal(true)} className="text-xs text-[#9d4edd] hover:text-[#c77dff] hover:underline transition-colors flex items-center gap-1">
-                <MessageCircle className="w-3 h-3" /> Write a Review
-              </button>
+              {myReview?.status === 'approved' ? (
+                <button onClick={() => { const el = document.getElementById('reviews-section'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }) }} className="text-xs text-green-500 hover:text-green-400 transition-colors flex items-center gap-1 cursor-pointer">
+                  <MessageCircle className="w-3 h-3" /> Reviewed
+                </button>
+              ) : (
+                <button onClick={() => { if (myReview?.status === 'pending') { setReviewRating(myReview.rating); setReviewContent(myReview.content || '') } setShowReviewModal(true) }} className="text-xs text-[#9d4edd] hover:text-[#c77dff] hover:underline transition-colors flex items-center gap-1">
+                  <MessageCircle className="w-3 h-3" /> {myReview?.status === 'pending' ? 'Edit your hot take' : myReview?.status === 'rejected' ? 'Submit new review' : 'Give us your hot take'}
+                </button>
+              )}
             </div>
           </div>
 
@@ -1264,6 +1283,8 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                   if (!confirm('Are you sure you want to withdraw your review?')) return
                   await fetch(`/api/reviews?id=${myReview.id}`, { method: 'DELETE' })
                   setMyReview(null)
+                  setToast({ msg: 'Your review has been withdrawn', type: 'info' })
+                  setTimeout(() => setToast(null), 4000)
                 }}>
                 Withdraw Review
               </Button>
@@ -1316,13 +1337,18 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
       {/* Approved Reviews */}
       {
         reviews.length > 0 && (
-          <div className="bg-card rounded-2xl">
+          <div id="reviews-section" className="bg-card rounded-2xl">
             <div className="p-6 pb-0">
-              <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
-                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                Ratings & Reviews
-                <span className="text-muted-foreground text-sm font-normal">({reviews.length})</span>
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                  Ratings & Reviews
+                  <span className="text-muted-foreground text-sm font-normal">({reviews.length})</span>
+                </h3>
+                <button onClick={() => myReview?.status === 'approved' ? (() => { const el = document.getElementById('reviews-section'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }) })() : (() => { if (myReview?.status === 'pending') { setReviewRating(myReview.rating); setReviewContent(myReview.content || '') } setShowReviewModal(true) })()} className="px-4 py-2 rounded-xl font-semibold text-white text-sm transition-all hover:scale-[1.02]" style={{ background: "linear-gradient(135deg, #9d4edd, #7b2cbf)" }}>
+                  {myReview?.status === 'pending' ? '✏️ Edit your review' : myReview?.status === 'rejected' ? '📝 Submit new review' : myReview?.status === 'approved' ? '✅ View your review' : '☕ Spill the tea'}
+                </button>
+              </div>
             </div>
             <div className="p-6 space-y-4">
               {/* Average */}
