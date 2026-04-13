@@ -56,9 +56,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, data: updated })
       }
       case "reply": {
-        const { itemId, parentId, itemName, author, email, content, avatar } = body || {}
+        const { itemId, parentId, itemName, author, email, content, avatar, userBadge, userBadgeColor, adminToken } = body || {}
         if (!itemId || !parentId || !itemName || !author || !content) return badRequest("Missing required fields")
-        const updated = await addReply({ itemId: Number(itemId), parentId: Number(parentId), itemName, author, email, content, avatar })
+        const isAdmin = adminToken === "authenticated"
+        const updated = await addReply({ itemId: Number(itemId), parentId: Number(parentId), itemName, author, email, content, avatar, userBadge, userBadgeColor, isAdmin })
         return NextResponse.json({ success: true, data: updated })
       }
       case "react": {

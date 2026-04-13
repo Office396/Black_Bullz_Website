@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Comments } from "@/components/comments"
+import { RichContent } from "@/components/rich-text"
 import { useUser } from "@/lib/user-context"
 
 interface SystemRequirements {
@@ -123,6 +124,11 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' } | null>(null)
   const [calculatedRating, setCalculatedRating] = useState<number>(0)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [reviewSortMode, setReviewSortMode] = useState<'recent' | 'top' | 'lowest' | 'oldest'>('recent')
+  const [reviewVisibleCount, setReviewVisibleCount] = useState(5)
+  const [filterCommentary, setFilterCommentary] = useState(true)
+  const [filterVerified, setFilterVerified] = useState(false)
+  const [filterMine, setFilterMine] = useState(false)
 
   const showToast = (msg: string, type: 'success' | 'info' = 'info') => {
     setToast({ msg, type })
@@ -1116,32 +1122,173 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
         )
       }
 
-      {/* Player Perspectives */}
-      <div className="bg-card rounded-2xl">
-        <div className="p-6 pb-0">
-          <h3 className="text-foreground font-bold text-lg">Player Perspectives</h3>
+      {/* ===== PLAYER PERSPECTIVES (AnkerGames Style) ===== */}
+      <div className="bg-[#0d0820]/90 border border-[#2d1b54]/60 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+        {/* Section Header */}
+        <div className="p-7 pb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-[#c77dff] text-xs font-bold tracking-[0.2em] uppercase mb-1.5">Community Voices</p>
+            <h3 className="text-white font-black text-2xl">Player perspectives</h3>
+            <p className="text-[#b8a9d4] text-sm mt-1">Spot the sentiment at a glance, then dive into the stories that matter to you.</p>
+          </div>
+          {/* Sort options */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-[#b8a9d4] text-sm font-medium mr-1 border-r border-[#2d1b54] pr-3 py-1">SORT BY</span>
+            {[
+              { key: 'recent' as const, label: 'Most recent' },
+              { key: 'top' as const, label: 'Top rated' },
+              { key: 'lowest' as const, label: 'Lowest rated' },
+              { key: 'oldest' as const, label: 'Oldest first' },
+            ].map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => { setReviewSortMode(opt.key); setReviewVisibleCount(5) }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                  reviewSortMode === opt.key
+                    ? 'bg-[#9d4edd] text-white shadow-md shadow-[#9d4edd]/25'
+                    : 'text-[#b8a9d4] hover:text-white'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-foreground mb-1">
-                {!isLoaded ? averageRating.toFixed(1) : (reviews.length > 0 ? calculatedRating.toFixed(1) : averageRating.toFixed(1))}
+
+        {/* Stats Dashboard */}
+        <div className="mx-7 mb-6 bg-[#110d24] border border-[#2d1b54]/50 rounded-xl p-6 shadow-inner">
+          {/* Top Stats Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mb-6">
+            <div className="bg-[#0d0820] rounded-xl p-4 border border-[#2d1b54]/30">
+              <div className="flex items-baseline justify-between mb-1">
+                <span className="text-[#b8a9d4] text-xs font-semibold uppercase tracking-wider">Average</span>
+                <span className="text-[#6b5b8a] text-xs">/5</span>
               </div>
-              <div className="text-muted-foreground text-sm">
-                {!isLoaded ? 'Average Score' : (reviews.length > 0 ? `Based on ${reviews.length} review${reviews.length !== 1 ? 's' : ''}` : 'Average Score')}
+              <p className="text-white text-4xl font-black mt-1 tracking-tight">
+                {reviews.length > 0 ? calculatedRating.toFixed(1) : averageRating.toFixed(1)}
+              </p>
+            </div>
+            <div className="bg-[#0d0820] rounded-xl p-4 border border-emerald-500/20">
+              <div className="flex items-baseline justify-between mb-1">
+                <span className="text-[#b8a9d4] text-xs font-semibold uppercase tracking-wider">Recommend</span>
+              </div>
+              <p className="text-emerald-400 text-4xl font-black mt-1 tracking-tight">{reviews.length > 0 ? Math.round((reviews.filter(r => r.rating >= 4).length / reviews.length) * 100) : recommendPercent}%</p>
+            </div>
+            <div className="bg-[#0d0820] rounded-xl p-4 border border-[#2d1b54]/30">
+              <div className="flex items-baseline justify-between mb-1">
+                <span className="text-[#b8a9d4] text-xs font-semibold uppercase tracking-wider">Written</span>
+              </div>
+              <p className="text-white text-4xl font-black mt-1 tracking-tight">{reviews.filter(r => r.content).length}</p>
+            </div>
+            <div className="bg-[#0d0820] rounded-xl p-4 border border-emerald-500/20">
+              <div className="flex items-baseline justify-between mb-1">
+                <span className="text-[#b8a9d4] text-xs font-semibold uppercase tracking-wider">Verified</span>
+              </div>
+              <p className="text-white text-4xl font-black mt-1 tracking-tight">{reviews.length}</p>
+            </div>
+          </div>
+
+          {/* Sentiment Mix */}
+          {reviews.length > 0 && (() => {
+            const positive = reviews.filter(r => r.rating >= 4).length
+            const neutral = reviews.filter(r => r.rating === 3).length
+            const critical = reviews.filter(r => r.rating <= 2).length
+            const total = reviews.length
+            const posPct = Math.round((positive / total) * 100)
+            const neuPct = Math.round((neutral / total) * 100)
+            const criPct = Math.round((critical / total) * 100)
+            return (
+              <div className="mb-5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[#6b5b8a] text-[10px] uppercase tracking-wider">Sentiment Mix</span>
+                  <span className="text-[#6b5b8a] text-[10px]">{total} REVIEWS</span>
+                </div>
+                <div className="w-full h-2 rounded-full overflow-hidden flex bg-[#2d1b54]/40">
+                  {posPct > 0 && <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all" style={{ width: `${posPct}%` }} />}
+                  {neuPct > 0 && <div className="h-full bg-yellow-500 transition-all" style={{ width: `${neuPct}%` }} />}
+                  {criPct > 0 && <div className="h-full bg-red-500 transition-all" style={{ width: `${criPct}%` }} />}
+                </div>
+                <div className="flex justify-between mt-2">
+                  <div><span className="text-emerald-400 text-sm font-bold">{posPct}%</span><br /><span className="text-[#4a3d6b] text-[10px] uppercase">Positive</span></div>
+                  <div className="text-center"><span className="text-yellow-400 text-sm font-bold">{neuPct}%</span><br /><span className="text-[#4a3d6b] text-[10px] uppercase">Neutral</span></div>
+                  <div className="text-right"><span className="text-red-400 text-sm font-bold">{criPct}%</span><br /><span className="text-[#4a3d6b] text-[10px] uppercase">Critical</span></div>
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* Bottom Row: Quick Filters + Rating Spread */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Quick Filters */}
+            <div>
+              <p className="text-[#6b5b8a] text-[10px] uppercase tracking-wider mb-3">Quick Filters</p>
+              <div className="flex flex-wrap gap-3">
+                <label className="flex items-center gap-2 bg-[#0d0820] rounded-lg px-3 py-2.5 cursor-pointer border border-[#2d1b54]/40 hover:border-[#9d4edd]/30 transition-colors">
+                  <div className="w-4 h-4 rounded bg-orange-500/30 flex items-center justify-center text-[8px]">💬</div>
+                  <div>
+                    <p className="text-white text-xs font-semibold">Reviews with commentary</p>
+                    <p className="text-[#4a3d6b] text-[9px]">Written thoughts only</p>
+                  </div>
+                  <button
+                    onClick={() => setFilterCommentary(!filterCommentary)}
+                    className={`ml-1 w-8 h-4 rounded-full transition-colors relative flex-shrink-0 ${filterCommentary ? 'bg-[#9d4edd]' : 'bg-[#2d1b54]'}`}
+                  >
+                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${filterCommentary ? 'left-4' : 'left-0.5'}`} />
+                  </button>
+                </label>
+                <label className="flex items-center gap-2 bg-[#0d0820] rounded-lg px-3 py-2.5 cursor-pointer border border-[#2d1b54]/40 hover:border-[#9d4edd]/30 transition-colors">
+                  <div className="w-4 h-4 rounded bg-[#9d4edd]/30 flex items-center justify-center text-[8px]">✓</div>
+                  <div>
+                    <p className="text-white text-xs font-semibold">Verified players only</p>
+                    <p className="text-[#4a3d6b] text-[9px]">Confirmed downloads</p>
+                  </div>
+                  <button
+                    onClick={() => setFilterVerified(!filterVerified)}
+                    className={`ml-1 w-8 h-4 rounded-full transition-colors relative flex-shrink-0 ${filterVerified ? 'bg-[#9d4edd]' : 'bg-[#2d1b54]'}`}
+                  >
+                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${filterVerified ? 'left-4' : 'left-0.5'}`} />
+                  </button>
+                </label>
+                <label className="flex items-center gap-2 bg-[#0d0820] rounded-lg px-3 py-2.5 cursor-pointer border border-[#2d1b54]/40 hover:border-[#9d4edd]/30 transition-colors">
+                  <div className="w-4 h-4 rounded bg-[#9d4edd]/20 flex items-center justify-center text-[8px]">👤</div>
+                  <div>
+                    <p className="text-white text-xs font-semibold">Only my feedback</p>
+                    <p className="text-[#4a3d6b] text-[9px]">Your personal notes</p>
+                  </div>
+                  <button
+                    onClick={() => setFilterMine(!filterMine)}
+                    className={`ml-1 w-8 h-4 rounded-full transition-colors relative flex-shrink-0 ${filterMine ? 'bg-[#9d4edd]' : 'bg-[#2d1b54]'}`}
+                  >
+                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${filterMine ? 'left-4' : 'left-0.5'}`} />
+                  </button>
+                </label>
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-400 mb-1">{recommendPercent}%</div>
-              <div className="text-muted-foreground text-sm">Recommend</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-foreground mb-1">{DownloadsFormatter(downloads)}</div>
-              <div className="text-muted-foreground text-sm">Downloads</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-foreground mb-1">{views.toLocaleString()}</div>
-              <div className="text-muted-foreground text-sm">Views</div>
+
+            {/* Rating Spread */}
+            <div>
+              <p className="text-[#6b5b8a] text-[10px] uppercase tracking-wider mb-3">Rating Spread</p>
+              <div className="space-y-1.5">
+                {[5, 4, 3, 2, 1].map(star => {
+                  const count = reviews.filter(r => r.rating === star).length
+                  const pct = reviews.length ? Math.round((count / reviews.length) * 100) : 0
+                  return (
+                    <div key={star} className="flex items-center gap-2 text-xs">
+                      <span className="text-[#b8a9d4] w-5 text-right font-medium">{star}★</span>
+                      <div className="flex-1 bg-[#0d0820] rounded-full h-2 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            star >= 4 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' :
+                            star === 3 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-[#6b5b8a] w-6 text-right">{count}</span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -1274,8 +1421,8 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                 </div>
                 <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-yellow-500/20 text-yellow-400">PENDING APPROVAL</span>
               </div>
-              {myReview.content && <p className="text-gray-300 text-sm leading-relaxed">{myReview.content}</p>}
-              <p className="text-gray-600 text-xs mt-3">Submitted on {new Date(myReview.created_at).toLocaleDateString()}</p>
+              {myReview.content && <p className="text-gray-300 text-[15px] leading-relaxed mt-1"><RichContent text={myReview.content} /></p>}
+              <p className="text-gray-600 text-sm mt-4 font-medium">Submitted on {new Date(myReview.created_at).toLocaleDateString()}</p>
             </div>
             <div className="flex gap-2 mt-3">
               <Button size="sm" variant="outline" className="border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10"
@@ -1318,7 +1465,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                   </div>
                 </div>
               </div>
-              {myReview.content && <p className="text-gray-300 text-sm leading-relaxed">{myReview.content}</p>}
+              {myReview.content && <p className="text-gray-300 text-[15px] leading-relaxed mt-1"><RichContent text={myReview.content} /></p>}
             </div>
             <div className="flex gap-2 mt-3">
               <Button size="sm" variant="outline" className="border-red-500/40 text-red-400 hover:bg-red-500/10"
@@ -1334,80 +1481,215 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
         </div>
       )}
 
-      {/* Approved Reviews */}
-      {
-        reviews.length > 0 && (
-          <div id="reviews-section" className="bg-card rounded-2xl">
-            <div className="p-6 pb-0">
-              <div className="flex items-center justify-between">
-                <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
-                  <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                  Ratings & Reviews
-                  <span className="text-muted-foreground text-sm font-normal">({reviews.length})</span>
-                </h3>
-                <button onClick={() => myReview?.status === 'approved' ? (() => { const el = document.getElementById('reviews-section'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }) })() : (() => { if (myReview?.status === 'pending') { setReviewRating(myReview.rating); setReviewContent(myReview.content || '') } setShowReviewModal(true) })()} className="px-4 py-2 rounded-xl font-semibold text-white text-sm transition-all hover:scale-[1.02]" style={{ background: "linear-gradient(135deg, #9d4edd, #7b2cbf)" }}>
-                  {myReview?.status === 'pending' ? '✏️ Edit your review' : myReview?.status === 'rejected' ? '📝 Submit new review' : myReview?.status === 'approved' ? '✅ View your review' : '☕ Spill the tea'}
-                </button>
-              </div>
-            </div>
-            <div className="p-6 space-y-4">
-              {/* Average */}
-              <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl">
-                <div className="text-center">
-                  <p className="text-4xl font-black text-white">{(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)}</p>
-                  <div className="flex gap-0.5 mt-1 justify-center">
-                    {[1, 2, 3, 4, 5].map(s => <Star key={s} className={`w-4 h-4 ${s <= Math.round(reviews.reduce((a, r) => a + r.rating, 0) / reviews.length) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} />)}
-                  </div>
-                  <p className="text-gray-500 text-xs mt-1">{reviews.length} review{reviews.length !== 1 ? 's' : ''}</p>
-                </div>
-                <div className="flex-1 space-y-1">
-                  {[5, 4, 3, 2, 1].map(star => {
-                    const count = reviews.filter(r => r.rating === star).length
-                    const pct = reviews.length ? Math.round((count / reviews.length) * 100) : 0
-                    return (
-                      <div key={star} className="flex items-center gap-2 text-xs">
-                        <span className="text-gray-400 w-3">{star}</span>
-                        <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                        <div className="flex-1 bg-[#1a103c] rounded-full h-1.5 overflow-hidden">
-                          <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className="text-gray-500 w-6 text-right">{count}</span>
+      {/* ===== APPROVED REVIEWS (AnkerGames Style) ===== */}
+      {(() => {
+        // Sort & filter reviews
+        let filteredReviews = [...reviews]
+        if (filterCommentary) filteredReviews = filteredReviews.filter(r => r.content && r.content.trim())
+        if (filterMine && user) filteredReviews = filteredReviews.filter(r => r.user_name === user.name)
+        // Sort
+        switch (reviewSortMode) {
+          case 'top': filteredReviews.sort((a, b) => b.rating - a.rating); break
+          case 'lowest': filteredReviews.sort((a, b) => a.rating - b.rating); break
+          case 'oldest': filteredReviews.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()); break
+          default: filteredReviews.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()); break
+        }
+        const visibleReviews = filteredReviews.slice(0, reviewVisibleCount)
+        const hasMoreReviews = reviewVisibleCount < filteredReviews.length
+        const newestReview = reviews.length > 0 ? [...reviews].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] : null
+        const spotlightReview = reviews.length > 0 ? [...reviews].sort((a, b) => b.rating - a.rating || (b.content?.length || 0) - (a.content?.length || 0))[0] : null
+        const topReviewers = reviews.length > 0 ? [...reviews].sort((a, b) => b.rating - a.rating).slice(0, 3) : []
+
+        return (
+          <div id="reviews-section" className="space-y-4">
+            {/* Fresh Off The Press + Spotlight Row */}
+            {reviews.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Left: Fresh Off The Press + Review List */}
+                <div className="lg:col-span-2 space-y-3">
+                  {/* Fresh Off The Press */}
+                  {newestReview && (
+                    <div className="bg-[#110d24] border border-[#2d1b54]/50 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
+                      <div>
+                        <p className="text-[#6b5b8a] text-[10px] uppercase tracking-wider font-bold">Fresh Off The Press</p>
+                        <p className="text-[#b8a9d4] text-xs mt-0.5">{formatDate(newestReview.created_at)}</p>
+                        <p className="text-[#6b5b8a] text-xs mt-1">Look for it at the top of the stream.</p>
                       </div>
-                    )
-                  })}
-                </div>
-              </div>
-              {/* Individual reviews */}
-              <div className="space-y-3">
-                {reviews.map(r => (
-                  <div key={r.id} className="bg-[#1a103c] border border-[#2d1b54] rounded-xl p-4">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#9d4edd]/30 flex items-center justify-center text-white text-xs font-bold">{r.user_name?.charAt(0)}</div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-white text-sm font-semibold">{r.user_name}</p>
-                            {r.user_badge && (
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${r.user_badge_color || 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
-                                {r.user_badge}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex gap-0.5 mt-0.5">
-                            {[1, 2, 3, 4, 5].map(s => <Star key={s} className={`w-3 h-3 ${s <= r.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-600'}`} />)}
-                          </div>
-                        </div>
+                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/25">
+                        <Star className="w-3 h-3 text-emerald-400 fill-emerald-400" />
+                        <span className="text-emerald-400 text-xs font-bold">{newestReview.rating}.0/5</span>
                       </div>
-                      <span className="text-gray-600 text-xs">{new Date(r.created_at).toLocaleDateString()}</span>
                     </div>
-                    {r.content && <p className="text-gray-300 text-sm leading-relaxed">{r.content}</p>}
+                  )}
+
+                  {/* Review Cards */}
+                  {visibleReviews.map((r, idx) => (
+                    <div key={r.id} className="bg-[#110d24] border border-[#2d1b54]/50 rounded-xl p-5 hover:border-[#9d4edd]/25 transition-all duration-200 shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#9d4edd]/40 to-[#7b2cbf]/40 flex items-center justify-center text-white text-base font-bold ring-2 ring-[#9d4edd]/20">
+                            {r.user_name?.charAt(0)?.toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-white font-semibold text-[15px]">{r.user_name}</span>
+                              <span className="text-[#4a3d6b] text-sm">{formatDate(r.created_at)}</span>
+                              {r.user_badge && PLAN_BADGES[r.user_badge] && (
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border ${PLAN_BADGES[r.user_badge].color || 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
+                                  {PLAN_BADGES[r.user_badge].label}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex gap-0.5 mt-1">
+                              {[1, 2, 3, 4, 5].map(s => <Star key={s} className={`w-3.5 h-3.5 ${s <= r.rating ? 'text-yellow-500 fill-yellow-500' : 'text-[#2d1b54]'}`} />)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex-shrink-0">
+                          <Star className="w-4 h-4 text-emerald-400 fill-emerald-400" />
+                          <span className="text-emerald-400 text-sm font-bold">{r.rating}.0/5</span>
+                        </div>
+                      </div>
+                      {r.content && <p className="text-[#c4b5de] text-[15px] leading-relaxed mt-4 pt-4 border-t border-[#2d1b54]/30"><RichContent text={r.content} /></p>}
+                    </div>
+                  ))}
+
+                  {/* Load More Reviews */}
+                  {hasMoreReviews && (
+                    <div className="text-center mt-4">
+                      <button
+                        onClick={() => setReviewVisibleCount(prev => prev + 5)}
+                        className="px-6 py-2.5 rounded-xl text-white text-sm font-semibold transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-[#9d4edd]/20"
+                        style={{ background: "linear-gradient(135deg, #9d4edd, #7b2cbf)" }}
+                      >
+                        Load more reviews
+                      </button>
+                    </div>
+                  )}
+
+                  {filteredReviews.length === 0 && reviews.length > 0 && (
+                    <div className="bg-[#110d24] border border-[#2d1b54]/50 rounded-xl py-16 px-8 text-center flex flex-col items-center justify-center">
+                      <p className="text-[#b8a9d4] text-[15px] font-medium">No reviews match your current filters.</p>
+                      <button onClick={() => { setFilterCommentary(false); setFilterVerified(false); setFilterMine(false) }} className="text-[#c77dff] text-sm mt-3 font-semibold hover:underline bg-[#9d4edd]/10 px-4 py-1.5 rounded-full">Clear filters</button>
+                    </div>
+                  )}
+
+                  {reviews.length === 0 && (
+                    <div className="bg-[#110d24] border border-[#2d1b54]/50 rounded-xl p-8 text-center">
+                      <Star className="w-10 h-10 text-[#2d1b54] mx-auto mb-3" />
+                      <p className="text-[#6b5b8a] text-sm font-medium">No reviews yet</p>
+                      <p className="text-[#4a3d6b] text-xs mt-1">Be the first to rate this game!</p>
+                      <button
+                        onClick={() => setShowReviewModal(true)}
+                        className="mt-3 px-5 py-2 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-semibold transition-all"
+                      >
+                        Write a Review
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Sidebar: Spotlight + Consistent Praise */}
+                {reviews.length > 0 && (
+                  <div className="space-y-4">
+                    {/* Spotlight Review */}
+                    {spotlightReview && (
+                      <div className="bg-[#110d24] border border-[#9d4edd]/20 rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(157,78,221,0.1)]">
+                        <div className="p-5 pb-4 border-b border-[#2d1b54]/30">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                            <p className="text-yellow-500 text-xs font-bold uppercase tracking-wider">Spotlight Review</p>
+                          </div>
+                          <p className="text-[#4a3d6b] text-xs">Community Favorite</p>
+                        </div>
+                        <div className="p-5">
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#9d4edd]/60 to-[#7b2cbf]/60 flex items-center justify-center text-white text-xl font-bold ring-3 ring-[#9d4edd]/30 shadow-lg shadow-[#9d4edd]/10">
+                              {spotlightReview.user_name?.charAt(0)?.toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-white text-base font-bold">{spotlightReview.user_name}</p>
+                              <div className="flex gap-0.5 mt-1">
+                                {[1, 2, 3, 4, 5].map(s => <Star key={s} className={`w-4 h-4 ${s <= spotlightReview.rating ? 'text-yellow-500 fill-yellow-500' : 'text-[#2d1b54]'}`} />)}
+                              </div>
+                              <p className="text-[#6b5b8a] text-xs mt-0.5">{formatDate(spotlightReview.created_at)}</p>
+                            </div>
+                          </div>
+                          {spotlightReview.content && (
+                            <div className="bg-[#0d0820]/60 border border-[#2d1b54]/30 rounded-lg p-5">
+                              <p className="text-[#c4b5de] text-[15px] leading-relaxed italic"><RichContent text={spotlightReview.content} /></p>
+                            </div>
+                          )}
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                              <Star className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
+                              <span className="text-emerald-400 text-sm font-bold">{spotlightReview.rating}.0/5</span>
+                            </div>
+                            <span className="text-[#c77dff] text-xs font-medium">Top Rated</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Consistent Praise */}
+                    {topReviewers.length > 0 && (
+                      <div className="bg-[#110d24] border border-[#2d1b54]/50 rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
+                        <div className="p-5 pb-3 border-b border-[#2d1b54]/30">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 rounded bg-[#9d4edd]/20 flex items-center justify-center">
+                              <Star className="w-3 h-3 text-[#9d4edd]" />
+                            </div>
+                            <p className="text-[#b8a9d4] text-sm font-bold uppercase tracking-wider">Consistent Praise</p>
+                          </div>
+                        </div>
+                        <div className="p-5 space-y-4">
+                          {topReviewers.map((r, i) => (
+                            <div key={r.id} className="flex items-start gap-3 p-3 rounded-lg bg-[#0d0820]/60 border border-[#2d1b54]/20 hover:border-[#9d4edd]/15 transition-colors">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#9d4edd]/40 to-[#7b2cbf]/40 flex items-center justify-center text-white text-sm font-bold ring-2 ring-[#9d4edd]/20 flex-shrink-0">
+                                {r.user_name?.charAt(0)?.toUpperCase()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-bold">{r.user_name}</p>
+                                <div className="flex gap-0.5 mt-0.5">
+                                  {[1, 2, 3, 4, 5].map(s => <Star key={s} className={`w-3 h-3 ${s <= r.rating ? 'text-yellow-500 fill-yellow-500' : 'text-[#2d1b54]'}`} />)}
+                                </div>
+                                <p className="text-[#6b5b8a] text-xs mt-1 line-clamp-2">{r.content ? r.content.substring(0, 80) + (r.content.length > 80 ? '...' : '') : 'Rating only'}</p>
+                              </div>
+                              <div className="flex-shrink-0">
+                                <span className="text-emerald-400 text-xs font-bold">{r.rating}.0</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Write Review CTA */}
+                    <button
+                      onClick={() => {
+                        if (myReview?.status === 'approved') {
+                          const el = document.getElementById('reviews-section')
+                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                        } else {
+                          if (myReview?.status === 'pending') {
+                            setReviewRating(myReview.rating)
+                            setReviewContent(myReview.content || '')
+                          }
+                          setShowReviewModal(true)
+                        }
+                      }}
+                      className="w-full px-4 py-3 rounded-xl font-semibold text-white text-sm transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-[#9d4edd]/20"
+                      style={{ background: "linear-gradient(135deg, #9d4edd, #7b2cbf)" }}
+                    >
+                      {myReview?.status === 'pending' ? '✏️ Edit your review' : myReview?.status === 'rejected' ? '📝 Submit new review' : myReview?.status === 'approved' ? '✅ View your review' : '☕ Rate this game'}
+                    </button>
                   </div>
-                ))}
+                )}
               </div>
-            </div>
+            )}
           </div>
         )
-      }
+      })()}
 
       {/* Comments */}
       <Comments gameId={game.id} itemName={game.title} />

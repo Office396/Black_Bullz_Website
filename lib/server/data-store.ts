@@ -14,6 +14,8 @@ export interface SiteCommentRecord {
   likes: number
   dislikes: number
   status: Status
+  user_badge?: string
+  user_badge_color?: string
   replies?: SiteCommentRecord[]
 }
 
@@ -32,11 +34,12 @@ export interface FlattenedComment {
 
 export async function getComments(itemId: number): Promise<SiteCommentRecord[]> {
   // Get all approved comments for this item (both top-level and replies)
+  // NOTE: .in() cannot match NULL in PostgreSQL, so we use .or() instead
   const { data, error } = await supabase
     .from('comments')
     .select('*')
     .eq('item_id', itemId)
-    .in('approval_status', ['approved', null as any])  // show approved or legacy (no approval_status)
+    .or('approval_status.eq.approved,approval_status.is.null')
     .order('timestamp', { ascending: false })
 
   if (error) {
@@ -51,11 +54,12 @@ export async function getComments(itemId: number): Promise<SiteCommentRecord[]> 
 }
 
 function buildCommentTree(data: any[]): SiteCommentRecord[] {
+  const commentMap: Record<number, SiteCommentRecord> = {}
   const topLevelComments: SiteCommentRecord[] = []
-  const repliesMap: Record<number, SiteCommentRecord[]> = {}
 
+  // First pass: create all records
   data.forEach(comment => {
-    const commentRecord: SiteCommentRecord = {
+    commentMap[comment.id] = {
       id: comment.id,
       itemId: comment.item_id,
       itemName: comment.item_name,
@@ -67,24 +71,24 @@ function buildCommentTree(data: any[]): SiteCommentRecord[] {
       likes: comment.likes,
       dislikes: comment.dislikes,
       status: comment.status,
+      user_badge: comment.user_badge,
+      user_badge_color: comment.user_badge_color,
       replies: []
-    }
-
-    if (comment.parent_id) {
-      // This is a reply
-      if (!repliesMap[comment.parent_id]) {
-        repliesMap[comment.parent_id] = []
-      }
-      repliesMap[comment.parent_id].push(commentRecord)
-    } else {
-      // This is a top-level comment
-      topLevelComments.push(commentRecord)
     }
   })
 
-  // Attach replies to their parent comments
-  topLevelComments.forEach(comment => {
-    comment.replies = repliesMap[comment.id] || []
+  // Second pass: attach to parents
+  data.forEach(comment => {
+    if (comment.parent_id && commentMap[comment.parent_id]) {
+      commentMap[comment.parent_id].replies!.push(commentMap[comment.id])
+    } else {
+      topLevelComments.push(commentMap[comment.id])
+    }
+  })
+
+  // Sort replies older to newer
+  Object.values(commentMap).forEach(comment => {
+    comment.replies!.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
   })
 
   return topLevelComments
@@ -139,8 +143,11 @@ export async function addReply(params: {
   email?: string
   content: string
   avatar?: string
+  userBadge?: string
+  userBadgeColor?: string
+  isAdmin?: boolean
 }): Promise<SiteCommentRecord[]> {
-  const { itemId, parentId, itemName, author, email, content, avatar } = params
+  const { itemId, parentId, itemName, author, email, content, avatar, userBadge, userBadgeColor, isAdmin } = params
 
   const { error } = await supabase
     .from('comments')
@@ -155,6 +162,9 @@ export async function addReply(params: {
       likes: 0,
       dislikes: 0,
       status: 'new',
+      approval_status: isAdmin ? 'approved' : 'pending',
+      user_badge: userBadge || null,
+      user_badge_color: userBadgeColor || null,
       parent_id: parentId
     })
 

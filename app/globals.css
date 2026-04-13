@@ -451,3 +451,51 @@ main {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* React Quill Theme Overrides */
+.ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid rgba(45, 27, 84, 0.4) !important;
+  background: rgba(13, 8, 32, 0.5);
+  border-radius: 12px 12px 0 0;
+  padding: 8px !important;
+}
+
+.ql-container.ql-snow {
+  border: none !important;
+}
+
+.ql-editor {
+  min-height: 100px;
+  font-size: 15px;
+}
+
+.ql-editor.ql-blank::before {
+  color: #4a3d6b !important;
+  font-style: normal !important;
+}
+
+.ql-toolbar .ql-stroke {
+  stroke: #6b5b8a !important;
+}
+
+.ql-toolbar .ql-fill {
+  fill: #6b5b8a !important;
+}
+
+.ql-toolbar button:hover .ql-stroke,
+.ql-toolbar button.ql-active .ql-stroke {
+  stroke: #c77dff !important;
+}
+
+.ql-toolbar button:hover .ql-fill,
+.ql-toolbar button.ql-active .ql-fill {
+  fill: #c77dff !important;
+}
+
+.quill-content p {
+  margin-bottom: 0.5rem;
+}
+.quill-content p:last-child {
+  margin-bottom: 0;
+}
