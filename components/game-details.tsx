@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Comments } from "@/components/comments"
 import { RichContent } from "@/components/rich-text"
 import { useUser } from "@/lib/user-context"
+import { PLAN_BADGES } from "@/lib/usernames"
 
 interface SystemRequirements {
   os?: string
