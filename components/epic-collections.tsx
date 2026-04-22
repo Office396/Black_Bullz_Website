@@ -65,7 +65,7 @@ export function EpicCollections({ collections = [], allGames = [] }: EpicCollect
                             href={`/collections/${collection.id}`}
                             className="group block"
                         >
-                            <div className="relative bg-gradient-to-br from-[#1a103c] dark:from-[#1a103c] to-[#120b22] dark:to-[#120b22] border border-[#2d1b54] rounded-xl p-3 hover:border-[#9d4edd]/50 transition-all duration-300 keep-white">
+                            <div className="relative bg-white dark:bg-gradient-to-br dark:from-[#1a103c] dark:to-[#120b22] border border-gray-200 dark:border-[#2d1b54] rounded-xl p-3 hover:border-[#9d4edd]/50 dark:hover:border-[#9d4edd]/50 transition-all duration-300">
                                 {/* Card fan fills the top area; overflow visible so fan pops up */}
                                 <div className="relative mb-3" style={{ overflow: "visible" }}>
                                     <CardFan
@@ -78,7 +78,7 @@ export function EpicCollections({ collections = [], allGames = [] }: EpicCollect
                                         SERIES
                                     </div>
                                 </div>
-                                <h3 className="text-white dark:text-white font-medium text-sm line-clamp-2 group-hover:text-[#9d4edd] transition-colors text-center">
+                                <h3 className="text-gray-900 dark:text-white font-medium text-sm line-clamp-2 group-hover:text-[#9d4edd] dark:group-hover:text-[#9d4edd] transition-colors text-center">
                                     {collection.name}
                                 </h3>
                                 <p className="text-gray-500 dark:text-gray-500 text-xs text-center mt-1">

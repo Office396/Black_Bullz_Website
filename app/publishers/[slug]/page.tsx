@@ -20,39 +20,45 @@ export default async function PublisherPage({ params }: { params: { slug: string
     <div className="min-h-screen bg-[#090514]">
       <Header />
       <div className="pt-16">
-        {/* Banner */}
-        <div className="relative h-48 sm:h-64 overflow-hidden">
+        {/* Ambient Blur Backdrop instead of sharp banner */}
+        <div className="absolute top-0 left-0 right-0 h-[500px] overflow-hidden pointer-events-none -z-10 bg-[#090514]">
           {publisher.banner_url ? (
-            <img src={publisher.banner_url} alt="" className="w-full h-full object-cover" />
+            <img src={publisher.banner_url} alt="" className="w-full h-full object-cover blur-[80px] opacity-30 scale-125" />
           ) : (
-            <div className="w-full h-full" style={{ background: "linear-gradient(135deg, #1a103c, #2d1b54, #9d4edd)" }} />
+            <div className="w-full h-full bg-gradient-to-b from-[#2d1b54]/20 to-[#090514]" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-[#090514]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#090514]/60 to-[#090514]" />
         </div>
 
-        <div className="max-w-5xl mx-auto px-4 -mt-16 relative">
+        <div className="max-w-5xl mx-auto px-4 pt-10 sm:pt-16 pb-12 relative z-10">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-end gap-5 mb-8">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 mb-12 text-center sm:text-left">
             {publisher.logo_url ? (
-              <img src={publisher.logo_url} alt={publisher.name} className="w-24 h-24 rounded-2xl object-cover ring-4 ring-[#090514] flex-shrink-0" />
+              <div className="p-2 sm:p-3 bg-[#120b22]/80 backdrop-blur-md rounded-3xl border border-[#2d1b54]/50 shadow-2xl shrink-0">
+                <img src={publisher.logo_url} alt={publisher.name} className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl object-contain bg-[#090514]" />
+              </div>
             ) : (
-              <div className="w-24 h-24 rounded-2xl bg-[#9d4edd]/20 flex items-center justify-center text-[#9d4edd] text-4xl font-black ring-4 ring-[#090514] flex-shrink-0">
+              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-[#120b22]/80 backdrop-blur-md border border-[#2d1b54]/50 shadow-2xl flex items-center justify-center text-[#9d4edd] text-6xl font-black shrink-0">
                 {publisher.name.charAt(0)}
               </div>
             )}
-            <div className="flex-1 pb-2">
-              <h1 className="text-3xl font-black text-white">{publisher.name}</h1>
-              {publisher.known_for && <p className="text-[#9d4edd] text-sm mt-1">Known for: {publisher.known_for}</p>}
-              <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-500">
-                {publisher.gender && <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{publisher.gender}</span>}
-                {publisher.birth_place && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{publisher.birth_place}</span>}
-                {publisher.birthday && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{publisher.birthday}</span>}
-                {publisher.website && (
-                  <a href={publisher.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#9d4edd] hover:underline">
-                    <Globe className="w-3 h-3" />{publisher.website}
-                  </a>
-                )}
+            <div className="flex-1 pt-2 sm:pt-4">
+              <h1 className="text-4xl sm:text-5xl font-black text-white mb-3">{publisher.name}</h1>
+              {publisher.known_for && (
+                <div className="inline-block px-4 py-1.5 bg-[#9d4edd]/10 border border-[#9d4edd]/20 rounded-full mb-5">
+                  <p className="text-[#c77dff] text-sm font-semibold">Known for: {publisher.known_for}</p>
+                </div>
+              )}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-sm text-gray-400 font-medium">
+                {publisher.gender && <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5"><Building2 className="w-4 h-4 text-gray-500" />{publisher.gender}</span>}
+                {publisher.birth_place && <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5"><MapPin className="w-4 h-4 text-gray-500" />{publisher.birth_place}</span>}
+                {publisher.birthday && <span className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5"><Calendar className="w-4 h-4 text-gray-500" />{publisher.birthday}</span>}
               </div>
+              {publisher.website && (
+                <a href={publisher.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-colors text-sm font-bold shadow-sm">
+                  <Globe className="w-4 h-4 text-[#9d4edd]" /> Visit Official Website <ExternalLink className="w-3.5 h-3.5 text-gray-500 ml-1" />
+                </a>
+              )}
             </div>
           </div>
 

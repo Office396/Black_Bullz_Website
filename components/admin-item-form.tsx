@@ -56,7 +56,12 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
   overrideBody?: (isEdit: boolean, id: number | undefined, formData: any) => any
   onTitleChange?: (title: string) => void
 }) {
+  const isEditMode = !!editItem
+  console.log('AdminItemForm render:', { isEditMode, hasEditItem: !!editItem, editItemId: editItem?.id, editItemType: typeof editItem })
+  
+  const editItemId = editItem?.id ?? editItem?._id ?? editItem?.itemId ?? null
   const [formData, setFormData] = useState<FormData>(() => {
+    console.log('formData init: editItem keys=', editItem ? Object.keys(editItem) : [], 'found id=', editItemId)
     if (editItem) {
       return {
         ...editItem,
@@ -83,23 +88,70 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
     e.preventDefault()
     try {
       const isEdit = !!editItem
+      const targetId = isEdit ? editItem?.id : undefined
+      const idValue = isEdit ? targetId : undefined
+      console.log('handleSubmit start:', { isEdit, hasEditItem: !!editItem, targetId, editItemKeys: editItem ? Object.keys(editItem) : [] })
+      
+      if (isEdit && (targetId === undefined || targetId === null || targetId === 0)) {
+        console.error('handleSubmit: editItem missing or invalid id', { targetId, editItem })
+        alert("Cannot update: Item ID is missing or invalid. Try refreshing the page.")
+        return
+      }
+      
+      const title = formData.title?.trim() || ""
+      const category = formData.category?.trim() || ""
+      if (!title) {
+        alert("Title is required")
+        return
+      }
+      if (!category) {
+        alert("Category is required")
+        return
+      }
+      
       const url = overrideApiUrl || "/api/items"
-      const method = overrideMethod ? overrideMethod(isEdit) : (isEdit ? "PUT" : "POST")
-      const body = overrideBody
-        ? overrideBody(isEdit, editItem?.id, formData)
-        : (isEdit ? { id: editItem.id, ...formData } : formData)
-      const response = await fetch(url, {
+      const method = overrideMethod ? overrideMethod(isEdit) : (isEdit ? "PATCH" : "POST")
+      let body
+      if (overrideBody) {
+        body = overrideBody(isEdit, idValue, formData)
+      } else if (isEdit) {
+        body = { id: targetId, ...formData }
+      } else {
+        body = formData
+      }
+      console.log('handleSubmit:', { isEdit, url, method, idValue, bodyHasId: !!body?.id, idFromBody: body?.id })
+      const fetchOptions = {
         method,
-        headers: { "Content-Type": "application/json", ...(overrideApiHeaders || {}) },
+        headers: { 
+          "Content-Type": "application/json", 
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          ...(overrideApiHeaders || {}) 
+        },
         body: JSON.stringify(body)
-      })
+      }
+      console.log('handleSubmit fetch:', { url, method, bodyId: body?.id })
+      let response
+      try {
+        response = await fetch(url, fetchOptions as any)
+      } catch (err) {
+        console.error('handleSubmit fetch error:', err)
+        throw err
+      }
       const result = await response.json()
+      
       if (response.ok && result.success) {
         alert(isEdit ? "Item updated successfully!" : "Item saved successfully!")
         if (onSave) onSave()
         if (!isEdit) setFormData({ ...initialFormData, sharedPinCode: String(Math.floor(1000 + Math.random() * 9000)) })
-      } else { throw new Error(result.error || "Failed to save item.") }
-    } catch (err) { console.error("Failed to save item", err); alert("Failed to save item. Please try again.") }
+      } else {
+        // Show the actual error message from the server
+        throw new Error(result.error || "Failed to save item.")
+      }
+    } catch (err) { 
+      console.error("Failed to save item", err)
+      alert("Failed to save item. Please try again.") 
+    }
   }
 
   const addKeyFeature = () => setFormData({ ...formData, keyFeatures: [...formData.keyFeatures, ""] })

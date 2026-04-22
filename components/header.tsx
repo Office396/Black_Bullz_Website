@@ -355,7 +355,7 @@ export function Header() {
                         onClick={() => setIsGenreOpen(!isGenreOpen)}
                         className={cn(
                           "flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                          isGenreOpen ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5"
+                          isGenreOpen ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5"
                         )}
                       >
                         {item.label}
@@ -435,7 +435,7 @@ export function Header() {
                         onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
                         className={cn(
                           "flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                          isCollectionsOpen ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5"
+                          isCollectionsOpen ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5"
                         )}
                       >
                         {item.label}
@@ -454,7 +454,7 @@ export function Header() {
                                   key={collection.id}
                                   href={`/collections/${collection.id}`}
                                   onClick={() => setIsCollectionsOpen(false)}
-                                  className="block px-4 py-2 text-sm text-gray-300 hover:text-[#9d4edd] hover:bg-white/5 transition-colors"
+                                  className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5 transition-colors"
                                 >
                                   {collection.name}
                                 </Link>
@@ -484,7 +484,7 @@ export function Header() {
                     "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive(item.href!)
                       ? "text-[#9d4edd] bg-[#9d4edd]/10"
-                      : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5"
+                      : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5"
                   )}
                 >
                   {item.icon && <item.icon className="w-4 h-4" />}
@@ -709,7 +709,7 @@ export function Header() {
                         { href: `/profile?tab=settings`, icon: Settings, label: "Settings" },
                       ].map(item => (
                         <Link key={item.href} href={item.href} onClick={() => setIsProfileOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5 transition-colors">
                           <item.icon className="w-4 h-4 text-gray-500" />
                           {item.label}
                           <ChevronRight className="w-3 h-3 ml-auto text-gray-600" />
@@ -744,7 +744,7 @@ export function Header() {
               </>
             ) : (
               <>
-                <Link href="/login" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-300 hover:text-white transition-colors">
+                <Link href="/login" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5 transition-colors">
                   <LogIn className="w-4 h-4" />
                   <span>Log in</span>
                 </Link>
@@ -766,21 +766,21 @@ export function Header() {
               <Link
                 href="/games"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/games") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/games") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
               >
                 All Games
               </Link>
               <Link
                 href="/top"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/top") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/top") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
               >
                 Top
               </Link>
               <Link
                 href="/trending"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/trending") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/trending") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
               >
                 Trending
               </Link>
@@ -791,7 +791,7 @@ export function Header() {
                     key={genre.name}
                     href={genre.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="px-3 py-2 text-sm text-gray-300 hover:text-[#9d4edd] hover:bg-white/5 rounded-lg transition-colors"
+                    className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5 rounded-lg transition-colors"
                   >
                     {genre.name}
                   </Link>
@@ -807,35 +807,35 @@ export function Header() {
               <Link
                 href="/updates"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/updates") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/updates") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
               >
                 Recent Updates
               </Link>
               <Link
                 href="/collections"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/collections") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/collections") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
               >
                 Collections
               </Link>
               <Link
                 href="/donate"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/donate") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/donate") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
               >
                 Donate
               </Link>
               <Link
                 href="/publishers"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/publishers") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/publishers") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
               >
                 Publishers
               </Link>
               <Link
                 href="/request"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/request") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-300 hover:text-[#9d4edd] hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/request") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
               >
                 Request
               </Link>
@@ -844,7 +844,7 @@ export function Header() {
                 <Link
                   href="/login"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2.5 text-gray-300 hover:text-[#9d4edd] hover:bg-white/5 rounded-lg"
+                  className="flex items-center gap-2 px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5 rounded-lg"
                 >
                   <LogIn className="w-4 h-4" />
                   Log in

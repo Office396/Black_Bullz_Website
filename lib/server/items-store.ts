@@ -304,7 +304,7 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'update
     developer: itemData.developer,
     publisher: itemData.publisher,
     size: itemData.size,
-    release_date: itemData.releaseDate,
+    release_date: itemData.releaseDate || null,
     published_date: itemData.publishedDate || null,
     image: itemData.image,
     landscape_image: itemData.landscapeImage,
@@ -415,8 +415,8 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
   if (itemData.developer !== undefined) dbUpdate.developer = itemData.developer
   if (itemData.publisher !== undefined) dbUpdate.publisher = itemData.publisher
   if (itemData.size !== undefined) dbUpdate.size = itemData.size
-  if (itemData.releaseDate !== undefined) dbUpdate.release_date = itemData.releaseDate
-  if (itemData.publishedDate !== undefined) dbUpdate.published_date = itemData.publishedDate
+  if (itemData.releaseDate !== undefined && itemData.releaseDate) dbUpdate.release_date = itemData.releaseDate
+  if (itemData.publishedDate !== undefined && itemData.publishedDate) dbUpdate.published_date = itemData.publishedDate
   if (itemData.image !== undefined) dbUpdate.image = itemData.image
   if (itemData.rating !== undefined) dbUpdate.rating = itemData.rating
   if (itemData.trending !== undefined) dbUpdate.trending = itemData.trending
@@ -441,6 +441,8 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
   
   // Automatically set updated_date to current timestamp whenever an item is edited
   dbUpdate.updated_date = new Date().toISOString()
+  
+  console.log('updateItem: attempting to update id=', id, 'type=', typeof id, 'body=', JSON.stringify(dbUpdate).slice(0, 100))
 
   const { data, error } = await supabase
     .from('items')
@@ -449,8 +451,10 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
     .select()
     .single()
 
+  console.log('updateItem result: data=', !!data, 'error=', error)
   if (error) {
     console.error('Error updating item:', error)
+    console.error('Update attempted with id:', id, 'and data:', dbUpdate)
     return null
   }
 

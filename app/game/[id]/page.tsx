@@ -4,17 +4,15 @@ import { GameDetails } from "@/components/game-details"
 import { getItemById, getRelatedGames, getPopularGameIds } from "@/lib/server/items-store"
 import Link from "next/link"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 interface GamePageProps {
   params: { id: string }
 }
 
 export async function generateStaticParams() {
-  try {
-    const ids = await getPopularGameIds(20)
-    return ids.map((id) => ({ id: String(id) }))
-  } catch {
-    return []
-  }
+  return []  // Don't pre-generate any pages - all routes are dynamic now
 }
 
 export default async function GamePage({ params }: GamePageProps) {

@@ -134,6 +134,7 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
   }
 
   const handleEdit = (item: any) => {
+    console.log('handleEdit: setting editingItem with id=', item?.id, 'keys=', item ? Object.keys(item).slice(0, 10) : [])
     setEditingItem(item)
   }
 

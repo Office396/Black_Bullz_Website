@@ -223,8 +223,8 @@ export function Comments({ gameId, itemName }: CommentsProps) {
 
         <div className={`rounded-xl p-5 mb-3 transition-all duration-200 ${
           isReply
-            ? 'bg-[#0d0820]/80 border border-[#2d1b54]/40'
-            : 'bg-[#110d24] border border-[#2d1b54]/60 hover:border-[#9d4edd]/30 shadow-[0_2px_12px_rgba(0,0,0,0.3)]'
+            ? 'bg-gray-100 dark:bg-[#0d0820]/80 border border-gray-300 dark:border-[#2d1b54]/40'
+            : 'bg-white dark:bg-[#110d24] border border-gray-300 dark:border-[#2d1b54]/60 hover:border-[#9d4edd]/30 shadow-[0_2px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.3)]'
         }`}>
           {/* Author row */}
           <div className="flex items-center gap-3 mb-3">
@@ -232,20 +232,20 @@ export function Comments({ gameId, itemName }: CommentsProps) {
               {c.author.charAt(0).toUpperCase()}
             </div>
             <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
-              <span className="text-white font-semibold text-[15px]">{c.author}</span>
-              <span className="text-[#6b5b8a] text-sm">{formatTimestamp(c.timestamp)}</span>
+              <span className="text-gray-900 dark:text-white font-semibold text-[15px]">{c.author}</span>
+              <span className="text-gray-500 dark:text-[#6b5b8a] text-sm">{formatTimestamp(c.timestamp)}</span>
               <UserBadge badge={c.user_badge} color={c.user_badge_color} />
             </div>
           </div>
 
           {/* Content */}
           <div 
-            className="text-[#c4b5de] text-[15px] leading-relaxed quill-content prose prose-invert prose-p:my-1 prose-h1:text-xl prose-a:text-[#c77dff] prose-code:bg-[#2d1b54]/60 prose-code:text-[#c77dff] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[13px]"
+            className="text-gray-700 dark:text-[#c4b5de] text-[15px] leading-relaxed quill-content prose dark:prose-invert prose-p:my-1 prose-h1:text-xl prose-a:text-[#9d4edd] dark:prose-a:text-[#c77dff] prose-code:bg-gray-200 dark:prose-code:bg-[#2d1b54]/60 prose-code:text-[#9d4edd] dark:prose-code:text-[#c77dff] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[13px]"
             dangerouslySetInnerHTML={{ __html: c.content }} 
           />
 
           {/* Action bar */}
-          <div className="flex items-center gap-5 mt-4 pt-3 border-t border-[#2d1b54]/30">
+          <div className="flex items-center gap-5 mt-4 pt-3 border-t border-gray-200 dark:border-[#2d1b54]/30">
             <button onClick={() => handleReact(c.id, 'like')} className="flex items-center gap-1.5 text-[#6b5b8a] hover:text-[#c77dff] transition-colors text-sm group">
               <ThumbsUp className="w-4 h-4 group-hover:scale-110 transition-transform" />
               <span className="font-medium">{c.likes || 0}</span>
@@ -282,8 +282,8 @@ export function Comments({ gameId, itemName }: CommentsProps) {
         {/* Reply input */}
         {replyingTo === c.id && (
           <div className="ml-10 sm:ml-14 mb-3">
-            <div className="bg-[#0d0820] border border-[#2d1b54]/50 rounded-xl overflow-hidden focus-within:border-[#9d4edd] focus-within:shadow-[0_0_0_3px_rgba(157,78,221,0.1)] transition-all">
-              <div className="bg-[#120b22] quill-container">
+            <div className="bg-gray-200 dark:bg-[#0d0820] border border-gray-300 dark:border-[#2d1b54]/50 rounded-xl overflow-hidden focus-within:border-[#9d4edd] focus-within:shadow-[0_0_0_3px_rgba(157,78,221,0.1)] transition-all">
+              <div className="bg-gray-300 dark:bg-[#120b22] quill-container">
                 <ReactQuill
                   theme="snow"
                   value={replyContent}
@@ -291,12 +291,12 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                   modules={quillModules}
                   formats={quillFormats}
                   placeholder="Write a reply..."
-                  className="text-white"
+                  className="text-gray-900 dark:text-white"
                 />
               </div>
-              <div className="p-3 bg-[#0d0820] border-t border-[#2d1b54]/50">
+              <div className="p-3 bg-gray-100 dark:bg-[#0d0820] border-t border-gray-200 dark:border-[#2d1b54]/50">
                 <div className="flex items-center justify-end gap-2">
-                  <button onClick={() => setReplyingTo(null)} className="px-4 py-2 rounded-lg text-[#6b5b8a] text-sm hover:text-white transition-colors">Cancel</button>
+                  <button onClick={() => setReplyingTo(null)} className="px-4 py-2 rounded-lg text-[#6b5b8a] text-sm hover:text-gray-900 dark:hover:text-white transition-colors">Cancel</button>
                   <button
                     onClick={() => handleReply(c.id)}
                     disabled={!replyContent.trim() || replyContent === '<p><br></p>'}
@@ -349,15 +349,15 @@ export function Comments({ gameId, itemName }: CommentsProps) {
       )}
 
       {/* ===== COMMENTS CONTAINER ===== */}
-      <div className="bg-[#0d0820]/90 border border-[#2d1b54]/60 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+      <div className="bg-gray-100 dark:bg-[#0d0820]/90 border border-gray-300 dark:border-[#2d1b54]/60 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
         {/* Header */}
-        <div className="px-6 py-5 flex items-center justify-between border-b border-[#2d1b54]/40">
+        <div className="px-6 py-5 flex items-center justify-between border-b border-gray-300 dark:border-[#2d1b54]/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#9d4edd]/15 flex items-center justify-center border border-[#9d4edd]/20">
               <MessageSquare className="w-5 h-5 text-[#9d4edd]" />
             </div>
             <div>
-              <h2 className="text-white font-bold text-xl flex items-center gap-2.5">
+              <h2 className="text-gray-900 dark:text-white font-bold text-xl flex items-center gap-2.5">
                 Comments
                 <span className="text-[#9d4edd] text-lg font-bold">{comments.length}</span>
               </h2>
@@ -374,7 +374,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
         </div>
 
         {/* Sort Tabs */}
-        <div className="px-6 py-3.5 flex items-center gap-2 flex-wrap border-b border-[#2d1b54]/30 bg-[#0d0820]/50">
+        <div className="px-6 py-3.5 flex items-center gap-2 flex-wrap border-b border-[#2d1b54]/30 bg-gray-200/50 dark:bg-[#0d0820]/50">
           <span className="text-[#6b5b8a] text-sm font-medium mr-2">Sort:</span>
           {sortTabs.map(tab => (
             <button
@@ -383,7 +383,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 sortMode === tab.key
                   ? 'bg-[#9d4edd] text-white shadow-md shadow-[#9d4edd]/25'
-                  : 'bg-[#1a103c] text-[#b8a9d4] hover:bg-[#2d1b54] hover:text-white border border-[#2d1b54]/60'
+                  : 'bg-gray-300 dark:bg-[#1a103c] text-gray-700 dark:text-[#b8a9d4] hover:bg-gray-400 dark:hover:bg-[#2d1b54] hover:text-gray-900 dark:hover:text-white border border-gray-400 dark:border-[#2d1b54]/60'
               }`}
             >
               {tab.label}
@@ -395,11 +395,11 @@ export function Comments({ gameId, itemName }: CommentsProps) {
         <div className="px-6 py-5">
           {sortedComments.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-16 h-16 rounded-full bg-[#1a103c] border border-[#2d1b54]/40 flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-7 h-7 text-[#2d1b54]" />
+              <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-[#1a103c] border border-gray-300 dark:border-[#2d1b54]/40 flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="w-7 h-7 text-gray-500 dark:text-[#2d1b54]" />
               </div>
-              <p className="text-[#6b5b8a] text-base font-medium">No comments yet</p>
-              <p className="text-[#4a3d6b] text-sm mt-1">Be the first to share your thoughts!</p>
+              <p className="text-gray-600 dark:text-[#6b5b8a] text-base font-medium">No comments yet</p>
+              <p className="text-gray-500 dark:text-[#4a3d6b] text-sm mt-1">Be the first to share your thoughts!</p>
             </div>
           ) : (
             <div className="space-y-0">
@@ -414,11 +414,11 @@ export function Comments({ gameId, itemName }: CommentsProps) {
             <div className="text-center mt-8">
               <button
                 onClick={() => setVisibleCount(prev => prev + COMMENTS_PER_PAGE)}
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-[#1a103c] border border-[#2d1b54]/60 text-white text-sm font-semibold hover:bg-[#2d1b54] hover:border-[#9d4edd]/30 transition-all duration-200"
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gray-200 dark:bg-[#1a103c] border border-gray-300 dark:border-[#2d1b54]/60 text-gray-700 dark:text-white text-sm font-semibold hover:bg-gray-300 dark:hover:bg-[#2d1b54] hover:text-gray-900 dark:hover:border-[#9d4edd]/30 transition-all duration-200"
               >
                 <ChevronDown className="w-4 h-4" /> Load More
               </button>
-              <p className="text-[#4a3d6b] text-sm mt-2">
+              <p className="text-gray-500 dark:text-[#4a3d6b] text-sm mt-2">
                 Showing {Math.min(visibleCount, sortedComments.length)} of {sortedComments.length}
               </p>
             </div>
@@ -426,14 +426,14 @@ export function Comments({ gameId, itemName }: CommentsProps) {
         </div>
 
         {/* ===== ALWAYS-VISIBLE COMMENT INPUT AT BOTTOM ===== */}
-        <div id="comment-write-section" className="border-t border-[#2d1b54]/40 bg-[#0d0820]/80">
+        <div id="comment-write-section" className="border-t border-[#2d1b54]/40 bg-gray-100 dark:bg-[#0d0820]/80">
           {!user ? (
             <div className="p-8 text-center">
               <LogIn className="w-8 h-8 text-[#9d4edd] mx-auto mb-3" />
-              <p className="text-white font-semibold text-base mb-1">Join the conversation</p>
+              <p className="text-gray-900 dark:text-white font-semibold text-base mb-1">Join the conversation</p>
               <p className="text-[#6b5b8a] text-sm mb-5">Sign in to comment and interact with the community</p>
               <div className="flex gap-3 justify-center">
-                <Link href="/login" className="px-6 py-2.5 rounded-xl border border-[#2d1b54] text-white text-sm font-semibold hover:bg-[#1a103c] transition-colors">Log in</Link>
+                <Link href="/login" className="px-6 py-2.5 rounded-xl border border-gray-300 dark:border-[#2d1b54] text-gray-700 dark:text-white text-sm font-semibold hover:bg-gray-200 dark:hover:bg-[#1a103c] transition-colors">Log in</Link>
                 <Link href="/signup" className="px-6 py-2.5 rounded-xl bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-sm font-semibold transition-colors">Sign up</Link>
               </div>
             </div>
@@ -445,10 +445,10 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-white text-[15px] font-semibold">{user.name}</span>
+                    <span className="text-gray-900 dark:text-white text-[15px] font-semibold">{user.name}</span>
                     {planBadge && <UserBadge badge={planBadge.label} color={planBadge.color} />}
                   </div>
-                  <div className="border border-[#2d1b54] rounded-xl overflow-hidden focus-within:border-[#9d4edd] focus-within:shadow-[0_0_0_3px_rgba(157,78,221,0.1)] transition-all flex flex-col min-h-[140px] quill-main-container bg-[#120b22]">
+                  <div className="border border-gray-400 dark:border-[#2d1b54] rounded-xl overflow-hidden focus-within:border-[#9d4edd] focus-within:shadow-[0_0_0_3px_rgba(157,78,221,0.1)] transition-all flex flex-col min-h-[140px] quill-main-container bg-gray-300 dark:bg-[#120b22]">
                     <ReactQuill
                       theme="snow"
                       value={newComment}
@@ -456,7 +456,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
                       modules={quillModules}
                       formats={quillFormats}
                       placeholder="What are your thoughts?"
-                      className="text-white flex-1"
+                      className="text-gray-900 dark:text-white flex-1"
                     />
                   </div>
                   <div className="flex items-center justify-between mt-3">

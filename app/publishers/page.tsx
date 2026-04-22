@@ -41,26 +41,38 @@ export default async function PublishersPage() {
                 const pubGames = items.filter(g => g.publisher?.toLowerCase() === pub.name.toLowerCase())
                 return (
                   <Link key={pub.id} href={`/publishers/${pub.slug}`}
-                    className="group bg-[#120b22] border border-[#2d1b54] hover:border-[#9d4edd]/50 rounded-2xl overflow-hidden transition-all hover:shadow-[0_0_20px_rgba(157,78,221,0.15)]">
+                    className="group relative bg-[#120b22] border border-[#2d1b54] hover:border-[#9d4edd]/50 rounded-2xl overflow-hidden transition-all hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(157,78,221,0.15)] flex flex-col h-full">
+                    
+                    {/* Ambient Blurred Background from Banner */}
                     {pub.banner_url && (
-                      <div className="h-24 overflow-hidden relative">
-                        <img src={pub.banner_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#120b22]" />
+                      <div className="absolute inset-0 z-0 opacity-20 group-hover:opacity-30 transition-opacity overflow-hidden">
+                        <img src={pub.banner_url} alt="" className="w-full h-full object-cover blur-[40px] scale-125" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#120b22] via-[#120b22]/80 to-transparent" />
                       </div>
                     )}
-                    <div className="p-5 flex items-start gap-4">
-                      {pub.logo_url ? (
-                        <img src={pub.logo_url} alt={pub.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 ring-2 ring-[#2d1b54]" />
-                      ) : (
-                        <div className="w-14 h-14 rounded-xl bg-[#9d4edd]/20 flex items-center justify-center flex-shrink-0 text-[#9d4edd] text-2xl font-black">
-                          {pub.name.charAt(0)}
+                    
+                    <div className="p-5 flex flex-col gap-4 flex-1 relative z-10">
+                      <div className="flex items-center gap-4">
+                        {pub.logo_url ? (
+                          <div className="bg-[#090514] p-1.5 rounded-xl shrink-0 border border-white/5 ring-1 ring-black/50 overflow-hidden shadow-lg">
+                            <img src={pub.logo_url} alt={pub.name} className="w-12 h-12 rounded-lg object-contain" />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 rounded-xl bg-[#9d4edd]/10 border border-[#9d4edd]/20 flex items-center justify-center flex-shrink-0 text-[#9d4edd] text-2xl font-black shadow-lg">
+                            {pub.name.charAt(0)}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-lg text-white font-black group-hover:text-[#c77dff] transition-colors truncate">{pub.name}</h2>
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#9d4edd]/10 border border-[#9d4edd]/20 mt-1">
+                            <span className="text-[#c77dff] text-[10px] font-bold uppercase tracking-wider">{pubGames.length} Game{pubGames.length !== 1 ? 's' : ''}</span>
+                          </div>
                         </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h2 className="text-white font-bold group-hover:text-[#c77dff] transition-colors">{pub.name}</h2>
-                        {pub.known_for && <p className="text-[#9d4edd] text-xs mt-0.5">{pub.known_for}</p>}
-                        {pub.overview && <p className="text-gray-500 text-xs mt-1 line-clamp-2">{pub.overview}</p>}
-                        <p className="text-gray-600 text-xs mt-2">{pubGames.length} game{pubGames.length !== 1 ? 's' : ''}</p>
+                      </div>
+
+                      <div className="flex-1 mt-1">
+                        {pub.known_for && <p className="text-[#e0aaff] text-xs font-semibold mb-2 line-clamp-2 leading-relaxed">Known for: {pub.known_for}</p>}
+                        {pub.overview && <p className="text-gray-400 text-xs leading-relaxed line-clamp-3">{pub.overview}</p>}
                       </div>
                     </div>
                   </Link>

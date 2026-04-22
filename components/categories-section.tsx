@@ -103,14 +103,14 @@ export function CategoriesSection({ games }: CategoriesSectionProps) {
                 ))}
             </div>
 
-            <div className="mt-6 p-4 bg-gradient-to-r from-[#9d4edd]/10 via-[#120b22] to-[#9d4edd]/10 border border-[#9d4edd]/20 rounded-xl">
+            <div className="mt-6 p-4 bg-gray-200 dark:bg-gray-800/60 border border-gray-300 dark:border-gray-700 rounded-xl">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
-                        <h3 className="text-white font-semibold">PC Games Available as:</h3>
-                        <p className="text-gray-400 text-sm mt-1">
-                            <span className="text-green-400">Pre-installed</span> (Recommended) - No installation needed, just extract & play! 
-                            <span className="mx-2">•</span> 
-                            <span className="text-purple-400">Installable</span> - Traditional setup with installer
+                        <h3 className="text-gray-900 dark:text-white font-semibold">PC Games Available as:</h3>
+                        <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">
+                            <span className="text-green-700 dark:text-green-400 font-medium">Pre-installed</span> (Recommended) - No installation needed, just extract & play! 
+                            <span className="mx-2 text-gray-400 dark:text-gray-600">•</span> 
+                            <span className="text-purple-700 dark:text-purple-400 font-medium">Installable</span> - Traditional setup with installer
                         </p>
                     </div>
                     <Link

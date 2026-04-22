@@ -110,12 +110,12 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#090514]">
+    <div className="min-h-screen bg-background dark:bg-[#090514]">
       <Header />
       <div className="pt-16">
         <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-center text-white mb-2">
+            <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
               {selectedCategory === "pre-installed" ? "Pre-installed PC Games" :
                selectedCategory === "installable" ? "Installable PC Games" :
                selectedCategory === "pc-games" ? "PC Games" :
@@ -156,7 +156,7 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
                 </button>
               )}
             </div>
-            <Button onClick={handleRandomGame} variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white">
+            <Button onClick={handleRandomGame} variant="outline" className="bg-transparent dark:bg-white/5 border-[#9d4edd]/40 dark:border-white/10 text-[#9d4edd] dark:text-white hover:bg-[#9d4edd]/10 dark:hover:bg-white/10 hover:border-[#9d4edd]">
               <Shuffle className="w-4 h-4 mr-2" />
               Random Game
             </Button>
@@ -170,8 +170,8 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-center text-sm font-medium transition-all",
                   selectedFilter === filter.value
-                    ? "bg-[#9d4edd] text-white"
-                    : "bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white"
+                    ? "bg-[#9d4edd] text-white border border-[#9d4edd]"
+                    : "bg-transparent dark:bg-white/5 text-[#9d4edd] dark:text-gray-300 border border-[#9d4edd]/40 dark:border-transparent hover:bg-[#9d4edd]/10 dark:hover:bg-white/10 hover:border-[#9d4edd] dark:hover:text-white"
                 )}
               >
                 {filter.label}
@@ -187,10 +187,10 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
                   key={letter}
                   onClick={() => handleLetterClick(letter)}
                   className={cn(
-                    "w-11 h-8 rounded-lg text-xs hover:bg-[#9d4edd] text-center font-medium transition-all",
+                    "w-11 h-8 rounded-lg text-xs text-center font-medium transition-all",
                     selectedLetter === letter
-                      ? "bg-[#9d4edd] text-white"
-                      : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
+                      ? "bg-[#9d4edd] text-white border border-[#9d4edd]"
+                      : "bg-transparent dark:bg-white/5 text-[#9d4edd] dark:text-gray-400 border border-[#9d4edd]/40 dark:border-transparent hover:bg-[#9d4edd]/10 dark:hover:bg-white/10 hover:border-[#9d4edd] dark:hover:text-white"
                   )}
                 >
                   {letter}
@@ -213,10 +213,10 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
                   Showing {((currentPage - 1) * gamesPerPage) + 1}–{Math.min(currentPage * gamesPerPage, filteredGames.length)} of {filteredGames.length} games
                 </p>
                 <div className="flex gap-2">
-                  <button onClick={() => setViewMode("grid")} className={cn("p-2 rounded-lg transition-colors", viewMode === "grid" ? "bg-[#9d4edd] text-white" : "bg-white/5 text-gray-400 hover:text-white")}>
+                  <button onClick={() => setViewMode("grid")} className={cn("p-2 rounded-lg transition-colors border", viewMode === "grid" ? "bg-[#9d4edd] text-white border-[#9d4edd]" : "bg-transparent dark:bg-white/5 text-[#9d4edd] dark:text-gray-400 border-[#9d4edd]/40 dark:border-transparent hover:bg-[#9d4edd]/10 dark:hover:bg-white/10 hover:border-[#9d4edd] dark:hover:text-white")}>
                     <Grid className="w-4 h-4" />
                   </button>
-                  <button onClick={() => setViewMode("list")} className={cn("p-2 rounded-lg transition-colors", viewMode === "list" ? "bg-[#9d4edd] text-white" : "bg-white/5 text-gray-400 hover:text-white")}>
+                  <button onClick={() => setViewMode("list")} className={cn("p-2 rounded-lg transition-colors border", viewMode === "list" ? "bg-[#9d4edd] text-white border-[#9d4edd]" : "bg-transparent dark:bg-white/5 text-[#9d4edd] dark:text-gray-400 border-[#9d4edd]/40 dark:border-transparent hover:bg-[#9d4edd]/10 dark:hover:bg-white/10 hover:border-[#9d4edd] dark:hover:text-white")}>
                     <List className="w-4 h-4" />
                   </button>
                 </div>
@@ -262,7 +262,7 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
 
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-8">
-                  <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white disabled:opacity-50">
+                  <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} variant="outline" className="bg-transparent dark:bg-white/5 border-[#9d4edd]/40 dark:border-white/10 text-[#9d4edd] dark:text-white hover:bg-[#9d4edd]/10 dark:hover:bg-white/10 hover:border-[#9d4edd] transition-colors disabled:opacity-50">
                     Previous
                   </Button>
                   <div className="flex items-center gap-1">
@@ -273,13 +273,13 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
                       else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i
                       else pageNum = currentPage - 2 + i
                       return (
-                        <button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={cn("w-10 h-10 rounded-lg text-sm font-medium transition-all", currentPage === pageNum ? "bg-[#9d4edd] text-white" : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white")}>
+                        <button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={cn("w-10 h-10 rounded-lg text-sm font-medium transition-all border", currentPage === pageNum ? "bg-[#9d4edd] text-white border-[#9d4edd]" : "bg-transparent dark:bg-white/5 text-[#9d4edd] dark:text-gray-400 border-[#9d4edd]/40 dark:border-transparent hover:bg-[#9d4edd]/10 dark:hover:bg-white/10 hover:border-[#9d4edd] dark:hover:text-white")}>
                           {pageNum}
                         </button>
                       )
                     })}
                   </div>
-                  <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white disabled:opacity-50">
+                  <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} variant="outline" className="bg-transparent dark:bg-white/5 border-[#9d4edd]/40 dark:border-white/10 text-[#9d4edd] dark:text-white hover:bg-[#9d4edd]/10 dark:hover:bg-white/10 hover:border-[#9d4edd] transition-colors disabled:opacity-50">
                     Next
                   </Button>
                 </div>

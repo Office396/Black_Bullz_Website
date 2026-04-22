@@ -456,9 +456,13 @@ main {
 .ql-toolbar.ql-snow {
   border: none !important;
   border-bottom: 1px solid rgba(45, 27, 84, 0.4) !important;
-  background: rgba(13, 8, 32, 0.5);
+  background: rgba(224, 224, 232, 0.8);
   border-radius: 12px 12px 0 0;
   padding: 8px !important;
+}
+
+.dark .ql-toolbar.ql-snow {
+  background: rgba(13, 8, 32, 0.5);
 }
 
 .ql-container.ql-snow {
@@ -471,25 +475,47 @@ main {
 }
 
 .ql-editor.ql-blank::before {
-  color: #4a3d6b !important;
+  color: #666 !important;
   font-style: normal !important;
 }
 
+.dark .ql-editor.ql-blank::before {
+  color: #4a3d6b !important;
+}
+
 .ql-toolbar .ql-stroke {
+  stroke: #444 !important;
+}
+
+.dark .ql-toolbar .ql-stroke {
   stroke: #6b5b8a !important;
 }
 
 .ql-toolbar .ql-fill {
+  fill: #444 !important;
+}
+
+.dark .ql-toolbar .ql-fill {
   fill: #6b5b8a !important;
 }
 
 .ql-toolbar button:hover .ql-stroke,
 .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #9d4edd !important;
+}
+
+.dark .ql-toolbar button:hover .ql-stroke,
+.dark .ql-toolbar button.ql-active .ql-stroke {
   stroke: #c77dff !important;
 }
 
 .ql-toolbar button:hover .ql-fill,
 .ql-toolbar button.ql-active .ql-fill {
+  fill: #9d4edd !important;
+}
+
+.dark .ql-toolbar button:hover .ql-fill,
+.dark .ql-toolbar button.ql-active .ql-fill {
   fill: #c77dff !important;
 }
 
