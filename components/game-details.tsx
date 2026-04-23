@@ -224,13 +224,47 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   }, [])
 
   const handleReaction = async (reaction: 'like' | 'dislike') => {
-    if (!user) { setShowReactionLoginPrompt(true); setTimeout(() => setShowReactionLoginPrompt(false), 3000); return }
+    if (!user) { showToast('Please login to react to this game', 'info'); return }
+    
+    // Immediately update UI for responsiveness
+    const prevReaction = userReaction
+    let toastMsg = ''
+    if (userReaction === reaction) {
+      // Toggle off
+      setUserReaction(null)
+      setLikes(likes - 1)
+      toastMsg = reaction === 'like' ? 'Like removed' : 'Dislike removed'
+    } else if (userReaction) {
+      // Switch reaction
+      setUserReaction(reaction)
+      if (reaction === 'like') {
+        setLikes(likes + 1)
+        setDislikes(dislikes - 1)
+      } else {
+        setLikes(likes - 1)
+        setDislikes(dislikes + 1)
+      }
+      toastMsg = reaction === 'like' ? 'Changed to Like' : 'Changed to Dislike'
+    } else {
+      // New reaction
+      setUserReaction(reaction)
+      if (reaction === 'like') setLikes(likes + 1)
+      else setDislikes(dislikes + 1)
+      toastMsg = reaction === 'like' ? 'Liked!' : 'Disliked!'
+    }
+    
+    // Show toast
+    showToast(toastMsg, 'success')
+    
+    // Send to server
     const res = await fetch('/api/reactions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ gameId: game.id, reaction }) })
     const data = await res.json()
-    if (data.success) {
-      setUserReaction(data.userReaction)
-      fetch(`/api/reactions?game_id=${game.id}`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.json()).then(d => { setLikes(d.likes || 0); setDislikes(d.dislikes || 0) }).catch(() => { })
+    if (!data.success) {
+      // Revert on failure
+      setUserReaction(prevReaction)
+      setLikes(likes)
+      setDislikes(dislikes)
+      showToast(data.error || 'Failed to react', 'info')
     }
   }
 
@@ -386,22 +420,15 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
           </div>
           {/* Like/Dislike/Report buttons below game cover */}
           <div className="flex items-center justify-center gap-2 mt-4">
-            <div className="relative">
-              <Button
-                variant="outline"
-                className={`h-9 px-3 border-gray-300 dark:border-white/20 transition-colors ${userReaction === 'like' ? 'text-green-600 dark:text-green-400 border-green-500/50 bg-green-500/10' : 'text-gray-700 dark:text-white hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400'}`}
-                onClick={() => handleReaction('like')}
-              >
-                <ThumbsUp className={`w-4 h-4 ${userReaction === 'like' ? 'fill-green-400' : ''}`} />
-                <span className="ml-1.5 text-xs font-medium">Like</span>
-                <span className="ml-1 text-xs opacity-70">{likes}</span>
-              </Button>
-              {showReactionLoginPrompt && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-card border border-[#9d4edd]/40 rounded-lg text-xs text-white dark:text-white whitespace-nowrap shadow-xl z-50">
-                  <a href="/login" className="text-[#9d4edd] font-semibold hover:underline">Login</a> or <a href="/signup" className="text-[#9d4edd] font-semibold hover:underline">Sign up</a> to react
-                </div>
-              )}
-            </div>
+            <Button
+              variant="outline"
+              className={`h-9 px-3 border-gray-300 dark:border-white/20 transition-colors ${userReaction === 'like' ? 'text-green-600 dark:text-green-400 border-green-500/50 bg-green-500/10' : 'text-gray-700 dark:text-white hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400'}`}
+              onClick={() => handleReaction('like')}
+            >
+              <ThumbsUp className={`w-4 h-4 ${userReaction === 'like' ? 'fill-green-400' : ''}`} />
+              <span className="ml-1.5 text-xs font-medium">Like</span>
+              <span className="ml-1 text-xs opacity-70">{likes}</span>
+            </Button>
             <Button
               variant="outline"
               className={`h-9 px-3 border-gray-300 dark:border-white/20 transition-colors ${userReaction === 'dislike' ? 'text-red-600 dark:text-red-400 border-red-500/50 bg-red-500/10' : 'text-gray-700 dark:text-white hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400'}`}
@@ -535,7 +562,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">Uploaded by</p>
+              <p className="text-gray-800 dark:text-gray-200 text-sm font-bold uppercase tracking-wide">Uploaded by</p>
             </div>
             {(game.uploaderName || game.uploader) ? (
               <Link href={`/profile`} className="flex items-center gap-2 text-purple-700 dark:text-purple-400 hover:text-purple-500 text-sm font-bold transition-colors">
@@ -543,8 +570,17 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
               </Link>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-purple-700 dark:text-purple-400 text-sm font-bold">BullzGamez Team</span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-600 text-white text-[10px] font-bold uppercase tracking-wider">
+                <span className="text-gray-600 dark:text-gray-400 text-sm font-medium">Bullz Community</span>
+                <span 
+                  className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%)',
+                    color: '#1a1a1a',
+                    borderColor: '#FFD700',
+                    boxShadow: '0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3)',
+                    textShadow: '0 0 2px rgba(255, 255, 255, 0.5)'
+                  }}
+                >
                   Admin
                 </span>
               </div>

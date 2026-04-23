@@ -21,8 +21,8 @@ export const BADGES = [
 ]
 
 export const PLAN_BADGES: Record<string, { label: string; color: string }> = {
-  free: { label: "Member", color: "bg-gray-500/20 text-gray-400 border-gray-500/30" },
-  fighter: { label: "Freedom Fighter", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-  leader: { label: "Revolution Leader", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
-  revolutionist: { label: "Revolutionist", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+  free: { label: "Member", color: "#6b7280" },      // Gray
+  fighter: { label: "Freedom Fighter", color: "#3b82f6" },  // Blue
+  leader: { label: "Revolution Leader", color: "#a855f7" }, // Purple
+  revolutionist: { label: "Revolutionist", color: "#eab308" }, // Yellow
 }

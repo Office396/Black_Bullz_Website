@@ -16,7 +16,7 @@ import AdminDetailsAutomation from "@/components/admin-details-automation"
 import AdminPublishersPanel from "@/components/admin-publishers-panel"
 import AdminReportsPanel from "@/components/admin-reports-panel"
 import AdminGenresPanel from "@/components/admin-genres-panel"
-import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow, Heart, Users, Bell, GamepadIcon, Building2, Flag, Tag } from "lucide-react"
+import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow, Heart, Users, Bell, GamepadIcon, Building2, Flag, Tag, Trash2 } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -114,6 +114,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <Flag className="h-4 w-4" />
                 Reports
               </TabsTrigger>
+              <TabsTrigger value="deletes" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
+                <Trash2 className="h-4 w-4" />
+                Delete Requests
+              </TabsTrigger>
               <TabsTrigger value="genres" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
                 <Tag className="h-4 w-4" />
                 Genres
@@ -189,6 +193,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
           <TabsContent value="reports" className="mt-0 outline-none">
             <AdminReportsPanel />
+          </TabsContent>
+
+          <TabsContent value="deletes" className="mt-0 outline-none">
+            <AdminDeleteRequests />
           </TabsContent>
 
           <TabsContent value="genres" className="mt-0 outline-none">
@@ -447,6 +455,110 @@ function AdminRequestsPanel() {
           </table>
         </div>
       )}
+    </div>
+  )
+}
+
+function AdminDeleteRequests() {
+  const [requests, setRequests] = useState<any[]>([])
+  const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
+  const [loading, setLoading] = useState(true)
+
+  const fetchRequests = async () => {
+    setLoading(true)
+    const res = await fetch(`/api/delete-requests?status=${filter}`)
+    const data = await res.json()
+    if (data.data) setRequests(data.data)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchRequests()
+  }, [filter])
+
+  const handleAction = async (id: number, action: 'approve' | 'reject') => {
+    const res = await fetch(`/api/delete-requests?adminToken=authenticated`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action })
+    })
+    const data = await res.json()
+    if (data.success) {
+      fetchRequests()
+    }
+  }
+
+  const pendingCount = requests.filter(r => r.status === 'pending').length
+
+  return (
+    <div className="bg-[#120b22] border border-[#2d1b54] rounded-2xl overflow-hidden shadow-2xl">
+      <div className="p-6 border-b border-[#2d1b54] bg-gradient-to-r from-[#1a103c] to-[#120b22]">
+        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+          <Trash2 className="h-5 w-5 text-[#9d4edd]" />
+          Comment Delete Requests ({pendingCount} pending)
+        </h3>
+      </div>
+      
+      {/* Filter tabs */}
+      <div className="flex gap-2 px-6 py-4 bg-[#0d0820]/50 border-b border-[#2d1b54]/30">
+        <button onClick={() => setFilter('pending')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'pending' ? 'bg-[#9d4edd] text-white' : 'bg-[#1a103c] text-gray-400 hover:text-white'}`}>
+          Pending
+        </button>
+        <button onClick={() => setFilter('approved')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'approved' ? 'bg-green-600 text-white' : 'bg-[#1a103c] text-gray-400 hover:text-white'}`}>
+          Approved
+        </button>
+        <button onClick={() => setFilter('rejected')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === 'rejected' ? 'bg-red-600 text-white' : 'bg-[#1a103c] text-gray-400 hover:text-white'}`}>
+          Rejected
+        </button>
+      </div>
+
+      <div className="p-6">
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 border-2 border-[#9d4edd] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : requests.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">No {filter} delete requests</p>
+        ) : (
+          <div className="space-y-4">
+            {requests.map(req => (
+              <div key={req.id} className="bg-[#1a103c] border border-[#2d1b54] rounded-xl p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-white font-semibold">{req.author}</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                        req.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                        req.status === 'approved' ? 'bg-green-500/20 text-green-400' :
+                        'bg-red-500/20 text-red-400'
+                      }`}>
+                        {req.status}
+                      </span>
+                      <span className="text-gray-500 text-xs">
+                        {new Date(req.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-gray-400 text-sm mb-2">
+                      Comment: "{req.content?.substring(0, 100)}{req.content?.length > 100 ? '...' : ''}"
+                    </p>
+                    <p className="text-gray-500 text-xs">Comment ID: {req.comment_id} | Item ID: {req.item_id}</p>
+                  </div>
+                  {req.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <button onClick={() => handleAction(req.id, 'approve')} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-medium rounded-lg transition-colors">
+                        Approve & Delete
+                      </button>
+                      <button onClick={() => handleAction(req.id, 'reject')} className="px-4 py-2 bg-red-600/50 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors">
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

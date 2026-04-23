@@ -57,7 +57,7 @@ export function AdminFeedback() {
     if (!replyTarget || !replyText.trim()) return
     setReplySubmitting(true)
     const parentId = replyTarget.type === 'reply' ? (replyTarget.parentId || replyTarget.id) : replyTarget.id
-    await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reply', itemId: replyTarget.itemId, parentId, itemName: replyTarget.itemName, author: 'BullzGamez-Admin', email: '', content: replyText.trim() }) })
+    await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reply', itemId: replyTarget.itemId, parentId, itemName: replyTarget.itemName, author: 'BullzGamez-Admin', email: '', content: replyText.trim(), adminToken: 'authenticated' }) })
     await markComment(replyTarget.id, replyTarget.itemId, 'read')
     setReplyTarget(null); setReplyText(""); setReplySubmitting(false)
     loadComments()

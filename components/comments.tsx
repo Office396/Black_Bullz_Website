@@ -42,8 +42,37 @@ function formatTimestamp(ts: string) {
 
 function UserBadge({ badge, color }: { badge?: string; color?: string }) {
   if (!badge) return null
+  
+  const isGold = color === '#FFD700'
+  
+  // Map badge labels to default colors if no color provided
+  const defaultColors: Record<string, string> = {
+    'Member': '#6b7280',
+    'Freedom Fighter': '#3b82f6',
+    'Revolution Leader': '#a855f7',
+    'Revolutionist': '#eab308',
+    'Admin': '#FFD700',
+  }
+  
+  const badgeColor = color || defaultColors[badge] || '#9d4edd'
+  
+  const badgeStyle = isGold ? { 
+    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%)',
+    color: '#1a1a1a',
+    borderColor: '#FFD700',
+    boxShadow: '0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3)',
+    textShadow: '0 0 2px rgba(255, 255, 255, 0.5)'
+  } : { 
+    backgroundColor: `${badgeColor}20`, 
+    color: badgeColor, 
+    borderColor: `${badgeColor}50` 
+  }
+  
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border ${color || 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
+    <span 
+      className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border"
+      style={badgeStyle}
+    >
       {badge}
     </span>
   )
@@ -66,6 +95,7 @@ export function Comments({ gameId, itemName }: CommentsProps) {
   const [sortMode, setSortMode] = useState<SortMode>('new')
   const [visibleCount, setVisibleCount] = useState(COMMENTS_PER_PAGE)
   const [expandedReplies, setExpandedReplies] = useState<Set<number>>(new Set())
+  const [userReactions, setUserReactions] = useState<Record<number, 'like' | 'dislike'>>({})
   const commentInputRef = useRef<HTMLTextAreaElement>(null)
   const replyInputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -81,6 +111,13 @@ export function Comments({ gameId, itemName }: CommentsProps) {
     fetch(`/api/comments?itemId=${gameId}`, { cache: 'no-store' })
       .then(r => r.json()).then(d => { if (d.success) setComments(d.data || []) }).catch(() => {})
   }, [gameId])
+
+  // Load user reactions for comments
+  useEffect(() => {
+    if (!token || !gameId) return
+    fetch(`/api/comment-reactions?itemId=${Number(gameId)}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => { if (d.reactions) setUserReactions(d.reactions) }).catch(() => {})
+  }, [token, gameId])
 
   const apiPost = async (body: object) => {
     const res = await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
@@ -139,12 +176,108 @@ export function Comments({ gameId, itemName }: CommentsProps) {
   }
 
   const handleReact = async (targetId: number, reaction: 'like' | 'dislike') => {
-    await apiPost({ action: 'react', itemId: gameId, targetId, reaction })
+    if (!user) { showToast('Please login to react', 'info'); return }
+    if (!token) return
+    
+    const existingReaction = userReactions[targetId]
+    
+    // Immediately update UI for responsiveness
+    if (existingReaction === reaction) {
+      // Toggle off - remove reaction
+      const newReactions = { ...userReactions }
+      delete newReactions[targetId]
+      setUserReactions(newReactions)
+      setComments(prev => prev.map(c => {
+        if (c.id === targetId) {
+          return {
+            ...c,
+            likes: reaction === 'like' ? Math.max(0, (c.likes || 0) - 1) : c.likes,
+            dislikes: reaction === 'dislike' ? Math.max(0, (c.dislikes || 0) - 1) : c.dislikes
+          }
+        }
+        return c
+      }))
+    } else if (existingReaction) {
+      // Switch reaction
+      setUserReactions(prev => ({ ...prev, [targetId]: reaction }))
+      setComments(prev => prev.map(c => {
+        if (c.id === targetId) {
+          return {
+            ...c,
+            likes: reaction === 'like' ? (c.likes || 0) + 1 : Math.max(0, (c.likes || 0) - 1),
+            dislikes: reaction === 'dislike' ? (c.dislikes || 0) + 1 : Math.max(0, (c.dislikes || 0) - 1)
+          }
+        }
+        return c
+      }))
+    } else {
+      // New reaction
+      setUserReactions(prev => ({ ...prev, [targetId]: reaction }))
+      setComments(prev => prev.map(c => {
+        if (c.id === targetId) {
+          return {
+            ...c,
+            likes: reaction === 'like' ? (c.likes || 0) + 1 : c.likes,
+            dislikes: reaction === 'dislike' ? (c.dislikes || 0) + 1 : c.dislikes
+          }
+        }
+        return c
+      }))
+    }
+    
+    try {
+      const res = await fetch('/api/comment-reactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ itemId: Number(gameId), commentId: targetId, reaction })
+      })
+      const data = await res.json()
+      
+      if (!data.success) {
+        // Revert on failure
+        setUserReactions(prev => existingReaction ? { ...prev, [targetId]: existingReaction } : (() => { const r = {...prev}; delete r[targetId]; return r; })())
+        setComments(prev => prev.map(c => {
+          if (c.id === targetId) {
+            return { ...c, likes: (c.likes || 0), dislikes: (c.dislikes || 0) }
+          }
+          return c
+        }))
+        showToast(data.error || 'Failed to react', 'info')
+      } else {
+        showToast(data.action === 'removed' ? (reaction === 'like' ? 'Like removed' : 'Dislike removed') : data.action === 'changed' ? (reaction === 'like' ? 'Changed to Like' : 'Changed to Dislike') : (reaction === 'like' ? 'Liked!' : 'Disliked!'), 'success')
+      }
+    } catch (err) {
+      // Revert on error
+      setUserReactions(prev => existingReaction ? { ...prev, [targetId]: existingReaction } : (() => { const r = {...prev}; delete r[targetId]; return r; })())
+      console.error('Reaction error:', err)
+      showToast('Error reacting to comment', 'info')
+    }
   }
 
-  const handleDelete = async (targetId: number) => {
-    const adminToken = typeof window !== 'undefined' ? localStorage.getItem('admin_token') || '' : ''
-    await apiPost({ action: 'delete', itemId: gameId, targetId, adminToken })
+  const handleDelete = async (targetId: number, comment: Comment) => {
+    if (!user) { showToast('Please login to delete your comment', 'info'); return }
+    if (!isAdmin) { showToast('Only admins can delete comments', 'info'); return }
+    
+    try {
+      const res = await fetch('/api/delete-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ 
+          commentId: targetId, 
+          itemId: gameId, 
+          author: comment.author,
+          content: comment.content 
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('Delete request submitted. Waiting for admin approval.', 'info')
+      } else {
+        showToast(data.error || 'Failed to submit delete request', 'info')
+      }
+    } catch (err) {
+      showToast('Error submitting delete request', 'info')
+    }
   }
 
   const handleShare = (c: Comment) => {
@@ -246,12 +379,28 @@ export function Comments({ gameId, itemName }: CommentsProps) {
 
           {/* Action bar */}
           <div className="flex items-center gap-5 mt-4 pt-3 border-t border-gray-200 dark:border-[#2d1b54]/30">
-            <button onClick={() => handleReact(c.id, 'like')} className="flex items-center gap-1.5 text-[#6b5b8a] hover:text-[#c77dff] transition-colors text-sm group">
-              <ThumbsUp className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <button 
+              onClick={() => handleReact(c.id, 'like')} 
+              className={`flex items-center gap-1.5 transition-colors text-sm group ${
+                !user ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50' :
+                userReactions[c.id] === 'like' 
+                  ? 'text-green-500 dark:text-green-400' 
+                  : 'text-gray-500 dark:text-[#6b5b8a] hover:text-green-500 dark:hover:text-green-400'
+              }`}
+            >
+              <ThumbsUp className={`w-4 h-4 group-hover:scale-110 transition-transform ${userReactions[c.id] === 'like' ? 'fill-green-400 dark:fill-green-400' : ''}`} />
               <span className="font-medium">{c.likes || 0}</span>
             </button>
-            <button onClick={() => handleReact(c.id, 'dislike')} className="flex items-center gap-1.5 text-[#6b5b8a] hover:text-red-400 transition-colors text-sm group">
-              <ThumbsDown className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <button 
+              onClick={() => handleReact(c.id, 'dislike')} 
+              className={`flex items-center gap-1.5 transition-colors text-sm group ${
+                !user ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50' :
+                userReactions[c.id] === 'dislike' 
+                  ? 'text-red-500 dark:text-red-400' 
+                  : 'text-gray-500 dark:text-[#6b5b8a] hover:text-red-500 dark:hover:text-red-400'
+              }`}
+            >
+              <ThumbsDown className={`w-4 h-4 group-hover:scale-110 transition-transform ${userReactions[c.id] === 'dislike' ? 'fill-red-400 dark:fill-red-400' : ''}`} />
               <span className="font-medium">{c.dislikes || 0}</span>
             </button>
             {!isReply && (
@@ -262,8 +411,8 @@ export function Comments({ gameId, itemName }: CommentsProps) {
             <button onClick={() => handleShare(c)} className="flex items-center gap-1.5 text-[#6b5b8a] hover:text-[#c77dff] transition-colors text-sm font-medium">
               <Share2 className="w-4 h-4" /> Share
             </button>
-            {isAdmin && (
-              <button onClick={() => handleDelete(c.id)} className="text-[#6b5b8a] hover:text-red-400 transition-colors text-sm font-medium ml-auto">Delete</button>
+            {isAdmin && c.user_badge !== 'Admin' && (
+              <button onClick={() => handleDelete(c.id, c)} className="text-[#6b5b8a] hover:text-red-400 transition-colors text-sm font-medium ml-auto">Delete</button>
             )}
 
             {/* Replies count */}

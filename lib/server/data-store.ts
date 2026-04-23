@@ -33,14 +33,14 @@ export interface FlattenedComment {
 }
 
 export async function getComments(itemId: number): Promise<SiteCommentRecord[]> {
-  // Get all approved comments for this item (both top-level and replies)
-  // NOTE: .in() cannot match NULL in PostgreSQL, so we use .or() instead
+  // Get all comments for this item (both top-level and replies)
+  // Show: approved comments, or comments with null approval_status, or admin replies
+  // Replies show if parent exists (even if pending)
   const { data, error } = await supabase
     .from('comments')
     .select('*')
     .eq('item_id', itemId)
-    .or('approval_status.eq.approved,approval_status.is.null')
-    .order('timestamp', { ascending: false })
+    .or(`approval_status.eq.approved,approval_status.is.null,parent_id.is.not.null`)
 
   if (error) {
     // Fallback: try without approval_status filter (column may not exist yet)
@@ -106,6 +106,15 @@ export async function addComment(params: {
 }): Promise<SiteCommentRecord[]> {
   const { itemId, itemName, author, email, content, avatar, userBadge, userBadgeColor } = params
 
+  // Set default colors based on badge type if no color provided
+  const defaultColors: Record<string, string> = {
+    'Member': '#6b7280',
+    'Freedom Fighter': '#3b82f6',
+    'Revolution Leader': '#a855f7',
+    'Revolutionist': '#eab308',
+  }
+  const finalColor = userBadgeColor || defaultColors[userBadge || ''] || null
+
   const { data, error } = await supabase
     .from('comments')
     .insert({
@@ -121,7 +130,7 @@ export async function addComment(params: {
       status: 'new',
       approval_status: 'pending',
       user_badge: userBadge || null,
-      user_badge_color: userBadgeColor || null,
+      user_badge_color: finalColor,
       parent_id: null
     })
     .select()
@@ -149,12 +158,25 @@ export async function addReply(params: {
 }): Promise<SiteCommentRecord[]> {
   const { itemId, parentId, itemName, author, email, content, avatar, userBadge, userBadgeColor, isAdmin } = params
 
+  // Set default colors based on badge type if no color provided
+  const defaultColors: Record<string, string> = {
+    'Member': '#6b7280',
+    'Freedom Fighter': '#3b82f6',
+    'Revolution Leader': '#a855f7',
+    'Revolutionist': '#eab308',
+  }
+
+  // If admin, set Admin badge and Bullz Community name
+  const badge = isAdmin ? 'Admin' : (userBadge || null)
+  const badgeColor = isAdmin ? '#FFD700' : (userBadgeColor || defaultColors[userBadge || ''] || null) // Gold color for admin
+  const authorName = isAdmin ? 'Bullz Community' : author.trim()
+
   const { error } = await supabase
     .from('comments')
     .insert({
       item_id: itemId,
       item_name: itemName,
-      author: author.trim(),
+      author: authorName,
       email: email?.trim() || '',
       avatar,
       content: content.trim(),
@@ -163,8 +185,8 @@ export async function addReply(params: {
       dislikes: 0,
       status: 'new',
       approval_status: isAdmin ? 'approved' : 'pending',
-      user_badge: userBadge || null,
-      user_badge_color: userBadgeColor || null,
+      user_badge: badge,
+      user_badge_color: badgeColor,
       parent_id: parentId
     })
 

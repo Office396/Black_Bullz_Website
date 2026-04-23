@@ -55,6 +55,7 @@ const mainNavItems = [
   { href: "/donate", label: "Donate", icon: Heart },
   { href: "/publishers", label: "Publishers" },
   { href: "/request", label: "Request" },
+  { href: "/about", label: "About" },
 ]
 
 const moreMenuItems: { href: string; label: string }[] = []
