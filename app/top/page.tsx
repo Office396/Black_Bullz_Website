@@ -3,6 +3,7 @@ import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
 import { Trophy, TrendingUp, Download, Star } from "lucide-react"
 import Link from "next/link"
+import { SafeImage } from "@/components/safe-image"
 
 export default async function TopGamesPage() {
   let items: any[] = []
@@ -74,7 +75,7 @@ export default async function TopGamesPage() {
               </div>
               <div className="flex flex-col lg:flex-row gap-6 p-6 lg:p-8">
                 <div className="relative w-48 h-64 lg:w-56 lg:h-72 flex-shrink-0 mx-auto lg:mx-0">
-                  <img src={featuredGame.image || "/placeholder.svg"} alt={featuredGame.title} className="w-full h-full object-cover rounded-xl shadow-2xl" />
+                  <SafeImage src={featuredGame.image || "/placeholder.svg"} alt={featuredGame.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover rounded-xl shadow-2xl" />
                   <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 ${featuredGame.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
                     {featuredGame.category === "Android Games" ? "ANDROID" : "PC"}
                   </div>
@@ -105,7 +106,7 @@ export default async function TopGamesPage() {
                 {topGames.slice(0, 24).map((game, index) => (
                   <Link key={game.id} href={`/game/${game.id}`} className="group relative">
                     <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-secondary">
-                      <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                      <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                       {index < 3 && (
                         <div className={`absolute top-2 left-2 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold text-white ${index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : "bg-amber-700"}`}>
                           {index + 1}
@@ -131,7 +132,7 @@ export default async function TopGamesPage() {
                 {runnerUps.map((game, index) => (
                   <Link key={game.id} href={`/game/${game.id}`} className="flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:border-[#9d4edd]/50 transition-all group">
                     <div className="relative w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden">
-                      <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover" />
+                      <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">

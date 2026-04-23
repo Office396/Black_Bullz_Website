@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
+import { SafeImage } from "@/components/safe-image"
 import {
   Star, Download, ExternalLink, Heart, Flag, MessageCircle,
   Monitor, Cpu, MemoryStick, HardDrive, Clock, User,
@@ -372,10 +372,13 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
         {/* Game Cover */}
         <div className="relative w-full lg:w-72 flex-shrink-0">
           <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-2xl">
-            <img
+            <SafeImage
               src={game.image || "/placeholder.svg"}
               alt={game.title}
-              className="w-full h-full object-cover"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 300px"
+              className="object-cover"
             />
             <div className="absolute top-3 right-3 px-2 py-1 bg-yellow-500/90 text-black text-xs font-bold rounded">
               v{game.version || '1.0'}
@@ -752,10 +755,12 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                     className="relative aspect-video rounded-lg overflow-hidden cursor-pointer hover:opacity-90 hover:ring-2 hover:ring-[#9d4edd]/50 transition-all"
                     onClick={() => { setLightboxIndex(index); setLightboxOpen(true) }}
                   >
-                    <img
+                    <SafeImage
                       src={screenshot || "/placeholder.svg"}
                       alt={`${game.title} screenshot ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="object-cover"
                     />
                     {/* Watermark */}
                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-bold text-white/70 select-none pointer-events-none" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }}>
@@ -775,12 +780,16 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                     onClick={(e) => { e.stopPropagation(); setLightboxIndex((lightboxIndex - 1 + game.screenshots!.length) % game.screenshots!.length) }}
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl z-[101] w-12 h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/80"
                   >‹</button>
-                  <img
-                    src={game.screenshots[lightboxIndex] || "/placeholder.svg"}
-                    alt={`${game.title} screenshot ${lightboxIndex + 1}`}
-                    className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                  />
+                  <div className="relative w-full max-w-6xl max-h-[90vh] aspect-video">
+                    <SafeImage
+                      src={game.screenshots[lightboxIndex] || "/placeholder.svg"}
+                      alt={`${game.title} screenshot ${lightboxIndex + 1}`}
+                      fill
+                      sizes="100vw"
+                      className="object-contain rounded-lg shadow-2xl"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
                   <div className="absolute top-4 left-4 px-2 py-1 rounded text-xs font-bold text-white/60 select-none pointer-events-none" style={{ background: "rgba(0,0,0,0.6)" }}>
                     BullzGamez
                   </div>
@@ -1209,10 +1218,12 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
           const GameCard = ({ g, index }: { g: any; index?: number }) => (
             <Link key={g.id} href={`/game/${g.id}`} className="group flex-shrink-0 w-28 sm:w-32">
               <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                <img
+                <SafeImage
                   src={g.image || "/placeholder.svg"}
                   alt={g.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 20vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-110"
                 />
                 {index !== undefined && index < 3 && (
                   <div className={`absolute top-1.5 left-1.5 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold text-white ${index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : "bg-amber-700"}`}>
@@ -1491,9 +1502,9 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
               <div className="relative aspect-video rounded-xl overflow-hidden bg-black shadow-2xl">
                 {trailerYtId ? (
                   <iframe
-                    src={`https://www.youtube.com/embed/${trailerYtId}?autoplay=1`}
+                    src={`https://www.youtube.com/embed/${trailerYtId}?autoplay=1&mute=1`}
                     className="w-full h-full"
-                    allow="autoplay; fullscreen"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
                 ) : (

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 
 export function SiteFooter() {
     const currentYear = new Date().getFullYear()
@@ -12,7 +13,7 @@ export function SiteFooter() {
                     <div className="lg:col-span-2">
                         <Link href="/" className="flex items-center space-x-2.5 mb-4">
                             <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-[#9d4edd]/30">
-                                <img src="/bull-logo.png" alt="BullzGamez Logo" className="w-full h-full object-cover rounded-full" />
+                                <Image src="/bull-logo.png" alt="BullzGamez Logo" width={60} height={60} className="w-full h-full object-cover rounded-full" />
                             </div>
                             <span className="text-white font-bold text-xl">
                                 <span className="text-[#9d4edd]">Black</span>Bullz

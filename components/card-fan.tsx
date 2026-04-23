@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { SafeImage } from "@/components/safe-image"
 
 interface CardFanProps {
   /** Array of image URLs to show as cards (can be fewer than count) */
@@ -105,11 +106,12 @@ export function CardFan({ images, count, name }: CardFanProps) {
                 : "0 3px 10px rgba(0,0,0,0.5)",
             }}
           >
-            <img
+            <SafeImage
               src={src}
               alt={`${name} ${i + 1}`}
-              className="w-full h-full object-cover"
-              draggable={false}
+              fill
+              sizes="(max-width: 768px) 50vw, 20vw"
+              className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
           </div>

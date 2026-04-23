@@ -4,6 +4,7 @@ import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
 import { TrendingUp, Download } from "lucide-react"
 import Link from "next/link"
+import { SafeImage } from "@/components/safe-image"
 
 export default async function TrendingGamesPage() {
   let items: any[] = []
@@ -70,7 +71,7 @@ export default async function TrendingGamesPage() {
                     {trendingGames.slice(0, 5).map((game: any, index: number) => (
                       <Link key={game.id} href={`/game/${game.id}`} className="flex items-center gap-3 p-3 bg-[#120b22] border border-[#2d1b54] rounded-xl hover:border-[#9d4edd]/50 transition-all group">
                         <div className="relative w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden">
-                          <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover" />
+                          <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
@@ -89,7 +90,7 @@ export default async function TrendingGamesPage() {
                     {trendingGames.slice(0, 16).map((game: any) => (
                       <Link key={game.id} href={`/game/${game.id}`} className="group relative">
                         <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                          <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                          <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                           <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
                             {game.category === "Android Games" ? "ANDROID" : "PC"}
                           </div>
@@ -112,7 +113,7 @@ export default async function TrendingGamesPage() {
                   {trendingGames.map((game: any) => (
                     <Link key={game.id} href={`/game/${game.id}`} className="group">
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                        <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                        <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                         <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
                           {game.category === "Android Games" ? "ANDROID" : "PC"}
                         </div>

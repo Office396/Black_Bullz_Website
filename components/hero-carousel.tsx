@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import Image from "next/image"
+import { SafeImage } from "@/components/safe-image"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 interface GameItem {
@@ -106,10 +106,13 @@ export function HeroCarousel({ games, modifiers = [] }: HeroCarouselProps) {
                             className={`absolute inset-0 transition-opacity duration-700 ${i === current ? "opacity-100" : "opacity-0"
                                 }`}
                         >
-                            <img
+                            <SafeImage
                                 src={imageUrl || "/placeholder.svg"}
                                 alt={(itemGame as GameItem)?.title || 'Game'}
-                                className="w-full h-full object-cover"
+                                fill
+                                priority={i === current || i === (current + 1) % featured.length}
+                                sizes="100vw"
+                                className="object-cover"
                             />
                         </div>
                     )
@@ -146,10 +149,13 @@ export function HeroCarousel({ games, modifiers = [] }: HeroCarouselProps) {
                     {/* Logo Image if available */}
                     {logoImage && (
                         <div className="mb-4 hero-slide-up">
-                            <img 
+                            <SafeImage 
                                 src={logoImage} 
                                 alt={(game as GameItem).title}
-                                className="h-24 md:h-32 w-auto drop-shadow-2xl"
+                                width={600}
+                                height={200}
+                                priority
+                                className="h-24 md:h-32 w-auto drop-shadow-2xl object-contain object-left"
                                 style={{ filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.8))' }}
                             />
                         </div>

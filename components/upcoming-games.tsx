@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { Calendar, Clock } from "lucide-react"
+import { SafeImage } from "@/components/safe-image"
 
 interface GameItem {
     id: number
@@ -52,10 +53,12 @@ export function UpcomingGames({ games }: { games: GameItem[] }) {
                     >
                         <div className="relative bg-[#120b22] border border-[#2d1b54] rounded-xl overflow-hidden hover:border-[#9d4edd]/50 transition-all duration-300">
                             <div className="relative aspect-[3/4]">
-                                <img
+                                <SafeImage
                                     src={game.image || "/placeholder.svg"}
                                     alt={game.title}
-                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, 300px"
+                                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 <div className="absolute top-2 left-2 px-2 py-0.5 bg-yellow-500/90 text-black text-xs font-bold rounded flex items-center gap-1 shadow-lg z-10">

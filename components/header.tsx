@@ -15,6 +15,7 @@ import Lottie from "lottie-react"
 import diceAnimation from "@/Dice roll.json"
 import { useTheme } from "next-themes"
 import { useUser } from "@/lib/user-context"
+import { SafeImage } from "@/components/safe-image"
 const genres = [
   { name: "Action", href: "/genre/action", letter: "A" },
   { name: "Adventure", href: "/genre/adventure", letter: "A" },
@@ -339,9 +340,9 @@ export function Header() {
           <div className="flex items-center space-x-2.5 flex-shrink-0">
             <Link href="/" className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full ring-4 ring-[#9d4edd] ring-offset-2 ring-offset-[#090514]">
-                <img src="/bull-logo.png" alt="Bull" className="w-full h-full object-cover rounded-full" />
+                <SafeImage src="/bull-logo.png" alt="Bull" width={40} height={40} className="w-full h-full object-cover rounded-full" />
               </div>
-              <img src="/logo.png" alt="BullzGamez" className="h-10 w-auto" />
+              <SafeImage src="/logo.png" alt="BullzGamez" width={300} height={300} className="h-10 w-auto" />
             </Link>
           </div>
 
@@ -687,7 +688,7 @@ export function Header() {
                   <button onClick={() => setIsProfileOpen(!isProfileOpen)}
                     className="flex items-center gap-2 p-1 rounded-full hover:bg-white/5 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#9d4edd] to-[#7b2cbf] flex items-center justify-center text-white font-bold text-sm ring-2 ring-[#9d4edd]/40 overflow-hidden">
-                      {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
+                      {user.avatar ? <SafeImage src={user.avatar} alt="" fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
                     </div>
                   </button>
                   {isProfileOpen && (
@@ -944,7 +945,7 @@ export function Header() {
                       className="flex items-center gap-3 p-3 bg-[#1a103c]/50 border border-[#2d1b54] rounded-xl hover:border-[#9d4edd]/50 hover:bg-[#1a103c] transition-all duration-200 group"
                     >
                       <div className="relative w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-200">
-                        <img src={result.image || "/placeholder.svg"} alt={result.title} className="w-full h-full object-cover" />
+                        <SafeImage src={result.image || "/placeholder.svg"} alt={result.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-white text-sm font-bold line-clamp-1 group-hover:text-[#9d4edd] transition-colors">{result.title}</h4>

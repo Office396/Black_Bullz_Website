@@ -5,6 +5,7 @@ import { getItems } from "@/lib/server/items-store"
 import Link from "next/link"
 import { Building2, Globe, Calendar, MapPin, ExternalLink } from "lucide-react"
 import { notFound } from "next/navigation"
+import { SafeImage } from "@/components/safe-image"
 
 export default async function PublisherPage({ params }: { params: { slug: string } }) {
   const [{ data: publisher }, items] = await Promise.all([
@@ -23,7 +24,7 @@ export default async function PublisherPage({ params }: { params: { slug: string
         {/* Ambient Blur Backdrop instead of sharp banner */}
         <div className="absolute top-0 left-0 right-0 h-[500px] overflow-hidden pointer-events-none -z-10 bg-[#090514]">
           {publisher.banner_url ? (
-            <img src={publisher.banner_url} alt="" className="w-full h-full object-cover blur-[80px] opacity-30 scale-125" />
+            <SafeImage src={publisher.banner_url} alt="" fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover blur-[80px] opacity-30 scale-125" />
           ) : (
             <div className="w-full h-full bg-gradient-to-b from-[#2d1b54]/20 to-[#090514]" />
           )}
@@ -35,7 +36,7 @@ export default async function PublisherPage({ params }: { params: { slug: string
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 mb-12 text-center sm:text-left">
             {publisher.logo_url ? (
               <div className="p-2 sm:p-3 bg-[#120b22]/80 backdrop-blur-md rounded-3xl border border-[#2d1b54]/50 shadow-2xl shrink-0">
-                <img src={publisher.logo_url} alt={publisher.name} className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl object-contain bg-[#090514]" />
+                <SafeImage src={publisher.logo_url} alt={publisher.name} width={300} height={300} className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl object-contain bg-[#090514]" />
               </div>
             ) : (
               <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-[#120b22]/80 backdrop-blur-md border border-[#2d1b54]/50 shadow-2xl flex items-center justify-center text-[#9d4edd] text-6xl font-black shrink-0">
@@ -107,7 +108,7 @@ export default async function PublisherPage({ params }: { params: { slug: string
                   {pubGames.map(g => (
                     <Link key={g.id} href={`/game/${g.id}`} className="group">
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                        <img src={g.image || '/placeholder.svg'} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <SafeImage src={g.image || '/placeholder.svg'} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <p className="text-white text-xs font-medium line-clamp-2">{g.title}</p>

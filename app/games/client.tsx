@@ -9,6 +9,7 @@ import { Grid, List, Shuffle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { SafeImage } from "@/components/safe-image"
 
 interface GameItem {
   id: number
@@ -227,7 +228,7 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
                   {displayedGames.map((game) => (
                     <Link key={game.id} href={`/game/${game.id}`} className="group">
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                        <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                        <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-cover transition-transform duration-300 group-hover:scale-110" />
                         <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
                           {game.category === "Android Games" ? "ANDROID" : "PC"}
                         </div>
@@ -245,7 +246,7 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
                   {displayedGames.map((game) => (
                     <Link key={game.id} href={`/game/${game.id}`} className="group flex items-center gap-4 p-4 bg-[#120b22] border border-[#2d1b54] rounded-xl hover:border-[#9d4edd]/50 transition-all">
                       <div className="relative w-20 h-28 flex-shrink-0 rounded-lg overflow-hidden">
-                        <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover" />
+                        <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="80px" className="object-cover" />
                         <div className={`absolute top-1 left-1 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
                           {game.category === "Android Games" ? "APK" : "PC"}
                         </div>

@@ -7,6 +7,7 @@ import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
 import { Search, X, TrendingUp, Flame, Clock, Grid, List, Filter, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { SafeImage } from "@/components/safe-image"
 
 interface GameItem {
   id: number
@@ -241,11 +242,7 @@ function SearchPageContent() {
                   {displayResults.map((game) => (
                     <Link key={game.id} href={`/game/${game.id}`} className="group">
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                        <img
-                          src={game.image || "/placeholder.svg"}
-                          alt={game.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
+                        <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                         <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
                           {game.category === "Android Games" ? "APK" : "PC"}
                         </div>
@@ -275,7 +272,7 @@ function SearchPageContent() {
                       className="group flex items-center gap-4 p-4 bg-[#120b22] border border-[#2d1b54] rounded-xl hover:border-[#9d4edd]/50 hover:bg-[#1a103c] transition-all"
                     >
                       <div className="relative w-16 h-20 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
-                        <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         <div className={`absolute top-1 left-1 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
                           {game.category === "Android Games" ? "APK" : "PC"}
                         </div>
@@ -316,7 +313,7 @@ function SearchPageContent() {
                   {allItems.filter(i => i.trending).slice(0, 8).map((game) => (
                     <Link key={game.id} href={`/game/${game.id}`} className="group">
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                        <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                        <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-3">
                           <p className="text-white text-xs font-medium line-clamp-2">{game.title}</p>
@@ -327,7 +324,7 @@ function SearchPageContent() {
                   {allItems.filter(i => i.trending).length === 0 && allItems.slice(0, 8).map((game) => (
                     <Link key={game.id} href={`/game/${game.id}`} className="group">
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                        <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                        <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-3">
                           <p className="text-white text-xs font-medium line-clamp-2">{game.title}</p>
@@ -346,7 +343,7 @@ function SearchPageContent() {
                     {allItems.filter(i => i.latest).slice(0, 5).map(g => (
                       <Link key={g.id} href={`/game/${g.id}`} className="flex items-center gap-3 group">
                         <div className="w-8 h-10 rounded flex-shrink-0 overflow-hidden">
-                          <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover" />
+                          <SafeImage src={g.image || "/placeholder.svg"} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" />
                         </div>
                         <span className="text-gray-400 text-sm group-hover:text-[#9d4edd] transition-colors line-clamp-1">{g.title}</span>
                       </Link>

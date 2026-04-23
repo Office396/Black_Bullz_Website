@@ -7,8 +7,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
     remotePatterns: [
+      { protocol: 'https', hostname: 'cdn2.steamgriddb.com' },
+      { protocol: 'https', hostname: 'steamcdn-a.akamaihd.net' },
       { protocol: 'https', hostname: '**' },
       { protocol: 'http', hostname: '**' },
     ],

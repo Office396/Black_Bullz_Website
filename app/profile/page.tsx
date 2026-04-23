@@ -8,6 +8,7 @@ import { useUser } from "@/lib/user-context"
 import { User, History, Star, Settings, Crown, Camera, Save, AlertTriangle, Bell, Eye, EyeOff, Trash2, ThumbsUp } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { SafeImage } from "@/components/safe-image"
 
 function ProfileContent() {
   const { user, token, logout, refreshUser } = useUser()
@@ -147,7 +148,7 @@ function ProfileContent() {
           const bgImg = bgGame?.landscapeImage || null
           return bgImg ? (
             <>
-              <img src={bgImg} alt="" className="w-full h-full object-cover" />
+              <SafeImage src={bgImg} alt="" fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/55" style={{ backdropFilter: "blur(0.5px)" }} />
             </>
           ) : (
@@ -161,7 +162,7 @@ function ProfileContent() {
         <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12 mb-6">
           <div className="flex flex-col items-center gap-2">
             <div className="relative w-24 h-24 rounded-full ring-4 ring-[#090514] overflow-hidden bg-gradient-to-br from-[#9d4edd] to-[#7b2cbf] flex items-center justify-center text-white text-3xl font-black flex-shrink-0">
-              {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
+              {user.avatar ? <SafeImage src={user.avatar} alt="" fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
             </div>
             {/* Like/Dislike counts below avatar */}
             <div className="flex items-center gap-3">
@@ -230,7 +231,7 @@ function ProfileContent() {
                 {historyGames.slice(0, 6).map(g => (
                   <Link key={g.id} href={`/game/${g.id}`} className="group">
                     <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c] relative">
-                      <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <SafeImage src={g.image || "/placeholder.svg"} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     </div>
                     <p className="text-gray-300 text-xs mt-1.5 line-clamp-1 group-hover:text-white transition-colors">{g.title}</p>
                     <div className="flex items-center gap-1 mt-0.5">
@@ -254,7 +255,7 @@ function ProfileContent() {
                   <div key={g.id} className="group">
                     <Link href={`/game/${g.id}`}>
                       <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                        <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <SafeImage src={g.image || "/placeholder.svg"} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       </div>
                       <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
                     </Link>
@@ -280,7 +281,7 @@ function ProfileContent() {
                   <div key={g.id} className="group">
                     <Link href={`/game/${g.id}`}>
                       <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                        <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <SafeImage src={g.image || "/placeholder.svg"} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       </div>
                       <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
                     </Link>
@@ -305,7 +306,7 @@ function ProfileContent() {
                 {likedGames.map(g => (
                   <Link key={g.id} href={`/game/${g.id}`} className="group">
                     <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                      <img src={g.image || "/placeholder.svg"} alt={g.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <SafeImage src={g.image || "/placeholder.svg"} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     </div>
                     <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
                   </Link>

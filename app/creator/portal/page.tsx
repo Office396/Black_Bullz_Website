@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Crown, Plus, Edit2, Trash2, LogOut, Eye, EyeOff, ExternalLink, TrendingUp, Star, Heart, X, AlertTriangle } from "lucide-react"
 import { AdminItemForm } from "@/components/admin-item-form"
+import { SafeImage } from "@/components/safe-image"
 
 interface CreatorUser {
   id: string
@@ -225,7 +226,7 @@ export default function CreatorPortalPage() {
                   return (
                     <div key={g.id} className="flex items-center gap-4 p-4 rounded-xl border" style={{ background: "rgba(18,11,34,0.8)", borderColor: "rgba(157,78,221,0.15)" }}>
                       <div className="w-12 h-16 rounded-lg overflow-hidden bg-[#1a103c] flex-shrink-0">
-                        {g.image && <img src={g.image} alt={g.title} className="w-full h-full object-cover" />}
+                        {g.image && <SafeImage src={g.image} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">

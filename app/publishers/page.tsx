@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase"
 import { getItems } from "@/lib/server/items-store"
 import Link from "next/link"
 import { Building2 } from "lucide-react"
+import { SafeImage } from "@/components/safe-image"
 
 export default async function PublishersPage() {
   const [{ data: publishers }, items] = await Promise.all([
@@ -46,7 +47,7 @@ export default async function PublishersPage() {
                     {/* Ambient Blurred Background from Banner */}
                     {pub.banner_url && (
                       <div className="absolute inset-0 z-0 opacity-20 group-hover:opacity-30 transition-opacity overflow-hidden">
-                        <img src={pub.banner_url} alt="" className="w-full h-full object-cover blur-[40px] scale-125" />
+                        <SafeImage src={pub.banner_url} alt="" fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover blur-[40px] scale-125" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#120b22] via-[#120b22]/80 to-transparent" />
                       </div>
                     )}
@@ -55,7 +56,7 @@ export default async function PublishersPage() {
                       <div className="flex items-center gap-4">
                         {pub.logo_url ? (
                           <div className="bg-[#090514] p-1.5 rounded-xl shrink-0 border border-white/5 ring-1 ring-black/50 overflow-hidden shadow-lg">
-                            <img src={pub.logo_url} alt={pub.name} className="w-12 h-12 rounded-lg object-contain" />
+                            <SafeImage src={pub.logo_url} alt={pub.name} width={300} height={300} className="w-12 h-12 rounded-lg object-contain" />
                           </div>
                         ) : (
                           <div className="w-14 h-14 rounded-xl bg-[#9d4edd]/10 border border-[#9d4edd]/20 flex items-center justify-center flex-shrink-0 text-[#9d4edd] text-2xl font-black shadow-lg">

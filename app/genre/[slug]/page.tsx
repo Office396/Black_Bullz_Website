@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { Gamepad2 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { SafeImage } from "@/components/safe-image"
 
 interface GenrePageProps {
   params: { slug: string }
@@ -72,7 +73,7 @@ export default async function GenrePage({ params }: GenrePageProps) {
               {filteredGames.map((game: any) => (
                 <Link key={game.id} href={`/game/${game.id}`} className="group">
                   <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                    <img src={game.image || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                    <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                     <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
                       {game.category === "Android Games" ? "ANDROID" : "PC"}
                     </div>
