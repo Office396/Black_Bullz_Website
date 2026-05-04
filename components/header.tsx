@@ -357,7 +357,7 @@ export function Header() {
                         onClick={() => setIsGenreOpen(!isGenreOpen)}
                         className={cn(
                           "flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                          isGenreOpen ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5"
+                          isGenreOpen ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30"
                         )}
                       >
                         {item.label}
@@ -437,7 +437,7 @@ export function Header() {
                         onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
                         className={cn(
                           "flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                          isCollectionsOpen ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5"
+                          isCollectionsOpen ? "text-[#9d4edd] bg-[#9d4edd]/10" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30"
                         )}
                       >
                         {item.label}
@@ -456,7 +456,7 @@ export function Header() {
                                   key={collection.id}
                                   href={`/collections/${collection.id}`}
                                   onClick={() => setIsCollectionsOpen(false)}
-                                  className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5 transition-colors"
+                                  className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30 transition-colors"
                                 >
                                   {collection.name}
                                 </Link>
@@ -466,7 +466,7 @@ export function Header() {
                               <Link
                                 href="/collections"
                                 onClick={() => setIsCollectionsOpen(false)}
-                                className="block px-4 py-2 text-sm text-[#9d4edd] hover:bg-white/5 transition-colors font-medium"
+                                className="block px-4 py-2 text-sm text-[#9d4edd] hover:bg-purple-600/30 transition-colors font-medium"
                               >
                                 View All Collections →
                               </Link>
@@ -486,7 +486,7 @@ export function Header() {
                     "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive(item.href!)
                       ? "text-[#9d4edd] bg-[#9d4edd]/10"
-                      : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5"
+                      : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30"
                   )}
                 >
                   {item.icon && <item.icon className="w-4 h-4" />}
@@ -500,7 +500,7 @@ export function Header() {
             <div className="flex items-center">
               <button
                 onClick={() => { setIsSearchPopupOpen(true); prefetchGames() }}
-                className="p-2 text-gray-400 hover:text-[#9d4edd] transition-colors rounded-full hover:bg-white/5"
+                className="p-2 text-gray-400 hover:text-[#9d4edd] transition-colors rounded-full hover:bg-purple-600/30"
                 title="Search Games"
               >
                 <Search className="h-5 w-5" />
@@ -651,7 +651,7 @@ export function Header() {
                 {/* Notification Bell */}
                 <div ref={notifRef} className="relative">
                   <button onClick={() => { setIsNotifOpen(!isNotifOpen); if (!isNotifOpen) markNotificationsRead() }}
-                    className="relative p-2 text-gray-400 hover:text-[#9d4edd] transition-colors rounded-full hover:bg-white/5">
+                    className="relative p-2 text-gray-400 hover:text-[#9d4edd] transition-colors rounded-full hover:bg-purple-600/30">
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
@@ -669,7 +669,7 @@ export function Header() {
                         {notifications.length === 0 ? (
                           <div className="px-4 py-8 text-center text-gray-500 text-sm">No notifications yet</div>
                         ) : notifications.map(n => (
-                          <div key={n.id} className={cn("px-4 py-3 border-b border-[#2d1b54]/50 hover:bg-white/5 transition-colors", !n.is_read && "bg-[#9d4edd]/5")}>
+                          <div key={n.id} className={cn("px-4 py-3 border-b border-[#2d1b54]/50 hover:bg-purple-600/30 transition-colors", !n.is_read && "bg-[#9d4edd]/5")}>
                             <div className="flex items-start gap-2">
                               <div className={cn("w-2 h-2 rounded-full mt-1.5 flex-shrink-0", n.type === 'success' ? 'bg-green-400' : n.type === 'error' ? 'bg-red-400' : 'bg-[#9d4edd]')} />
                               <div>
@@ -687,7 +687,7 @@ export function Header() {
                 {/* Profile Dropdown */}
                 <div ref={profileRef} className="relative">
                   <button onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="flex items-center gap-2 p-1 rounded-full hover:bg-white/5 transition-colors">
+                    className="flex items-center gap-2 p-1 rounded-full hover:bg-purple-600/30 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#9d4edd] to-[#7b2cbf] flex items-center justify-center text-white font-bold text-sm ring-2 ring-[#9d4edd]/40 overflow-hidden">
                       {user.avatar ? <SafeImage src={user.avatar} alt="" fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
                     </div>
@@ -711,7 +711,7 @@ export function Header() {
                         { href: `/profile?tab=settings`, icon: Settings, label: "Settings" },
                       ].map(item => (
                         <Link key={item.href} href={item.href} onClick={() => setIsProfileOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5 transition-colors">
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30 transition-colors">
                           <item.icon className="w-4 h-4 text-gray-500" />
                           {item.label}
                           <ChevronRight className="w-3 h-3 ml-auto text-gray-600" />
@@ -746,7 +746,7 @@ export function Header() {
               </>
             ) : (
               <>
-                <Link href="/login" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5 transition-colors">
+                <Link href="/login" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30 transition-colors">
                   <LogIn className="w-4 h-4" />
                   <span>Log in</span>
                 </Link>
@@ -756,7 +756,7 @@ export function Header() {
               </>
             )}
 
-            <Button variant="ghost" size="sm" className="lg:hidden text-white hover:text-[#9d4edd] hover:bg-white/5" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <Button variant="ghost" size="sm" className="lg:hidden text-white hover:text-[#9d4edd] hover:bg-purple-600/30" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
@@ -768,21 +768,21 @@ export function Header() {
               <Link
                 href="/games"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/games") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/games") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30")}
               >
                 All Games
               </Link>
               <Link
                 href="/top"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/top") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/top") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30")}
               >
                 Top
               </Link>
               <Link
                 href="/trending"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/trending") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/trending") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30")}
               >
                 Trending
               </Link>
@@ -793,7 +793,7 @@ export function Header() {
                     key={genre.name}
                     href={genre.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+                    className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30 rounded-lg transition-colors"
                   >
                     {genre.name}
                   </Link>
@@ -802,42 +802,42 @@ export function Header() {
               <Link
                 href="/genres"
                 onClick={() => setIsMenuOpen(false)}
-                className="px-4 py-2 text-sm text-[#9d4edd] hover:bg-white/5 rounded-lg"
+                className="px-4 py-2 text-sm text-[#9d4edd] hover:bg-purple-600/30 rounded-lg"
               >
                 All Genres →
               </Link>
               <Link
                 href="/updates"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/updates") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/updates") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30")}
               >
                 Recent Updates
               </Link>
               <Link
                 href="/collections"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/collections") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/collections") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30")}
               >
                 Collections
               </Link>
               <Link
                 href="/donate"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/donate") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/donate") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30")}
               >
                 Donate
               </Link>
               <Link
                 href="/publishers"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/publishers") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/publishers") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30")}
               >
                 Publishers
               </Link>
               <Link
                 href="/request"
                 onClick={() => setIsMenuOpen(false)}
-                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/request") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5")}
+                className={cn("px-4 py-2.5 rounded-lg transition-all duration-200", isActive("/request") ? "text-[#9d4edd] bg-[#9d4edd]/10 font-semibold" : "text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30")}
               >
                 Request
               </Link>
@@ -846,7 +846,7 @@ export function Header() {
                 <Link
                   href="/login"
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-white/5 rounded-lg"
+                  className="flex items-center gap-2 px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:text-[#9d4edd] hover:bg-purple-100 dark:hover:bg-purple-600/30 rounded-lg"
                 >
                   <LogIn className="w-4 h-4" />
                   Log in
