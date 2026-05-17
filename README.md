@@ -1,4 +1,4 @@
-# BullzGamez Website Clone
+# BullzGamez Website
 
 A complete gaming and software download website built with Next.js, featuring a dark theme with red accents.
 
