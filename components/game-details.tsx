@@ -156,6 +156,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const features = game?.keyFeatures?.filter(Boolean) || game?.features || []
   const genres = game?.genres || []
   const cloudDownloads = game?.cloudDownloads || []
+  const installableDownloads = game?.installableDownloads || []
 
   // Get YouTube embed ID from trailer URL
   const getYouTubeId = (url: string) => {
@@ -753,24 +754,6 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                   ))}
                 </div>
               )}
-              {isAndroid && game.androidRequirements?.recommended && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  {[
-                    { icon: Monitor, label: "Android Version", value: game.androidRequirements.recommended.os },
-                    { icon: Cpu, label: "Processor", value: game.androidRequirements.recommended.processor },
-                    { icon: MemoryStick, label: "RAM", value: game.androidRequirements.recommended.ram },
-                    { icon: HardDrive, label: "Storage", value: game.androidRequirements.recommended.storage },
-                  ].filter(r => r.value).map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
-                      <Icon className="w-4 h-4 text-[#9d4edd] mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="text-gray-400 text-xs">{label}</span>
-                        <p className="text-foreground font-medium">{value}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         )
@@ -1026,7 +1009,8 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                   {/* Show PC game sections */}
                   {isPCGame ? (
                     <div className="space-y-4">
-                      {/* Pre-installed section */}
+                      {/* Pre-installed section - only show if links exist */}
+                      {cloudDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) && (
                       <div className="bg-green-900/60 border border-green-500/40 rounded-2xl overflow-hidden keep-white">
                         <div className="flex items-center gap-3 p-4 border-b border-green-500/30">
                           <div className="w-10 h-10 rounded-xl bg-green-500/30 flex items-center justify-center">
@@ -1086,8 +1070,10 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                           })}
                         </div>
                       </div>
+                      )}
 
-                      {/* Installable section */}
+                      {/* Installable section - only show if links exist */}
+                      {installableDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) && (
                       <div className="bg-purple-900/60 border border-purple-500/40 rounded-2xl overflow-hidden keep-white">
                         <div className="flex items-center gap-3 p-4 border-b border-purple-500/30">
                           <div className="w-10 h-10 rounded-xl bg-purple-500/30 flex items-center justify-center">
@@ -1099,16 +1085,68 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                           </div>
                           <Badge className="ml-auto bg-purple-500/30 text-purple-300 dark:text-purple-400 border border-purple-500/40">INSTALLER</Badge>
                         </div>
-                        <div className="p-4 flex items-center justify-center text-gray-500 py-8">
-                          <div className="text-center">
-                            <Package className="w-10 h-10 mx-auto mb-2 text-gray-600" />
-                            <p className="text-gray-700 dark:text-gray-500 text-sm">Use the same links above — select your preferred version</p>
-                          </div>
+                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {installableDownloads.length > 0 ? (
+                            installableDownloads.map((cloud, ci) => {
+                              const style = getCloudStyle(cloud.cloudName)
+                              const isExpanded = expandedCloud === ci
+                              const links = cloud.actualDownloadLinks || []
+                              return (
+                                <div key={ci} className={`border rounded-xl overflow-hidden transition-all ${style.bg}`}>
+                                  <button
+                                    className="w-full flex items-center justify-between gap-3 p-3"
+                                    onClick={() => setExpandedCloud(isExpanded ? null : ci)}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-2xl">{style.icon}</span>
+                                      <div className="text-left">
+                                        <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Cloud'}</p>
+                                        {cloud.version && <p className="text-gray-500 text-xs">v{cloud.version}</p>}
+                                        {links.length > 0 && <p className="text-gray-400 text-xs">{links.length} part{links.length > 1 ? 's' : ''}</p>}
+                                      </div>
+                                    </div>
+                                    {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                                  </button>
+                                  {isExpanded && links.length > 0 && (
+                                    <div className="border-t border-white/10 p-2 space-y-1.5">
+                                      {links.map((link, li) => (
+                                        <a
+                                          key={li}
+                                          href={link.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center justify-between gap-2 px-3 py-2 bg-black/20 rounded-lg hover:bg-black/40 transition-all group"
+                                        >
+                                          <div className="flex items-center gap-2 min-w-0">
+                                            <Download className={`w-3.5 h-3.5 ${style.color} flex-shrink-0`} />
+                                            <span className="text-white dark:text-white text-sm truncate">{link.name || `Part ${li + 1}`}</span>
+                                          </div>
+                                          {link.size && <span className="text-gray-400 text-xs flex-shrink-0">{link.size}</span>}
+                                        </a>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {isExpanded && links.length === 0 && (
+                                    <div className="border-t border-white/10 p-3 text-center text-gray-500 text-sm">No links available</div>
+                                  )}
+                                </div>
+                              )
+                            })
+                          ) : (
+                            <div className="col-span-full flex items-center justify-center text-gray-500 py-8">
+                              <div className="text-center">
+                                <Package className="w-10 h-10 mx-auto mb-2 text-gray-600" />
+                                <p className="text-gray-700 dark:text-gray-500 text-sm">No installable links provided</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
+                      )}
                     </div>
                   ) : (
                     /* Android - single download section */
+                    allLinks.some(c => c.actualDownloadLinks?.some(l => l.url)) && (
                     <div className="bg-[#9d4edd]/40 border border-[#9d4edd]/40 rounded-2xl overflow-hidden keep-white">
                       <div className="flex items-center gap-3 p-4 border-b border-[#9d4edd]/30">
                         <div className="w-10 h-10 rounded-xl bg-[#9d4edd]/30 flex items-center justify-center">
@@ -1163,8 +1201,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                         })}
                       </div>
                     </div>
-                  )}
-
+                  ))}
                 </div>
               )
             })()}

@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { GameDetails } from "@/components/game-details"
-import { Plus, Trash2, Save, Copy, ExternalLink } from "lucide-react"
+import { Plus, Trash2, Save, Copy, ExternalLink, Package, Wrench } from "lucide-react"
 import Editor from "@monaco-editor/react"
 
 const cleanScreenshotUrl = (url: string): string => {
@@ -34,6 +34,7 @@ interface FormData {
   androidRequirements: { recommended: { os: string; ram: string; storage: string; processor: string } }
   sharedPinCode: string; sharedRarPassword?: string
   cloudDownloads: Array<{ cloudName: string; actualProvider?: string; customProvider?: string; partsNumber?: number; version?: string; actualDownloadLinks: Array<{ name: string; url: string; size: string }> }>
+  installableDownloads: Array<{ cloudName: string; actualProvider?: string; customProvider?: string; partsNumber?: number; version?: string; actualDownloadLinks: Array<{ name: string; url: string; size: string }> }>
 }
 
 const initialFormData: FormData = {
@@ -45,6 +46,7 @@ const initialFormData: FormData = {
   androidRequirements: { recommended: { os: "Android 12", ram: "8 GB", storage: "350 MB", processor: "Snapdragon / MediaTek (Average Processors)" } },
   sharedPinCode: "1234", sharedRarPassword: "",
   cloudDownloads: [{ cloudName: "", partsNumber: undefined, version: undefined, actualDownloadLinks: [{ name: "", url: "", size: "" }] }],
+  installableDownloads: [{ cloudName: "", partsNumber: undefined, version: undefined, actualDownloadLinks: [{ name: "", url: "", size: "" }] }],
 }
 
 export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHeaders, overrideMethod, overrideBody, onTitleChange }: {
@@ -77,6 +79,7 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
         sharedPinCode: editItem.sharedPinCode || "1234",
         sharedRarPassword: editItem.sharedRarPassword || "",
         cloudDownloads: editItem.cloudDownloads || [{ cloudName: "", partsNumber: undefined, version: undefined, actualDownloadLinks: [{ name: "", url: "", size: "" }] }],
+        installableDownloads: editItem.installableDownloads || [{ cloudName: "", partsNumber: undefined, version: undefined, actualDownloadLinks: [{ name: "", url: "", size: "" }] }],
         systemRequirements: editItem.systemRequirements || { recommended: { os: "", processor: "", memory: "", graphics: "", storage: "", directx: "", sound_card: "" } },
         androidRequirements: editItem.androidRequirements || { recommended: { os: "Android 12", ram: "8 GB", storage: "350 MB", processor: "Snapdragon / MediaTek (Average Processors)" } },
       }
@@ -170,6 +173,21 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
   const removeDownloadLink = (ci: number, li: number) => { const u = [...formData.cloudDownloads]; u[ci].actualDownloadLinks = u[ci].actualDownloadLinks.filter((_, i) => i !== li); setFormData({ ...formData, cloudDownloads: u }) }
   const duplicateDownloadLink = (ci: number, li: number) => { const u = [...formData.cloudDownloads]; const l = u[ci].actualDownloadLinks[li]; if (!l) return; u[ci].actualDownloadLinks.splice(li + 1, 0, { ...l }); setFormData({ ...formData, cloudDownloads: u }) }
   const updateDownloadLink = (ci: number, li: number, field: string, value: string) => { const u = [...formData.cloudDownloads]; u[ci].actualDownloadLinks[li] = { ...u[ci].actualDownloadLinks[li], [field]: value }; setFormData({ ...formData, cloudDownloads: u }) }
+
+  // Installable downloads helpers
+  const addInstallableDownload = () => setFormData({ ...formData, installableDownloads: [...formData.installableDownloads, { cloudName: "", partsNumber: undefined, version: undefined, actualDownloadLinks: [{ name: "", url: "", size: "" }] }] })
+  const removeInstallableDownload = (ci: number) => setFormData({ ...formData, installableDownloads: formData.installableDownloads.filter((_, i) => i !== ci) })
+  const duplicateInstallableDownload = (ci: number) => {
+    const c = formData.installableDownloads[ci]
+    const dup = { ...c, actualDownloadLinks: c.actualDownloadLinks.map(l => ({ ...l })), partsNumber: undefined, version: undefined }
+    const u = [...formData.installableDownloads]; u.splice(ci + 1, 0, dup); setFormData({ ...formData, installableDownloads: u })
+  }
+  const updateInstallableDownload = (ci: number, field: string, value: any) => { const u = [...formData.installableDownloads]; u[ci] = { ...u[ci], [field]: value }; setFormData({ ...formData, installableDownloads: u }) }
+  const addInstallableLink = (ci: number) => { const u = [...formData.installableDownloads]; u[ci].actualDownloadLinks.push({ name: "", url: "", size: "" }); setFormData({ ...formData, installableDownloads: u }) }
+  const removeInstallableLink = (ci: number, li: number) => { const u = [...formData.installableDownloads]; u[ci].actualDownloadLinks = u[ci].actualDownloadLinks.filter((_, i) => i !== li); setFormData({ ...formData, installableDownloads: u }) }
+  const duplicateInstallableLink = (ci: number, li: number) => { const u = [...formData.installableDownloads]; const l = u[ci].actualDownloadLinks[li]; if (!l) return; u[ci].actualDownloadLinks.splice(li + 1, 0, { ...l }); setFormData({ ...formData, installableDownloads: u }) }
+  const updateInstallableLink = (ci: number, li: number, field: string, value: string) => { const u = [...formData.installableDownloads]; u[ci].actualDownloadLinks[li] = { ...u[ci].actualDownloadLinks[li], [field]: value }; setFormData({ ...formData, installableDownloads: u }) }
+
   const generateNewSharedPin = () => setFormData({ ...formData, sharedPinCode: String(Math.floor(1000 + Math.random() * 9000)) })
 
   const showSystemRequirements = formData.category === "PC Games" || formData.category === "Software"
@@ -251,7 +269,66 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
     developer: formData.developer, publisher: formData.publisher, releaseDate: formData.releaseDate,
     uploadDate: new Date().toISOString(), screenshots: formData.screenshots.filter(s => s.trim().length > 0),
     systemRequirements: formData.systemRequirements, features: formData.keyFeatures.filter(f => f.trim().length > 0),
-    cloudDownloads: formData.cloudDownloads
+    cloudDownloads: formData.cloudDownloads,
+    installableDownloads: formData.installableDownloads,
+  }
+
+  const renderDownloadSection = (
+    cloud: Array<{ cloudName: string; partsNumber?: number; version?: string; actualDownloadLinks: Array<{ name: string; url: string; size: string }> }>,
+    onAdd: () => void,
+    onRemove: (ci: number) => void,
+    onDuplicate: (ci: number) => void,
+    onUpdate: (ci: number, field: string, value: any) => void,
+    onAddLink: (ci: number) => void,
+    onRemoveLink: (ci: number, li: number) => void,
+    onDuplicateLink: (ci: number, li: number) => void,
+    onUpdateLink: (ci: number, li: number, field: string, value: string) => void,
+    fieldPrefix: string
+  ) => {
+    return (
+      <>
+        {cloud.map((cloudItem, ci) => (
+          <div key={ci} className="border border-[#2d1b54] rounded-xl p-4 space-y-4 bg-[#1a103c]/30">
+            <div className="flex items-center justify-between gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">
+                <div>
+                  <Label className="text-white text-xs">Cloud Provider</Label>
+                  <select value={cloudItem.cloudName} onChange={e => onUpdate(ci, "cloudName", e.target.value)} className="w-full bg-[#1a103c] border border-[#2d1b54] text-white rounded-lg px-3 py-2 text-sm">
+                    <option value="">Select provider</option>
+                    {["Google Drive","MediaFire","OneDrive","MEGA","Telegram","Pixeldrain","Buzzheavier","GoFile"].map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-white text-xs">Version (Optional)</Label>
+                  <Input value={cloudItem.version || ""} onChange={e => onUpdate(ci, "version", e.target.value || undefined)} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" placeholder="e.g. v1.0.5" />
+                </div>
+                <div>
+                  <Label className="text-white text-xs">Parts Number</Label>
+                  <Input type="number" value={cloudItem.partsNumber || ""} onChange={e => onUpdate(ci, "partsNumber", e.target.value ? parseInt(e.target.value) : undefined)} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" placeholder="e.g. 3" />
+                </div>
+              </div>
+              <div className="flex gap-1 flex-shrink-0">
+                <Button type="button" onClick={() => onDuplicate(ci)} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-blue-400 h-8 w-8 p-0"><Copy className="h-3 w-3" /></Button>
+                <Button type="button" onClick={() => onRemove(ci)} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-red-400 h-8 w-8 p-0"><Trash2 className="h-3 w-3" /></Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {cloudItem.actualDownloadLinks.map((link, li) => (
+                <div key={li} className="grid grid-cols-[1fr,1fr,auto,auto,auto] gap-2 items-center">
+                  <Input value={link.name} onChange={e => onUpdateLink(ci, li, "name", e.target.value)} className="bg-[#1a103c] border-[#2d1b54] text-white text-xs" placeholder="Part name" />
+                  <Input value={link.url} onChange={e => onUpdateLink(ci, li, "url", e.target.value)} className="bg-[#1a103c] border-[#2d1b54] text-white text-xs" placeholder="https://..." />
+                  <Input value={link.size} onChange={e => onUpdateLink(ci, li, "size", e.target.value)} className="bg-[#1a103c] border-[#2d1b54] text-white text-xs w-20" placeholder="Size" />
+                  <Button type="button" onClick={() => onDuplicateLink(ci, li)} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-blue-400 h-8 w-8 p-0"><Copy className="h-3 w-3" /></Button>
+                  <Button type="button" onClick={() => onRemoveLink(ci, li)} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-red-400 h-8 w-8 p-0"><Trash2 className="h-3 w-3" /></Button>
+                </div>
+              ))}
+              <Button type="button" onClick={() => onAddLink(ci)} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-white text-xs"><Plus className="h-3 w-3 mr-1" />Add Link</Button>
+            </div>
+          </div>
+        ))}
+        <Button type="button" onClick={onAdd} variant="outline" className="bg-[#1a103c] border-[#2d1b54] text-white w-full"><Plus className="h-4 w-4 mr-2" />Add Cloud Provider</Button>
+      </>
+    )
   }
 
   return (
@@ -544,76 +621,34 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
             </Card>
 
             {/* Cloud Downloads */}
-            <Card className="bg-[#120b22] border-[#2d1b54]">
+            <Card className="bg-[#120b22] border-green-500/40">
               <CardHeader className="pb-4">
-                <CardTitle className="text-white text-lg">Download Links</CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded bg-green-500/30 flex items-center justify-center">
+                    <Package className="w-3.5 h-3.5 text-green-400" />
+                  </div>
+                  <CardTitle className="text-white text-lg">Pre-installed Version</CardTitle>
+                </div>
+                <p className="text-green-300/60 text-xs mt-1">Links for pre-installed version (extract & play)</p>
               </CardHeader>
               <CardContent className="space-y-6 px-4 md:px-6">
-                {formData.cloudDownloads.map((cloud, ci) => (
-                  <div key={ci} className="border border-[#2d1b54] rounded-xl p-4 space-y-4 bg-[#1a103c]/30">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">
-                        <div>
-                          <Label className="text-white text-xs">Cloud Provider</Label>
-                          <select value={cloud.cloudName} onChange={e => updateCloudDownload(ci, "cloudName", e.target.value)} className="w-full bg-[#1a103c] border border-[#2d1b54] text-white rounded-lg px-3 py-2 text-sm">
-                            <option value="">Select provider</option>
-                            {["Google Drive","MediaFire","OneDrive","MEGA","Telegram","Pixeldrain","Buzzheavier","GoFile"].map(p => <option key={p} value={p}>{p}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <Label className="text-white text-xs">Version (Optional)</Label>
-                          <Input value={cloud.version || ""} onChange={e => updateCloudDownload(ci, "version", e.target.value || undefined)} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" placeholder="e.g. v1.0.5" />
-                        </div>
-                        <div>
-                          <Label className="text-white text-xs">Parts Number</Label>
-                          <Input type="number" value={cloud.partsNumber || ""} onChange={e => updateCloudDownload(ci, "partsNumber", e.target.value ? parseInt(e.target.value) : undefined)} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" placeholder="e.g. 3" />
-                        </div>
-                      </div>
-                      <div className="flex gap-1 flex-shrink-0">
-                        <Button type="button" onClick={() => duplicateCloudDownload(ci)} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-blue-400 h-8 w-8 p-0"><Copy className="h-3 w-3" /></Button>
-                        <Button type="button" onClick={() => removeCloudDownload(ci)} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-red-400 h-8 w-8 p-0"><Trash2 className="h-3 w-3" /></Button>
-                      </div>
-                    </div>
+                {renderDownloadSection(formData.cloudDownloads, addCloudDownload, removeCloudDownload, duplicateCloudDownload, updateCloudDownload, addDownloadLink, removeDownloadLink, duplicateDownloadLink, updateDownloadLink, 'cloudDownloads')}
+              </CardContent>
+            </Card>
 
-                    {/* Multi-link mode toggle */}
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" id={`multi-${ci}`} checked={!!multiLinkMode[ci]} onChange={e => handleToggleMultiLink(ci, e.target.checked)} className="w-4 h-4 text-[#9d4edd] bg-[#1a103c] border-[#2d1b54] rounded" />
-                      <Label htmlFor={`multi-${ci}`} className="text-gray-400 text-xs cursor-pointer">Paste multiple links at once</Label>
-                    </div>
-
-                    {multiLinkMode[ci] ? (
-                      <div className="space-y-3">
-                        {(multiLinkSections[ci] || []).map((section, si) => (
-                          <div key={si} className="border border-[#2d1b54]/50 rounded-lg p-3 space-y-2">
-                            <div className="grid grid-cols-2 gap-2">
-                              <Input value={section.name} onChange={e => { const u = [...(multiLinkSections[ci] || [])]; u[si] = { ...u[si], name: e.target.value }; setMultiLinkSections({ ...multiLinkSections, [ci]: u }) }} className="bg-[#1a103c] border-[#2d1b54] text-white text-xs" placeholder="Part name (optional)" />
-                              <Input value={section.size} onChange={e => { const u = [...(multiLinkSections[ci] || [])]; u[si] = { ...u[si], size: e.target.value }; setMultiLinkSections({ ...multiLinkSections, [ci]: u }) }} className="bg-[#1a103c] border-[#2d1b54] text-white text-xs" placeholder="Size (optional)" />
-                            </div>
-                            <Textarea value={section.text} onChange={e => { const u = [...(multiLinkSections[ci] || [])]; u[si] = { ...u[si], text: e.target.value }; setMultiLinkSections({ ...multiLinkSections, [ci]: u }) }} className="bg-[#1a103c] border-[#2d1b54] text-white text-xs min-h-[80px]" placeholder="Paste one URL per line..." />
-                          </div>
-                        ))}
-                        <div className="flex gap-2">
-                          <Button type="button" onClick={() => setMultiLinkSections({ ...multiLinkSections, [ci]: [...(multiLinkSections[ci] || []), { name: "", size: "", text: "" }] })} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-white text-xs"><Plus className="h-3 w-3 mr-1" />Add Section</Button>
-                          <Button type="button" onClick={() => handleApplyMultipleLinks(ci)} size="sm" className="bg-[#9d4edd] hover:bg-[#7b2cbf] text-white text-xs">Apply Links</Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {cloud.actualDownloadLinks.map((link, li) => (
-                          <div key={li} className="grid grid-cols-[1fr,1fr,auto,auto,auto] gap-2 items-center">
-                            <Input value={link.name} onChange={e => updateDownloadLink(ci, li, "name", e.target.value)} className="bg-[#1a103c] border-[#2d1b54] text-white text-xs" placeholder="Part name" />
-                            <Input value={link.url} onChange={e => updateDownloadLink(ci, li, "url", e.target.value)} className="bg-[#1a103c] border-[#2d1b54] text-white text-xs" placeholder="https://..." />
-                            <Input value={link.size} onChange={e => updateDownloadLink(ci, li, "size", e.target.value)} className="bg-[#1a103c] border-[#2d1b54] text-white text-xs w-20" placeholder="Size" />
-                            <Button type="button" onClick={() => duplicateDownloadLink(ci, li)} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-blue-400 h-8 w-8 p-0"><Copy className="h-3 w-3" /></Button>
-                            <Button type="button" onClick={() => removeDownloadLink(ci, li)} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-red-400 h-8 w-8 p-0"><Trash2 className="h-3 w-3" /></Button>
-                          </div>
-                        ))}
-                        <Button type="button" onClick={() => addDownloadLink(ci)} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-white text-xs"><Plus className="h-3 w-3 mr-1" />Add Link</Button>
-                      </div>
-                    )}
+            {/* Installable Version */}
+            <Card className="bg-[#120b22] border-purple-500/40">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded bg-purple-500/30 flex items-center justify-center">
+                    <Wrench className="w-3.5 h-3.5 text-purple-400" />
                   </div>
-                ))}
-                <Button type="button" onClick={addCloudDownload} variant="outline" className="bg-[#1a103c] border-[#2d1b54] text-white w-full"><Plus className="h-4 w-4 mr-2" />Add Cloud Provider</Button>
+                  <CardTitle className="text-white text-lg">Installable Version</CardTitle>
+                </div>
+                <p className="text-purple-300/60 text-xs mt-1">Links for installable version (run setup.exe)</p>
+              </CardHeader>
+              <CardContent className="space-y-6 px-4 md:px-6">
+                {renderDownloadSection(formData.installableDownloads, addInstallableDownload, removeInstallableDownload, duplicateInstallableDownload, updateInstallableDownload, addInstallableLink, removeInstallableLink, duplicateInstallableLink, updateInstallableLink, 'installableDownloads')}
               </CardContent>
             </Card>
 

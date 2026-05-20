@@ -53,6 +53,14 @@ export interface Item {
     cloudName: string
     actualDownloadLinks: Array<{ name: string; url: string; size: string }>
   }>
+  preInstalledDownloads: Array<{
+    cloudName: string
+    actualDownloadLinks: Array<{ name: string; url: string; size: string }>
+  }>
+  installableDownloads: Array<{
+    cloudName: string
+    actualDownloadLinks: Array<{ name: string; url: string; size: string }>
+  }>
   uploadDate: string
   updatedDate?: string
 }
@@ -84,6 +92,8 @@ export async function getItems(): Promise<Item[]> {
       sharedPinCode: item.shared_pin_code,
       sharedRarPassword: item.shared_rar_password,
       cloudDownloads: item.cloud_downloads || [],
+      preInstalledDownloads: item.pre_installed_downloads || [],
+      installableDownloads: item.installable_downloads || [],
       uploadDate: item.upload_date,
       updatedDate: item.updated_date,
       trailerUrl: item.trailer_url,
@@ -138,6 +148,8 @@ export async function getItemById(id: number): Promise<Item | null> {
       sharedPinCode: data.shared_pin_code,
       sharedRarPassword: data.shared_rar_password,
       cloudDownloads: data.cloud_downloads || [],
+      preInstalledDownloads: data.pre_installed_downloads || [],
+      installableDownloads: data.installable_downloads || [],
       uploadDate: data.upload_date,
       updatedDate: data.updated_date,
       trailerUrl: data.trailer_url,
@@ -327,6 +339,8 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'update
     shared_pin_code: itemData.sharedPinCode,
     shared_rar_password: itemData.sharedRarPassword,
     cloud_downloads: itemData.cloudDownloads,
+    pre_installed_downloads: itemData.preInstalledDownloads || [],
+    installable_downloads: itemData.installableDownloads || [],
     upload_date: now,
     updated_date: now
   }
@@ -429,6 +443,8 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
   if (itemData.sharedPinCode !== undefined) dbUpdate.shared_pin_code = itemData.sharedPinCode
   if (itemData.sharedRarPassword !== undefined) dbUpdate.shared_rar_password = itemData.sharedRarPassword
   if (itemData.cloudDownloads !== undefined) dbUpdate.cloud_downloads = itemData.cloudDownloads
+  if (itemData.preInstalledDownloads !== undefined) dbUpdate.pre_installed_downloads = itemData.preInstalledDownloads
+  if (itemData.installableDownloads !== undefined) dbUpdate.installable_downloads = itemData.installableDownloads
   if (itemData.uploadDate !== undefined) dbUpdate.upload_date = itemData.uploadDate
   if (itemData.trailerUrl !== undefined) dbUpdate.trailer_url = itemData.trailerUrl
   if (itemData.steamUrl !== undefined) dbUpdate.steam_url = itemData.steamUrl
