@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { getUserByToken } from '@/lib/server/user-store'
+import { getUserByToken, sendNotification } from '@/lib/server/user-store'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -34,8 +34,18 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { id, status } = await req.json()
+  const { id, status, user_id } = await req.json()
   await supabase.from('game_requests').update({ status }).eq('id', id)
+  if (user_id) {
+    const statusMessages: Record<string, string> = {
+      in_progress: 'Your game request is now being worked on!',
+      completed: 'Your requested game has been added!',
+      rejected: 'Your game request could not be fulfilled at this time.',
+    }
+    if (statusMessages[status]) {
+      await sendNotification({ user_id, title: 'Game Request Update', message: statusMessages[status], type: status === 'completed' ? 'success' : status === 'rejected' ? 'warning' : 'info' })
+    }
+  }
   return NextResponse.json({ success: true })
 }
 

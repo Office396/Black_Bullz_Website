@@ -129,18 +129,44 @@ export async function getWatchHistory(userId: string): Promise<{ game_id: number
 }
 
 export async function getNotifications(userId: string): Promise<any[]> {
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  await supabase.from('notifications').delete().or(`user_id.eq.${userId},user_id.is.null`).lt('created_at', cutoff)
-  const { data } = await supabase.from('notifications').select('*').or(`user_id.eq.${userId},user_id.is.null`).order('created_at', { ascending: false }).limit(20)
+  const { data: existing } = await supabase.from('notifications').select('id').or(`user_id.eq.${userId},user_id.is.null`)
+  const count = existing?.length || 0
+  if (count > 50) {
+    const { data: oldest } = await supabase.from('notifications').select('id').or(`user_id.eq.${userId},user_id.is.null`).order('created_at', { ascending: true }).limit(count - 50)
+    if (oldest?.length) await supabase.from('notifications').delete().in('id', oldest.map((n: any) => n.id))
+  }
+  const { data: results } = await supabase.from('notifications').select('*').or(`user_id.eq.${userId},user_id.is.null`).order('created_at', { ascending: false }).limit(50)
+  return results || []
+}
+
+export async function getUnreadNotifications(userId: string): Promise<any[]> {
+  const { data } = await supabase.from('notifications').select('*').or(`user_id.eq.${userId},user_id.is.null`).eq('is_read', false).order('created_at', { ascending: false }).limit(20)
   return data || []
+}
+
+export async function getUnreadCount(userId: string): Promise<number> {
+  const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).or(`user_id.eq.${userId},user_id.is.null`).eq('is_read', false)
+  return count || 0
 }
 
 export async function markNotificationsRead(userId: string): Promise<void> {
   await supabase.from('notifications').update({ is_read: true }).or(`user_id.eq.${userId},user_id.is.null`).eq('is_read', false)
 }
 
+export async function markNotificationRead(userId: string, notificationId: string): Promise<void> {
+  await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId).or(`user_id.eq.${userId},user_id.is.null`)
+}
+
 export async function sendNotification(data: { user_id?: string; title: string; message: string; type?: string }): Promise<void> {
   await supabase.from('notifications').insert({ user_id: data.user_id || null, title: data.title, message: data.message, type: data.type || 'info' })
+}
+
+export async function sendBroadcastNotification(title: string, message: string, type: string = 'info'): Promise<void> {
+  await supabase.from('notifications').insert({ user_id: null, title, message, type })
+}
+
+export async function deleteAllNotifications(): Promise<void> {
+  await supabase.from('notifications').delete().neq('id', '00000000-0000-0000-0000-000000000000')
 }
 
 export async function requestPlanUpgrade(userId: string, plan: string): Promise<void> {

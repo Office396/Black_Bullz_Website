@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { getUserByToken } from '@/lib/server/user-store'
+import { getUserByToken, sendNotification } from '@/lib/server/user-store'
 
 export async function GET() {
   const { data } = await supabase.from('game_reports').select('*').order('created_at', { ascending: false })
@@ -29,8 +29,17 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { id, status } = await req.json()
+  const { id, status, user_id } = await req.json()
   await supabase.from('game_reports').update({ status }).eq('id', id)
+  if (user_id && status) {
+    const statusMessages: Record<string, string> = {
+      resolved: 'Your report has been reviewed and resolved. Thank you!',
+      dismissed: 'Your report has been reviewed but no action was needed.',
+    }
+    if (statusMessages[status]) {
+      await sendNotification({ user_id, title: 'Report Update', message: statusMessages[status], type: status === 'resolved' ? 'success' : 'info' })
+    }
+  }
   return NextResponse.json({ success: true })
 }
 

@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation"
 import {
   Search, Menu, X, ChevronDown, Sun, Moon, LogIn,
   Heart, Bell, User, History, Star, Settings, LogOut,
-  Sparkles, Crown, ChevronRight
+  Sparkles, Crown, ChevronRight, CheckCheck, Check, Trash2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -74,6 +74,52 @@ interface Collection {
   order: number
 }
 
+function NotifDropdown({ notifications, markNotificationRead, markNotificationsRead, onClose }: { notifications: any[]; markNotificationRead: (id: string) => Promise<void>; markNotificationsRead: () => Promise<void>; onClose: () => void }) {
+  const unread = notifications.filter(n => !n.is_read)
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set())
+
+  const handleMarkRead = async (id: string) => {
+    setRemovingIds(prev => new Set(prev).add(id))
+    setTimeout(() => markNotificationRead(id), 300)
+  }
+
+  return (
+    <div className="absolute top-full right-0 mt-2 w-80 bg-[#120b22] border border-[#2d1b54] rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+      <div className="px-4 py-3 border-b border-[#2d1b54] flex items-center justify-between">
+        <span className="text-white font-semibold text-sm">Notifications</span>
+        {unread.length > 0 && (
+          <button onClick={() => markNotificationsRead()} className="text-[10px] text-red-400 hover:text-red-300 font-medium flex items-center gap-1 transition-colors">
+            <Trash2 className="w-3 h-3" /> Clear all
+          </button>
+        )}
+      </div>
+      <div className="max-h-72 overflow-y-auto">
+        {unread.length === 0 ? (
+          <div className="px-4 py-8 text-center text-gray-500 text-sm">No unread notifications</div>
+        ) : unread.map(n => (
+          <div key={n.id} className={cn("px-4 py-3 border-b border-[#2d1b54]/50 hover:bg-purple-600/30 transition-all duration-300", removingIds.has(n.id) && "opacity-0 -translate-x-4 max-h-0 py-0 overflow-hidden")}>
+            <div className="flex items-start gap-2">
+              <div className={cn("w-2 h-2 rounded-full mt-1.5 flex-shrink-0", n.type === 'success' ? 'bg-green-400' : n.type === 'error' ? 'bg-red-400' : 'bg-[#9d4edd]')} />
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-xs font-semibold">{n.title}</p>
+                <p className="text-gray-400 text-xs mt-0.5">{n.message}</p>
+                <p className="text-gray-600 text-[10px] mt-1">{new Date(n.created_at).toLocaleDateString()}</p>
+              </div>
+              <button onClick={() => handleMarkRead(n.id)} className="text-[#9d4edd] hover:text-[#c77dff] p-1 rounded-lg hover:bg-[#9d4edd]/10 transition-colors flex-shrink-0" title="Mark as read">
+                <Check className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <Link href="/profile?tab=notifications" onClick={onClose}
+        className="block px-4 py-2.5 border-t border-[#2d1b54] text-center text-[#9d4edd] text-xs font-semibold hover:bg-purple-600/20 transition-colors">
+        View all notifications
+      </Link>
+    </div>
+  )
+}
+
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isGenreOpen, setIsGenreOpen] = useState(false)
@@ -96,7 +142,7 @@ export function Header() {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter()
   const pathname = usePathname()
-  const { user, logout, notifications, unreadCount, markNotificationsRead } = useUser()
+  const { user, logout, notifications, unreadCount, markNotificationsRead, markNotificationRead } = useUser()
 
   // Stop spinning once the route actually changes to the target
   useEffect(() => {
@@ -650,7 +696,7 @@ export function Header() {
 
                 {/* Notification Bell */}
                 <div ref={notifRef} className="relative">
-                  <button onClick={() => { setIsNotifOpen(!isNotifOpen); if (!isNotifOpen) markNotificationsRead() }}
+                  <button onClick={() => setIsNotifOpen(!isNotifOpen)}
                     className="relative p-2 text-gray-400 hover:text-[#9d4edd] transition-colors rounded-full hover:bg-purple-600/30">
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
@@ -660,27 +706,7 @@ export function Header() {
                     )}
                   </button>
                   {isNotifOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-80 bg-[#120b22] border border-[#2d1b54] rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
-                      <div className="px-4 py-3 border-b border-[#2d1b54] flex items-center justify-between">
-                        <span className="text-white font-semibold text-sm">Notifications</span>
-                        <span className="text-xs text-gray-500">{notifications.length} total</span>
-                      </div>
-                      <div className="max-h-72 overflow-y-auto">
-                        {notifications.length === 0 ? (
-                          <div className="px-4 py-8 text-center text-gray-500 text-sm">No notifications yet</div>
-                        ) : notifications.map(n => (
-                          <div key={n.id} className={cn("px-4 py-3 border-b border-[#2d1b54]/50 hover:bg-purple-600/30 transition-colors", !n.is_read && "bg-[#9d4edd]/5")}>
-                            <div className="flex items-start gap-2">
-                              <div className={cn("w-2 h-2 rounded-full mt-1.5 flex-shrink-0", n.type === 'success' ? 'bg-green-400' : n.type === 'error' ? 'bg-red-400' : 'bg-[#9d4edd]')} />
-                              <div>
-                                <p className="text-white text-xs font-semibold">{n.title}</p>
-                                <p className="text-gray-400 text-xs mt-0.5">{n.message}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <NotifDropdown notifications={notifications} markNotificationRead={markNotificationRead} markNotificationsRead={markNotificationsRead} onClose={() => setIsNotifOpen(false)} />
                   )}
                 </div>
 
@@ -705,6 +731,7 @@ export function Header() {
                       </div>
                       {[
                         { href: `/profile`, icon: User, label: "My Profile" },
+                        { href: `/profile?tab=notifications`, icon: Bell, label: "Notifications" },
                         { href: `/profile?tab=history`, icon: History, label: "Watch History" },
                         { href: `/profile?tab=favourites`, icon: Star, label: "Favourites" },
                         { href: `/subscribe`, icon: Crown, label: "Subscription" },

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPageModifierData, updateCarousel, type CarouselItem } from '@/lib/server/page-modifier-store'
+import { sendBroadcastNotification } from '@/lib/server/user-store'
 
 export async function GET() {
   try {
@@ -33,6 +34,12 @@ export async function POST(request: Request) {
         success: false, 
         error: 'Failed to update carousel - check server logs for details'
       }, { status: 500 })
+    }
+
+    const gameNames = items.map(i => i.title).filter(Boolean)
+    if (gameNames.length > 0) {
+      const preview = gameNames.length === 1 ? gameNames[0] : `${gameNames[0]} and ${gameNames.length - 1} more`
+      await sendBroadcastNotification('Hero Carousel Updated', `Featured games updated — now showcasing: ${preview}`, 'info')
     }
 
     return NextResponse.json({ success: true })

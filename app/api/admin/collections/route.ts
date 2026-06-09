@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPageModifierData, updateCollections, type Collection } from '@/lib/server/page-modifier-store'
+import { sendBroadcastNotification } from '@/lib/server/user-store'
 
 export async function GET() {
   try {
@@ -19,6 +20,14 @@ export async function POST(request: Request) {
     
     if (!success) {
       return NextResponse.json({ success: false, error: 'Failed to update collections' }, { status: 500 })
+    }
+
+    if (collections.length > 0) {
+      const names = collections.map(c => c.title).filter(Boolean)
+      if (names.length > 0) {
+        const preview = names.length === 1 ? names[0] : `${names[0]} and ${names.length - 1} more`
+        await sendBroadcastNotification('Collections Updated', `New collections available — explore ${preview}`, 'info')
+      }
     }
 
     return NextResponse.json({ success: true })

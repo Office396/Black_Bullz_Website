@@ -90,7 +90,7 @@ export function HeroCarousel({ games, modifiers = [] }: HeroCarouselProps) {
             Change these pixel numbers (e.g., h-[600px]) to instantly resize the slideshow.
         */}
 
-            <section className="relative w-full h-[600px] sm:h-[800px] md:h-[600px] overflow-hidden rounded-xl keep-white" style={{ backgroundColor: '#090514' }}>
+            <section className="relative w-full h-[500px] sm:h-[650px] md:h-[700px] overflow-hidden rounded-2xl keep-white" style={{ backgroundColor: '#090514' }}>
 
                 {/* Background Image - Only load current and preload next */}
                 {featured.map((item, i) => {

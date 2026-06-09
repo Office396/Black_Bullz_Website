@@ -34,13 +34,17 @@ interface UserContextType {
   notifications: any[]
   unreadCount: number
   markNotificationsRead: () => Promise<void>
+  markNotificationRead: (id: string) => Promise<void>
+  deleteAllNotifications: () => Promise<void>
 }
 
 const UserContext = createContext<UserContextType>({
   user: null, token: null, loading: true,
   login: async () => ({}), signup: async () => ({}),
   logout: async () => {}, refreshUser: async () => {},
-  notifications: [], unreadCount: 0, markNotificationsRead: async () => {}
+  notifications: [], unreadCount: 0, markNotificationsRead: async () => {},
+  markNotificationRead: async () => {},
+  deleteAllNotifications: async () => {}
 })
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
@@ -160,14 +164,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const markNotificationsRead = async () => {
     if (!token) return
-    await fetch('/api/user/notifications', { method: 'POST', headers: { Authorization: `Bearer ${token}` } })
+    await fetch('/api/user/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({}) })
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+  }
+
+  const markNotificationRead = async (id: string) => {
+    if (!token) return
+    await fetch('/api/user/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ notification_id: id }) })
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
+  }
+
+  const deleteAllNotifications = async () => {
+    if (!token) return
+    await fetch('/api/user/notifications/delete-all', { method: 'POST', headers: { Authorization: `Bearer ${token}` } })
+    setNotifications([])
   }
 
   const unreadCount = notifications.filter(n => !n.is_read).length
 
   return (
-    <UserContext.Provider value={{ user, token, loading, login, signup, logout, refreshUser, notifications, unreadCount, markNotificationsRead }}>
+    <UserContext.Provider value={{ user, token, loading, login, signup, logout, refreshUser, notifications, unreadCount, markNotificationsRead, markNotificationRead, deleteAllNotifications }}>
       {children}
     </UserContext.Provider>
   )

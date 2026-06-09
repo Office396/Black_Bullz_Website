@@ -7,7 +7,7 @@ import {
   Star, Download, ExternalLink, Heart, Flag, MessageCircle,
   Monitor, Cpu, MemoryStick, HardDrive, Clock, User,
   Calendar, ChevronLeft, Play, ThumbsUp, ThumbsDown, Share2, Shield,
-  AlertTriangle, CheckCircle, Info, Package, Wrench,
+  AlertTriangle, CheckCircle, Info, Package, Wrench, RefreshCw,
   ChevronDown, ChevronUp, Cloud, Building2, X, Maximize2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,13 @@ interface SystemRequirements {
   storage?: string
   directx?: string
   sound_card?: string
+}
+
+interface CloudDownload {
+  cloudName?: string
+  version?: string
+  partsNumber?: number
+  actualDownloadLinks?: Array<{ name?: string; url?: string; size?: string }>
 }
 
 interface GameData {
@@ -70,6 +77,10 @@ interface GameData {
   version?: string
   note?: string
   reviews?: any[]
+  sharedPinCode?: string
+  sharedRarPassword?: string
+  cloudDownloads?: CloudDownload[]
+  installableDownloads?: CloudDownload[]
 }
 
 interface GameDetailsProps {
@@ -100,7 +111,9 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const [isFavorite, setIsFavorite] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
   const [installTab, setInstallTab] = useState<"pre-installed" | "installable">("pre-installed")
-  const [expandedCloud, setExpandedCloud] = useState<number | null>(null)
+  const [preinstalledActiveTab, setPreinstalledActiveTab] = useState<"downloads" | "updates">("downloads")
+  const [installableActiveTab, setInstallableActiveTab] = useState<"downloads" | "updates">("downloads")
+  const [androidActiveTab, setAndroidActiveTab] = useState<"downloads" | "updates">("downloads")
   const [trailerOpen, setTrailerOpen] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
@@ -123,6 +136,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' } | null>(null)
   const [calculatedRating, setCalculatedRating] = useState<number>(0)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [downloadingCloud, setDownloadingCloud] = useState<string | null>(null)
 
   const showToast = (msg: string, type: 'success' | 'info' = 'info') => {
     setToast({ msg, type })
@@ -158,12 +172,41 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const cloudDownloads = game?.cloudDownloads || []
   const installableDownloads = game?.installableDownloads || []
 
+  const preinstalledDownloads = cloudDownloads.filter(c => c.cloudName !== 'Update')
+  const preinstalledUpdates = cloudDownloads.filter(c => c.cloudName === 'Update')
+  const installableRegularDownloads = installableDownloads.filter(c => c.cloudName !== 'Update')
+  const installableUpdates = installableDownloads.filter(c => c.cloudName === 'Update')
+
   // Get YouTube embed ID from trailer URL
   const getYouTubeId = (url: string) => {
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/)
     return match ? match[1] : null
   }
   const trailerYtId = game?.trailerUrl ? getYouTubeId(game.trailerUrl) : null
+
+  const handleCloudDownload = async (cloudIndex: number, sectionType: 'pre-installed' | 'installable') => {
+    if (!game?.id) return
+    const key = `${sectionType}-${cloudIndex}`
+    setDownloadingCloud(key)
+    try {
+      const response = await fetch('/api/filecrypt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId: game.id, cloudIndex, sectionType }),
+      })
+      const result = await response.json()
+      if (result.success && result.link) {
+        window.open(result.link, '_blank')
+      } else {
+        alert(result.error || 'Failed to create download link. Please try again.')
+      }
+    } catch (error) {
+      console.error('FileCrypt error:', error)
+      alert('Failed to create download link. Please try again.')
+    } finally {
+      setDownloadingCloud(null)
+    }
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -992,219 +1035,425 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
 
       {/* ===== DOWNLOAD SECTION ===== - AFTER INSTALLATION GUIDE */}
       {
-        cloudDownloads.length > 0 && (
+        (cloudDownloads.length > 0 || installableDownloads.length > 0) && (
           <div id="download-section" className="space-y-6">
-            {(() => {
-              const allLinks = cloudDownloads
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Download className="w-6 h-6 text-[#9d4edd]" />
+                  Download Links
+                </h2>
+              </div>
 
-              return (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      <Download className="w-6 h-6 text-[#9d4edd]" />
-                      Download Links
-                    </h2>
-                  </div>
-
-                  {/* Show PC game sections */}
-                  {isPCGame ? (
-                    <div className="space-y-4">
-                      {/* Pre-installed section - only show if links exist */}
-                      {cloudDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) && (
-                      <div className="bg-green-900/60 border border-green-500/40 rounded-2xl overflow-hidden keep-white">
-                        <div className="flex items-center gap-3 p-4 border-b border-green-500/30">
-                          <div className="w-10 h-10 rounded-xl bg-green-500/30 flex items-center justify-center">
-                            <Package className="w-5 h-5 text-green-400" />
-                          </div>
-                          <div>
-                            <h3 className="text-white font-bold text-lg">Pre-installed Version</h3>
-                            <p className="text-green-300 dark:text-green-400 text-xs">Recommended • No installation needed, just extract & play!</p>
-                          </div>
-                          <Badge className="ml-auto bg-green-500/30 text-green-300 dark:text-green-400 border border-green-500/40">RECOMMENDED</Badge>
+              {/* PC game sections */}
+              {isPCGame ? (
+                <div className="space-y-5">
+                  {/* ========== PRE-INSTALLED VERSION ========== */}
+                  {(preinstalledDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) || preinstalledUpdates.some(c => c.actualDownloadLinks?.some(l => l.url))) && (
+                    <div className="bg-gradient-to-br from-green-900/60 via-green-900/40 to-emerald-900/30 border border-green-500/40 rounded-2xl overflow-hidden">
+                      <div className="flex items-center gap-3 p-4 border-b border-green-500/20">
+                        <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
+                          <Package className="w-5 h-5 text-green-400" />
                         </div>
-                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {allLinks.map((cloud, ci) => {
-                            const style = getCloudStyle(cloud.cloudName)
-                            const isExpanded = expandedCloud === ci
-                            const links = cloud.actualDownloadLinks || []
-                            return (
-                              <div key={ci} className={`border rounded-xl overflow-hidden transition-all ${style.bg}`}>
+                        <div className="flex-1">
+                          <h3 className="text-white font-bold text-lg">Pre-installed Version</h3>
+                          <p className="text-green-300/70 text-xs">Recommended &bull; Just extract & play!</p>
+                        </div>
+                        <Badge className="bg-green-500/20 text-green-300 border border-green-500/30 text-[10px] font-bold tracking-wider">RECOMMENDED</Badge>
+                      </div>
+                      {/* Tabs */}
+                      <div className="flex border-b border-green-500/10">
+                        <button
+                          onClick={() => setPreinstalledActiveTab('downloads')}
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all relative ${
+                            preinstalledActiveTab === 'downloads'
+                              ? 'text-green-300'
+                              : 'text-gray-500 hover:text-gray-300'
+                          }`}
+                        >
+                          <Download className="w-4 h-4" />
+                          Download Links
+                          {preinstalledDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) && (
+                            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold">{preinstalledDownloads.filter(c => c.actualDownloadLinks?.some(l => l.url)).length}</span>
+                          )}
+                          {preinstalledActiveTab === 'downloads' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-400 rounded-full" />}
+                        </button>
+                        <button
+                          onClick={() => setPreinstalledActiveTab('updates')}
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all relative ${
+                            preinstalledActiveTab === 'updates'
+                              ? 'text-green-300'
+                              : 'text-gray-500 hover:text-gray-300'
+                          }`}
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          Updates
+                          {preinstalledUpdates.length > 0 && (
+                            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold">{preinstalledUpdates.filter(c => c.actualDownloadLinks?.some(l => l.url)).length}</span>
+                          )}
+                          {preinstalledActiveTab === 'updates' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-400 rounded-full" />}
+                        </button>
+                      </div>
+                      {/* Tab Content */}
+                      <div className="p-4">
+                        {preinstalledActiveTab === 'downloads' ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {preinstalledDownloads.map((cloud, ci) => {
+                              const style = getCloudStyle(cloud.cloudName || '')
+                              const links = cloud.actualDownloadLinks || []
+                              const validLinks = links.filter(l => l.url)
+                              const isLoading = downloadingCloud === `pre-installed-${cloudDownloads.indexOf(cloud)}`
+                              if (validLinks.length === 0) return null
+                              return (
                                 <button
-                                  className="w-full flex items-center justify-between gap-3 p-3"
-                                  onClick={() => setExpandedCloud(isExpanded ? null : ci)}
+                                  key={ci}
+                                  onClick={() => handleCloudDownload(cloudDownloads.indexOf(cloud), 'pre-installed')}
+                                  disabled={isLoading}
+                                  className={`group relative flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/10 active:scale-[0.98] ${style.bg} ${isLoading ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
                                 >
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-2xl">{style.icon}</span>
-                                    <div className="text-left">
-                                      <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Cloud'}</p>
-                                      {cloud.version && <p className="text-gray-500 text-xs">v{cloud.version}</p>}
-                                      {links.length > 0 && <p className="text-gray-400 text-xs">{links.length} part{links.length > 1 ? 's' : ''}</p>}
+                                  <div className="w-11 h-11 rounded-xl bg-black/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
+                                    {style.icon}
+                                  </div>
+                                  <div className="flex-1 text-left min-w-0">
+                                    <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Cloud'}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      {cloud.version && <span className="text-gray-500 text-[11px]">v{cloud.version}</span>}
+                                      <span className="text-gray-500 text-[11px]">{validLinks.length} part{validLinks.length > 1 ? 's' : ''}</span>
                                     </div>
                                   </div>
-                                  {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                                </button>
-                                {isExpanded && links.length > 0 && (
-                                  <div className="border-t border-white/10 p-2 space-y-1.5">
-                                    {links.map((link, li) => (
-                                      <a
-                                        key={li}
-                                        href={link.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center justify-between gap-2 px-3 py-2 bg-black/20 rounded-lg hover:bg-black/40 transition-all group"
-                                      >
-                                        <div className="flex items-center gap-2 min-w-0">
-                                          <Download className={`w-3.5 h-3.5 ${style.color} flex-shrink-0`} />
-                                          <span className="text-white dark:text-white text-sm truncate">{link.name || `Part ${li + 1}`}</span>
-                                        </div>
-                                        {link.size && <span className="text-gray-400 text-xs flex-shrink-0">{link.size}</span>}
-                                      </a>
-                                    ))}
+                                  <div className="flex-shrink-0">
+                                    {isLoading ? (
+                                      <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                      <Download className="w-5 h-5 text-green-400/60 group-hover:text-green-300 transition-colors" />
+                                    )}
                                   </div>
-                                )}
-                                {isExpanded && links.length === 0 && (
-                                  <div className="border-t border-white/10 p-3 text-center text-gray-500 text-sm">No links available</div>
-                                )}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        ) : (
+                          <div>
+                            {preinstalledUpdates.some(c => c.actualDownloadLinks?.some(l => l.url)) ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {preinstalledUpdates.map((cloud, ci) => {
+                                  const style = getCloudStyle(cloud.cloudName || '')
+                                  const links = cloud.actualDownloadLinks || []
+                                  const validLinks = links.filter(l => l.url)
+                                  const isLoading = downloadingCloud === `pre-installed-${cloudDownloads.indexOf(cloud)}`
+                                  if (validLinks.length === 0) return null
+                                  return (
+                                    <button
+                                      key={ci}
+                                      onClick={() => handleCloudDownload(cloudDownloads.indexOf(cloud), 'pre-installed')}
+                                      disabled={isLoading}
+                                      className={`group relative flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-amber-500/10 active:scale-[0.98] ${style.bg} ${isLoading ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
+                                    >
+                                      <div className="w-11 h-11 rounded-xl bg-black/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
+                                        {style.icon}
+                                      </div>
+                                      <div className="flex-1 text-left min-w-0">
+                                        <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Update'}</p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          {cloud.version && <span className="text-gray-500 text-[11px]">v{cloud.version}</span>}
+                                          <span className="text-gray-500 text-[11px]">{validLinks.length} part{validLinks.length > 1 ? 's' : ''}</span>
+                                        </div>
+                                      </div>
+                                      <div className="flex-shrink-0">
+                                        {isLoading ? (
+                                          <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                          <Download className="w-5 h-5 text-amber-400/60 group-hover:text-amber-300 transition-colors" />
+                                        )}
+                                      </div>
+                                    </button>
+                                  )
+                                })}
                               </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center py-8 text-center">
+                                <div className="w-14 h-14 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-3">
+                                  <CheckCircle className="w-7 h-7 text-green-400" />
+                                </div>
+                                <p className="text-green-300 font-semibold text-sm">Game is up to date!</p>
+                                <p className="text-gray-500 text-xs mt-1">No updates available for the pre-installed version</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ========== INSTALLABLE VERSION ========== */}
+                  {(installableRegularDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) || installableUpdates.some(c => c.actualDownloadLinks?.some(l => l.url))) && (
+                    <div className="bg-gradient-to-br from-purple-900/60 via-purple-900/40 to-violet-900/30 border border-purple-500/40 rounded-2xl overflow-hidden">
+                      <div className="flex items-center gap-3 p-4 border-b border-purple-500/20">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                          <Wrench className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-white font-bold text-lg">Installable Version</h3>
+                          <p className="text-purple-300/70 text-xs">Traditional installer &bull; Run setup.exe</p>
+                        </div>
+                        <Badge className="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-bold tracking-wider">INSTALLER</Badge>
+                      </div>
+                      {/* Tabs */}
+                      <div className="flex border-b border-purple-500/10">
+                        <button
+                          onClick={() => setInstallableActiveTab('downloads')}
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all relative ${
+                            installableActiveTab === 'downloads'
+                              ? 'text-purple-300'
+                              : 'text-gray-500 hover:text-gray-300'
+                          }`}
+                        >
+                          <Download className="w-4 h-4" />
+                          Download Links
+                          {installableRegularDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) && (
+                            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-[10px] font-bold">{installableRegularDownloads.filter(c => c.actualDownloadLinks?.some(l => l.url)).length}</span>
+                          )}
+                          {installableActiveTab === 'downloads' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-400 rounded-full" />}
+                        </button>
+                        <button
+                          onClick={() => setInstallableActiveTab('updates')}
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all relative ${
+                            installableActiveTab === 'updates'
+                              ? 'text-purple-300'
+                              : 'text-gray-500 hover:text-gray-300'
+                          }`}
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          Updates
+                          {installableUpdates.length > 0 && (
+                            <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold">{installableUpdates.filter(c => c.actualDownloadLinks?.some(l => l.url)).length}</span>
+                          )}
+                          {installableActiveTab === 'updates' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-400 rounded-full" />}
+                        </button>
+                      </div>
+                      {/* Tab Content */}
+                      <div className="p-4">
+                        {installableActiveTab === 'downloads' ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {installableRegularDownloads.map((cloud, ci) => {
+                              const style = getCloudStyle(cloud.cloudName || '')
+                              const links = cloud.actualDownloadLinks || []
+                              const validLinks = links.filter(l => l.url)
+                              const isLoading = downloadingCloud === `installable-${installableDownloads.indexOf(cloud)}`
+                              if (validLinks.length === 0) return null
+                              return (
+                                <button
+                                  key={ci}
+                                  onClick={() => handleCloudDownload(installableDownloads.indexOf(cloud), 'installable')}
+                                  disabled={isLoading}
+                                  className={`group relative flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10 active:scale-[0.98] ${style.bg} ${isLoading ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
+                                >
+                                  <div className="w-11 h-11 rounded-xl bg-black/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
+                                    {style.icon}
+                                  </div>
+                                  <div className="flex-1 text-left min-w-0">
+                                    <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Cloud'}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      {cloud.version && <span className="text-gray-500 text-[11px]">v{cloud.version}</span>}
+                                      <span className="text-gray-500 text-[11px]">{validLinks.length} part{validLinks.length > 1 ? 's' : ''}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex-shrink-0">
+                                    {isLoading ? (
+                                      <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                      <Download className="w-5 h-5 text-purple-400/60 group-hover:text-purple-300 transition-colors" />
+                                    )}
+                                  </div>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        ) : (
+                          <div>
+                            {installableUpdates.some(c => c.actualDownloadLinks?.some(l => l.url)) ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {installableUpdates.map((cloud, ci) => {
+                                  const style = getCloudStyle(cloud.cloudName || '')
+                                  const links = cloud.actualDownloadLinks || []
+                                  const validLinks = links.filter(l => l.url)
+                                  const isLoading = downloadingCloud === `installable-${installableDownloads.indexOf(cloud)}`
+                                  if (validLinks.length === 0) return null
+                                  return (
+                                    <button
+                                      key={ci}
+                                      onClick={() => handleCloudDownload(installableDownloads.indexOf(cloud), 'installable')}
+                                      disabled={isLoading}
+                                      className={`group relative flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-amber-500/10 active:scale-[0.98] ${style.bg} ${isLoading ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
+                                    >
+                                      <div className="w-11 h-11 rounded-xl bg-black/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
+                                        {style.icon}
+                                      </div>
+                                      <div className="flex-1 text-left min-w-0">
+                                        <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Update'}</p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          {cloud.version && <span className="text-gray-500 text-[11px]">v{cloud.version}</span>}
+                                          <span className="text-gray-500 text-[11px]">{validLinks.length} part{validLinks.length > 1 ? 's' : ''}</span>
+                                        </div>
+                                      </div>
+                                      <div className="flex-shrink-0">
+                                        {isLoading ? (
+                                          <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                          <Download className="w-5 h-5 text-amber-400/60 group-hover:text-amber-300 transition-colors" />
+                                        )}
+                                      </div>
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center py-8 text-center">
+                                <div className="w-14 h-14 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-3">
+                                  <CheckCircle className="w-7 h-7 text-purple-400" />
+                                </div>
+                                <p className="text-purple-300 font-semibold text-sm">Game is up to date!</p>
+                                <p className="text-gray-500 text-xs mt-1">No updates available for the installable version</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* ========== ANDROID - SINGLE DOWNLOAD SECTION ========== */
+                (cloudDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) || cloudDownloads.some(c => c.cloudName === 'Update' && c.actualDownloadLinks?.some(l => l.url))) && (
+                  <div className="bg-gradient-to-br from-[#9d4edd]/40 via-[#9d4edd]/25 to-[#7b2cbf]/20 border border-[#9d4edd]/40 rounded-2xl overflow-hidden">
+                    <div className="flex items-center gap-3 p-4 border-b border-[#9d4edd]/20">
+                      <div className="w-10 h-10 rounded-xl bg-[#9d4edd]/20 flex items-center justify-center">
+                        <Download className="w-5 h-5 text-[#9d4edd]" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-bold text-lg">APK Download</h3>
+                        <p className="text-[#9d4edd]/70 text-xs">Modded Android Game</p>
+                      </div>
+                    </div>
+                    {/* Tabs */}
+                    <div className="flex border-b border-[#9d4edd]/10">
+                      <button
+                        onClick={() => setAndroidActiveTab('downloads')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all relative ${
+                          androidActiveTab === 'downloads'
+                            ? 'text-[#c77dff]'
+                            : 'text-gray-500 hover:text-gray-300'
+                        }`}
+                      >
+                        <Download className="w-4 h-4" />
+                        Download Links
+                        {preinstalledDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) && (
+                          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-[#9d4edd]/20 text-[#c77dff] text-[10px] font-bold">{preinstalledDownloads.filter(c => c.actualDownloadLinks?.some(l => l.url)).length}</span>
+                        )}
+                        {androidActiveTab === 'downloads' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c77dff] rounded-full" />}
+                      </button>
+                      <button
+                        onClick={() => setAndroidActiveTab('updates')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all relative ${
+                          androidActiveTab === 'updates'
+                            ? 'text-[#c77dff]'
+                            : 'text-gray-500 hover:text-gray-300'
+                        }`}
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Updates
+                        {cloudDownloads.filter(c => c.cloudName === 'Update').length > 0 && (
+                          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold">{cloudDownloads.filter(c => c.cloudName === 'Update' && c.actualDownloadLinks?.some(l => l.url)).length}</span>
+                        )}
+                        {androidActiveTab === 'updates' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c77dff] rounded-full" />}
+                      </button>
+                    </div>
+                    {/* Tab Content */}
+                    <div className="p-4">
+                      {androidActiveTab === 'downloads' ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {cloudDownloads.filter(c => c.cloudName !== 'Update').map((cloud, ci) => {
+                            const style = getCloudStyle(cloud.cloudName || '')
+                            const links = cloud.actualDownloadLinks || []
+                            const validLinks = links.filter(l => l.url)
+                            const isLoading = downloadingCloud === `pre-installed-${cloudDownloads.indexOf(cloud)}`
+                            if (validLinks.length === 0) return null
+                            return (
+                              <button
+                                key={ci}
+                                onClick={() => handleCloudDownload(cloudDownloads.indexOf(cloud), 'pre-installed')}
+                                disabled={isLoading}
+                                className={`group relative flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#9d4edd]/10 active:scale-[0.98] ${style.bg} ${isLoading ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
+                              >
+                                <div className="w-11 h-11 rounded-xl bg-black/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
+                                  {style.icon}
+                                </div>
+                                <div className="flex-1 text-left min-w-0">
+                                  <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Cloud'}</p>
+                                  <span className="text-gray-500 text-[11px]">{validLinks.length} link{validLinks.length > 1 ? 's' : ''}</span>
+                                </div>
+                                <div className="flex-shrink-0">
+                                  {isLoading ? (
+                                    <div className="w-5 h-5 border-2 border-[#9d4edd] border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <Download className="w-5 h-5 text-[#9d4edd]/60 group-hover:text-[#c77dff] transition-colors" />
+                                  )}
+                                </div>
+                              </button>
                             )
                           })}
                         </div>
-                      </div>
-                      )}
-
-                      {/* Installable section - only show if links exist */}
-                      {installableDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) && (
-                      <div className="bg-purple-900/60 border border-purple-500/40 rounded-2xl overflow-hidden keep-white">
-                        <div className="flex items-center gap-3 p-4 border-b border-purple-500/30">
-                          <div className="w-10 h-10 rounded-xl bg-purple-500/30 flex items-center justify-center">
-                            <Wrench className="w-5 h-5 text-purple-400" />
-                          </div>
-                          <div>
-                            <h3 className="text-white font-bold text-lg">Installable Version</h3>
-                            <p className="text-purple-300 dark:text-purple-400 text-xs">Traditional installer • Run setup.exe to install</p>
-                          </div>
-                          <Badge className="ml-auto bg-purple-500/30 text-purple-300 dark:text-purple-400 border border-purple-500/40">INSTALLER</Badge>
-                        </div>
-                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {installableDownloads.length > 0 ? (
-                            installableDownloads.map((cloud, ci) => {
-                              const style = getCloudStyle(cloud.cloudName)
-                              const isExpanded = expandedCloud === ci
-                              const links = cloud.actualDownloadLinks || []
-                              return (
-                                <div key={ci} className={`border rounded-xl overflow-hidden transition-all ${style.bg}`}>
+                      ) : (
+                        <div>
+                          {cloudDownloads.filter(c => c.cloudName === 'Update' && c.actualDownloadLinks?.some(l => l.url)).length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {cloudDownloads.filter(c => c.cloudName === 'Update').map((cloud, ci) => {
+                                const style = getCloudStyle(cloud.cloudName || '')
+                                const links = cloud.actualDownloadLinks || []
+                                const validLinks = links.filter(l => l.url)
+                                const isLoading = downloadingCloud === `pre-installed-${cloudDownloads.indexOf(cloud)}`
+                                if (validLinks.length === 0) return null
+                                return (
                                   <button
-                                    className="w-full flex items-center justify-between gap-3 p-3"
-                                    onClick={() => setExpandedCloud(isExpanded ? null : ci)}
+                                    key={ci}
+                                    onClick={() => handleCloudDownload(cloudDownloads.indexOf(cloud), 'pre-installed')}
+                                    disabled={isLoading}
+                                    className={`group relative flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-amber-500/10 active:scale-[0.98] ${style.bg} ${isLoading ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
                                   >
-                                    <div className="flex items-center gap-3">
-                                      <span className="text-2xl">{style.icon}</span>
-                                      <div className="text-left">
-                                        <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Cloud'}</p>
-                                        {cloud.version && <p className="text-gray-500 text-xs">v{cloud.version}</p>}
-                                        {links.length > 0 && <p className="text-gray-400 text-xs">{links.length} part{links.length > 1 ? 's' : ''}</p>}
-                                      </div>
+                                    <div className="w-11 h-11 rounded-xl bg-black/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
+                                      {style.icon}
                                     </div>
-                                    {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                                    <div className="flex-1 text-left min-w-0">
+                                      <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Update'}</p>
+                                      <span className="text-gray-500 text-[11px]">{validLinks.length} link{validLinks.length > 1 ? 's' : ''}</span>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                      {isLoading ? (
+                                        <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                                      ) : (
+                                        <Download className="w-5 h-5 text-amber-400/60 group-hover:text-amber-300 transition-colors" />
+                                      )}
+                                    </div>
                                   </button>
-                                  {isExpanded && links.length > 0 && (
-                                    <div className="border-t border-white/10 p-2 space-y-1.5">
-                                      {links.map((link, li) => (
-                                        <a
-                                          key={li}
-                                          href={link.url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="flex items-center justify-between gap-2 px-3 py-2 bg-black/20 rounded-lg hover:bg-black/40 transition-all group"
-                                        >
-                                          <div className="flex items-center gap-2 min-w-0">
-                                            <Download className={`w-3.5 h-3.5 ${style.color} flex-shrink-0`} />
-                                            <span className="text-white dark:text-white text-sm truncate">{link.name || `Part ${li + 1}`}</span>
-                                          </div>
-                                          {link.size && <span className="text-gray-400 text-xs flex-shrink-0">{link.size}</span>}
-                                        </a>
-                                      ))}
-                                    </div>
-                                  )}
-                                  {isExpanded && links.length === 0 && (
-                                    <div className="border-t border-white/10 p-3 text-center text-gray-500 text-sm">No links available</div>
-                                  )}
-                                </div>
-                              )
-                            })
+                                )
+                              })}
+                            </div>
                           ) : (
-                            <div className="col-span-full flex items-center justify-center text-gray-500 py-8">
-                              <div className="text-center">
-                                <Package className="w-10 h-10 mx-auto mb-2 text-gray-600" />
-                                <p className="text-gray-700 dark:text-gray-500 text-sm">No installable links provided</p>
+                            <div className="flex flex-col items-center justify-center py-8 text-center">
+                              <div className="w-14 h-14 rounded-full bg-[#9d4edd]/10 border border-[#9d4edd]/20 flex items-center justify-center mb-3">
+                                <CheckCircle className="w-7 h-7 text-[#c77dff]" />
                               </div>
+                              <p className="text-[#c77dff] font-semibold text-sm">Game is up to date!</p>
+                              <p className="text-gray-500 text-xs mt-1">No updates available for this APK</p>
                             </div>
                           )}
                         </div>
-                      </div>
                       )}
                     </div>
-                  ) : (
-                    /* Android - single download section */
-                    allLinks.some(c => c.actualDownloadLinks?.some(l => l.url)) && (
-                    <div className="bg-[#9d4edd]/40 border border-[#9d4edd]/40 rounded-2xl overflow-hidden keep-white">
-                      <div className="flex items-center gap-3 p-4 border-b border-[#9d4edd]/30">
-                        <div className="w-10 h-10 rounded-xl bg-[#9d4edd]/30 flex items-center justify-center">
-                          <Download className="w-5 h-5 text-[#9d4edd]" />
-                        </div>
-                        <div>
-                          <h3 className="text-white font-bold text-lg">APK Download</h3>
-                          <p className="text-[#9d4edd] text-xs">Modded Android Game</p>
-                        </div>
-                      </div>
-                      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {allLinks.map((cloud, ci) => {
-                          const style = getCloudStyle(cloud.cloudName)
-                          const isExpanded = expandedCloud === ci
-                          const links = cloud.actualDownloadLinks || []
-                          return (
-                            <div key={ci} className={`border rounded-xl overflow-hidden transition-all ${style.bg}`}>
-                              <button
-                                className="w-full flex items-center justify-between gap-3 p-3"
-                                onClick={() => setExpandedCloud(isExpanded ? null : ci)}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <span className="text-2xl">{style.icon}</span>
-                                  <div className="text-left">
-                                    <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Cloud'}</p>
-                                    {links.length > 0 && <p className="text-gray-400 text-xs">{links.length} link{links.length > 1 ? 's' : ''}</p>}
-                                  </div>
-                                </div>
-                                {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                              </button>
-                              {isExpanded && links.length > 0 && (
-                                <div className="border-t border-white/10 p-2 space-y-1.5">
-                                  {links.map((link, li) => (
-                                    <a
-                                      key={li}
-                                      href={link.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center justify-between gap-2 px-3 py-2 bg-black/20 rounded-lg hover:bg-black/40 transition-all"
-                                    >
-                                      <div className="flex items-center gap-2 min-w-0">
-                                        <Download className={`w-3.5 h-3.5 ${style.color} flex-shrink-0`} />
-                                          <span className="text-white dark:text-white text-sm truncate">{link.name || `Download ${li + 1}`}</span>
-                                      </div>
-                                      {link.size && <span className="text-gray-400 text-xs flex-shrink-0">{link.size}</span>}
-                                    </a>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
-            })()}
+                  </div>
+                )
+              )}
+            </div>
           </div>
         )
       }

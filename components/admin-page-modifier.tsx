@@ -48,9 +48,6 @@ interface Collection {
 
 const pages = [
   { value: "home", label: "Home Page", icon: Home },
-  { value: "all-games", label: "All Games", icon: Gamepad2 },
-  { value: "top", label: "Top Games", icon: Star },
-  { value: "trending", label: "Trending", icon: TrendingUp },
 ]
 
 export function AdminPageModifier() {

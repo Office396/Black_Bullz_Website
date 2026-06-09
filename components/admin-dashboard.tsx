@@ -35,94 +35,101 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     <div className="min-h-screen bg-[#090514] text-white">
       {/* Header */}
       <header className="bg-[#090514]/90 backdrop-blur-md border-b border-[#2d1b54] sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center relative overflow-hidden ring-2 ring-[#9d4edd]/50 shadow-[0_0_15px_rgba(157,78,221,0.5)]">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center relative overflow-hidden ring-2 ring-[#9d4edd]/50 shadow-[0_0_15px_rgba(157,78,221,0.5)]">
                 <img src="/bull-logo.png" alt="Logo" className="w-full h-full object-cover rounded-full" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#9d4edd] via-[#c77dff] to-[#00bcd4]">
+                <span className="text-base sm:text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#9d4edd] via-[#c77dff] to-[#00bcd4]">
                   BULLZGAMEZ
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold -mt-1">ADMIN PORTAL</span>
+                <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold -mt-0.5 sm:-mt-1">ADMIN PORTAL</span>
               </div>
             </div>
             <Button
               onClick={handleLogout}
               variant="outline"
               size="sm"
-              className="bg-red-500/10 border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300"
+              className="bg-red-500/10 border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 text-xs sm:text-sm px-2 sm:px-4"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              <span>Logout</span>
+              <LogOut className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <TabsList className="bg-[#120b22] border border-[#2d1b54] p-1 h-auto flex-wrap md:flex-nowrap">
-              <TabsTrigger value="list" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <List className="h-4 w-4" />
-                Items
+          <div className="flex flex-col gap-4">
+            <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+            <TabsList className="bg-[#120b22] border border-[#2d1b54] p-1 h-auto flex flex-nowrap md:flex-wrap min-w-max md:min-w-0">
+              <TabsTrigger value="list" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <List className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Items</span>
+                <span className="sm:hidden">Items</span>
               </TabsTrigger>
-              <TabsTrigger value="add" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Plus className="h-4 w-4" />
-                Add New
+              <TabsTrigger value="add" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Plus className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Add New</span>
+                <span className="sm:hidden">Add</span>
               </TabsTrigger>
-              <TabsTrigger value="automation" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Workflow className="h-4 w-4" />
-                Auto Scraper
+              <TabsTrigger value="automation" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Workflow className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Auto Scraper</span>
+                <span className="sm:hidden">Scraper</span>
               </TabsTrigger>
-              <TabsTrigger value="modifier" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Edit3 className="h-4 w-4" />
+              <TabsTrigger value="modifier" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Edit3 className="h-4 w-4 flex-shrink-0" />
                 Modifier
               </TabsTrigger>
-              <TabsTrigger value="feedback" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all relative cursor-pointer">
-                <MessageSquare className="h-4 w-4" />
+              <TabsTrigger value="feedback" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all relative cursor-pointer whitespace-nowrap">
+                <MessageSquare className="h-4 w-4 flex-shrink-0" />
                 Msgs
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Settings className="h-4 w-4" />
+              <TabsTrigger value="settings" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Settings className="h-4 w-4 flex-shrink-0" />
                 Settings
               </TabsTrigger>
-              <TabsTrigger value="system" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Activity className="h-4 w-4" />
-                System Status
+              <TabsTrigger value="system" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Activity className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">System Status</span>
+                <span className="sm:hidden">System</span>
               </TabsTrigger>
-              <TabsTrigger value="donate" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Heart className="h-4 w-4" />
+              <TabsTrigger value="donate" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Heart className="h-4 w-4 flex-shrink-0" />
                 Donate
               </TabsTrigger>
-              <TabsTrigger value="users" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Users className="h-4 w-4" />
+              <TabsTrigger value="users" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Users className="h-4 w-4 flex-shrink-0" />
                 Users
               </TabsTrigger>
-              <TabsTrigger value="requests" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <GamepadIcon className="h-4 w-4" />
+              <TabsTrigger value="requests" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <GamepadIcon className="h-4 w-4 flex-shrink-0" />
                 Requests
               </TabsTrigger>
-              <TabsTrigger value="publishers" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Building2 className="h-4 w-4" />
+              <TabsTrigger value="publishers" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Building2 className="h-4 w-4 flex-shrink-0" />
                 Publishers
               </TabsTrigger>
-              <TabsTrigger value="reports" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Flag className="h-4 w-4" />
+              <TabsTrigger value="reports" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Flag className="h-4 w-4 flex-shrink-0" />
                 Reports
               </TabsTrigger>
-              <TabsTrigger value="deletes" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Trash2 className="h-4 w-4" />
-                Delete Requests
+              <TabsTrigger value="deletes" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Trash2 className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Delete Requests</span>
+                <span className="sm:hidden">Deletes</span>
               </TabsTrigger>
-              <TabsTrigger value="genres" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 transition-all cursor-pointer">
-                <Tag className="h-4 w-4" />
+              <TabsTrigger value="genres" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Tag className="h-4 w-4 flex-shrink-0" />
                 Genres
               </TabsTrigger>
             </TabsList>
+            </div>
 
             {activeTab === "list" && (
               <div className="relative w-full md:w-64">

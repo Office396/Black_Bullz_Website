@@ -53,10 +53,6 @@ export interface Item {
     cloudName: string
     actualDownloadLinks: Array<{ name: string; url: string; size: string }>
   }>
-  preInstalledDownloads: Array<{
-    cloudName: string
-    actualDownloadLinks: Array<{ name: string; url: string; size: string }>
-  }>
   installableDownloads: Array<{
     cloudName: string
     actualDownloadLinks: Array<{ name: string; url: string; size: string }>
@@ -92,7 +88,6 @@ export async function getItems(): Promise<Item[]> {
       sharedPinCode: item.shared_pin_code,
       sharedRarPassword: item.shared_rar_password,
       cloudDownloads: item.cloud_downloads || [],
-      preInstalledDownloads: item.pre_installed_downloads || [],
       installableDownloads: item.installable_downloads || [],
       uploadDate: item.upload_date,
       updatedDate: item.updated_date,
@@ -148,7 +143,6 @@ export async function getItemById(id: number): Promise<Item | null> {
       sharedPinCode: data.shared_pin_code,
       sharedRarPassword: data.shared_rar_password,
       cloudDownloads: data.cloud_downloads || [],
-      preInstalledDownloads: data.pre_installed_downloads || [],
       installableDownloads: data.installable_downloads || [],
       uploadDate: data.upload_date,
       updatedDate: data.updated_date,
@@ -216,6 +210,7 @@ export async function getRelatedGames(category: string, excludeId: number): Prom
       sharedPinCode: "",
       sharedRarPassword: "",
       cloudDownloads: [],
+      installableDownloads: [],
       updatedDate: "",
       uploaderName: "",
       uploaderId: "",
@@ -290,6 +285,7 @@ export async function getItemsLight(): Promise<Item[]> {
       sharedPinCode: "",
       sharedRarPassword: "",
       cloudDownloads: [],
+      installableDownloads: [],
       updatedDate: "",
       uploaderName: "",
       uploaderId: "",
@@ -339,7 +335,6 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'update
     shared_pin_code: itemData.sharedPinCode,
     shared_rar_password: itemData.sharedRarPassword,
     cloud_downloads: itemData.cloudDownloads,
-    pre_installed_downloads: itemData.preInstalledDownloads || [],
     installable_downloads: itemData.installableDownloads || [],
     upload_date: now,
     updated_date: now
@@ -403,6 +398,7 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'update
     sharedPinCode: data.shared_pin_code,
     sharedRarPassword: data.shared_rar_password,
     cloudDownloads: data.cloud_downloads || [],
+    installableDownloads: data.installable_downloads || [],
     uploadDate: data.upload_date,
     updatedDate: data.updated_date,
     trailerUrl: data.trailer_url,
@@ -443,7 +439,6 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
   if (itemData.sharedPinCode !== undefined) dbUpdate.shared_pin_code = itemData.sharedPinCode
   if (itemData.sharedRarPassword !== undefined) dbUpdate.shared_rar_password = itemData.sharedRarPassword
   if (itemData.cloudDownloads !== undefined) dbUpdate.cloud_downloads = itemData.cloudDownloads
-  if (itemData.preInstalledDownloads !== undefined) dbUpdate.pre_installed_downloads = itemData.preInstalledDownloads
   if (itemData.installableDownloads !== undefined) dbUpdate.installable_downloads = itemData.installableDownloads
   if (itemData.uploadDate !== undefined) dbUpdate.upload_date = itemData.uploadDate
   if (itemData.trailerUrl !== undefined) dbUpdate.trailer_url = itemData.trailerUrl
@@ -488,6 +483,7 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
     sharedPinCode: data.shared_pin_code,
     sharedRarPassword: data.shared_rar_password,
     cloudDownloads: data.cloud_downloads || [],
+    installableDownloads: data.installable_downloads || [],
     uploadDate: data.upload_date,
     updatedDate: data.updated_date,
     trailerUrl: data.trailer_url,
@@ -506,40 +502,19 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
 
 export async function deleteItem(id: number): Promise<boolean> {
   try {
-    // First, delete all associated comments
-    const { error: commentsError } = await supabase
-      .from('comments')
-      .delete()
-      .eq('item_id', id)
+    await supabase.from('comments').delete().eq('item_id', id)
+    await supabase.from('download_pages').delete().eq('game_id', id)
+    await supabase.from('game_reviews').delete().eq('game_id', id)
+    await supabase.from('game_reports').delete().eq('game_id', id)
+    await supabase.from('game_requests').delete().eq('game_id', id)
+    await supabase.from('user_favourites').delete().eq('game_id', id)
+    await supabase.from('user_watch_history').delete().eq('game_id', id)
 
-    if (commentsError) {
-      console.error('Error deleting associated comments:', commentsError)
-      // Continue with deletion even if comments fail to delete
-    }
-
-    // Then delete all associated download pages
-    const { error: downloadPagesError } = await supabase
-      .from('download_pages')
-      .delete()
-      .eq('game_id', id)
-
-    if (downloadPagesError) {
-      console.error('Error deleting associated download pages:', downloadPagesError)
-      // Continue with item deletion even if download pages fail to delete
-    }
-
-    // Then delete the item itself
-    const { error: itemError } = await supabase
-      .from('items')
-      .delete()
-      .eq('id', id)
-
+    const { error: itemError } = await supabase.from('items').delete().eq('id', id)
     if (itemError) {
       console.error('Error deleting item:', itemError)
       return false
     }
-
-    console.log(`Successfully deleted item ${id}, all associated comments, and download pages`)
     return true
   } catch (error) {
     console.error('Error in deleteItem:', error)

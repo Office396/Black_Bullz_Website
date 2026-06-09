@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Database, Server, Globe, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
+import { RefreshCw, Database, Server, Globe, AlertTriangle, CheckCircle, XCircle, Trash2 } from 'lucide-react'
 
 interface SystemStatus {
   supabase: {
@@ -43,6 +43,10 @@ export default function AdminSystemStatus() {
   const [status, setStatus] = useState<SystemStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showNukeConfirm, setShowNukeConfirm] = useState(false)
+  const [nukeLoading, setNukeLoading] = useState(false)
+  const [nukeResult, setNukeResult] = useState<string | null>(null)
+  const [nukeStep, setNukeStep] = useState(0)
 
   const fetchStatus = async () => {
     try {
@@ -66,6 +70,32 @@ export default function AdminSystemStatus() {
   useEffect(() => {
     fetchStatus()
   }, [])
+
+  const handleNuke = async () => {
+    setNukeLoading(true)
+    setNukeResult(null)
+    setNukeStep(1)
+    try {
+      const response = await fetch('/api/admin/nuke', { method: 'POST' })
+      const result = await response.json()
+      if (result.success) {
+        setNukeResult(`Successfully deleted ${result.totalDeleted} total records from all tables.`)
+        fetchStatus()
+      } else {
+        const errors = Object.entries(result.results || {})
+          .filter(([_, r]: [string, any]) => !r.success)
+          .map(([table, r]: [string, any]) => `${table}: ${r.error}`)
+          .join(', ')
+        setNukeResult(`Partial success. Errors: ${errors}`)
+        fetchStatus()
+      }
+    } catch (err: any) {
+      setNukeResult(`Error: ${err.message}`)
+    } finally {
+      setNukeLoading(false)
+      setNukeStep(0)
+    }
+  }
 
   if (loading) {
     return (
@@ -177,6 +207,25 @@ export default function AdminSystemStatus() {
               Export All Games Details to Text File
             </Button>
           </div>
+
+          <div className="pt-4 border-t mt-4 flex justify-between items-center">
+            <div>
+              <span className="text-sm text-red-400 font-semibold">Danger Zone</span>
+              <p className="text-xs text-gray-500 mt-0.5">Permanently delete ALL data from the database</p>
+            </div>
+            <Button onClick={() => { setShowNukeConfirm(true); setNukeResult(null) }} className="bg-red-600 hover:bg-red-700 text-white">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete All Data
+            </Button>
+          </div>
+
+          {nukeResult && (
+            <Alert className={`mt-3 ${nukeResult.includes('Error') || nukeResult.includes('Partial') ? 'border-red-500/50 bg-red-500/10' : 'border-green-500/50 bg-green-500/10'}`}>
+              <AlertDescription className={nukeResult.includes('Error') || nukeResult.includes('Partial') ? 'text-red-300' : 'text-green-300'}>
+                {nukeResult}
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
@@ -286,6 +335,61 @@ export default function AdminSystemStatus() {
           Refresh Status
         </Button>
       </div>
+
+      {/* Nuke Confirmation Modal */}
+      {showNukeConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => !nukeLoading && setShowNukeConfirm(false)}>
+          <div className="bg-[#120b22] border border-red-500/40 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl shadow-red-500/10" onClick={e => e.stopPropagation()}>
+            {!nukeLoading ? (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle className="w-6 h-6 text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">Delete All Data?</h3>
+                    <p className="text-gray-400 text-sm">This cannot be undone</p>
+                  </div>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-4">
+                  <p className="text-red-300 text-sm font-semibold mb-2">This will permanently delete:</p>
+                  <ul className="text-red-200/70 text-xs space-y-1">
+                    <li>• All games & software items</li>
+                    <li>• All comments & reactions</li>
+                    <li>• All reviews & ratings</li>
+                    <li>• All download pages & tokens</li>
+                    <li>• All user accounts & sessions</li>
+                    <li>• All favourites & watch history</li>
+                    <li>• All notifications</li>
+                    <li>• All contact messages</li>
+                    <li>• All page modifiers</li>
+                  </ul>
+                  <p className="text-green-300/70 text-xs mt-2">✓ Admin credentials will be kept</p>
+                </div>
+                <div className="flex gap-3">
+                  <Button onClick={() => setShowNukeConfirm(false)} variant="outline" className="flex-1 border-[#2d1b54] text-gray-400 hover:bg-white/5">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleNuke} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Yes, Delete Everything
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-4">
+                <div className="w-16 h-16 mx-auto mb-4 relative">
+                  <div className="absolute inset-0 border-4 border-red-500/20 rounded-full" />
+                  <div className="absolute inset-0 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+                  <Trash2 className="w-6 h-6 text-red-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                </div>
+                <p className="text-white font-semibold">Deleting all data...</p>
+                <p className="text-gray-400 text-sm mt-1">This may take a moment</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

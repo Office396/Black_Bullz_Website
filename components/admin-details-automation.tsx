@@ -149,7 +149,7 @@ export default function AdminDetailsAutomation() {
                     rating: merged.rating || '4.0',
                     latest: true,
                     keyFeatures: merged.genres || [],
-                    screenshots: (merged.screenshots || []).slice(0, 6),
+                    screenshots: merged.screenshots || [],
                     note: merged.languages ? `Languages: ${merged.languages}\nOriginal Size: ${merged.originalSize || 'N/A'}\nRepack Size: ${merged.repackSize || 'N/A'}` : undefined,
                     systemRequirements: {
                         recommended: {

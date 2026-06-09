@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPageModifierData, updateGameOfTheDay, type GameOfTheDay } from '@/lib/server/page-modifier-store'
+import { sendBroadcastNotification } from '@/lib/server/user-store'
 
 export async function GET() {
   try {
@@ -19,6 +20,10 @@ export async function POST(request: Request) {
     
     if (!success) {
       return NextResponse.json({ success: false, error: 'Failed to update game of the day' }, { status: 500 })
+    }
+
+    if (game?.title) {
+      await sendBroadcastNotification('Game of the Day', `Today's pick: ${game.title} — check it out!`, 'success')
     }
 
     return NextResponse.json({ success: true })

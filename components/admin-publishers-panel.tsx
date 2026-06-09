@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, Trash2, Edit2, Save, X } from 'lucide-react'
 
-const EMPTY_PUB = { name: '', biography: '', overview: '', known_for: '', gender: '', birth_place: '', birthday: '', logo_url: '', banner_url: '', website: '' }
+const EMPTY_PUB = { name: '', biography: '', overview: '', known_for: '', birth_place: '', birthday: '', logo_url: '', banner_url: '', website: '' }
 
 export default function AdminPublishersPanel() {
   const [publishers, setPublishers] = useState<any[]>([])
@@ -69,7 +69,7 @@ export default function AdminPublishersPanel() {
   const startEdit = (pub: any) => {
     setEditing(pub)
     setCreating(false)
-    setForm({ name: pub.name || '', biography: pub.biography || '', overview: pub.overview || '', known_for: pub.known_for || '', gender: pub.gender || '', birth_place: pub.birth_place || '', birthday: pub.birthday || '', logo_url: pub.logo_url || '', banner_url: pub.banner_url || '', website: pub.website || '' })
+    setForm({ name: pub.name || '', biography: pub.biography || '', overview: pub.overview || '', known_for: pub.known_for || '', birth_place: pub.birth_place || '', birthday: pub.birthday || '', logo_url: pub.logo_url || '', banner_url: pub.banner_url || '', website: pub.website || '' })
   }
 
   const cancel = () => { setEditing(null); setCreating(false); setForm(EMPTY_PUB) }
@@ -79,7 +79,6 @@ export default function AdminPublishersPanel() {
     { key: 'overview', label: 'Overview', type: 'textarea' },
     { key: 'biography', label: 'Biography', type: 'textarea' },
     { key: 'known_for', label: 'Known For', type: 'input' },
-    { key: 'gender', label: 'Gender', type: 'input' },
     { key: 'birth_place', label: 'Birth Place', type: 'input' },
     { key: 'birthday', label: 'Birthday', type: 'input', placeholder: '01 Jan, 1983' },
     { key: 'logo_url', label: 'Logo URL', type: 'input' },
@@ -148,7 +147,6 @@ export default function AdminPublishersPanel() {
                 {pub.overview && <p className="text-gray-400 text-xs mt-1 line-clamp-2">{pub.overview}</p>}
                 {pub.fromItems && <p className="text-gray-600 text-xs mt-1">Add full profile by clicking Edit</p>}
                 <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
-                  {pub.gender && <span>Gender: {pub.gender}</span>}
                   {pub.birth_place && <span>From: {pub.birth_place}</span>}
                   {pub.birthday && <span>Born: {pub.birthday}</span>}
                 </div>

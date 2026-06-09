@@ -524,7 +524,7 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
 
             {/* Screenshots */}
             <Card className="bg-[#120b22] border-[#2d1b54]">
-              <CardHeader className="pb-4"><CardTitle className="text-white text-lg">Screenshots (Max 5)</CardTitle></CardHeader>
+              <CardHeader className="pb-4"><CardTitle className="text-white text-lg">Screenshots</CardTitle></CardHeader>
               <CardContent className="space-y-4 px-4 md:px-6">
                 {formData.screenshots.map((screenshot, index) => (
                   <div key={index} className="flex gap-2">
@@ -536,9 +536,7 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
                     <Button type="button" onClick={() => setFormData({ ...formData, screenshots: formData.screenshots.filter((_, i) => i !== index) })} variant="outline" size="sm" className="bg-[#1a103c] border-[#2d1b54] text-red-400 h-10 w-10 p-0"><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 ))}
-                {formData.screenshots.length < 5 && (
-                  <Button type="button" onClick={() => setFormData({ ...formData, screenshots: [...formData.screenshots, ""] })} variant="outline" className="bg-[#1a103c] border-[#2d1b54] text-white w-full md:w-auto"><Plus className="h-4 w-4 mr-2" />Add Screenshot</Button>
-                )}
+                <Button type="button" onClick={() => setFormData({ ...formData, screenshots: [...formData.screenshots, ""] })} variant="outline" className="bg-[#1a103c] border-[#2d1b54] text-white w-full md:w-auto"><Plus className="h-4 w-4 mr-2" />Add Screenshot</Button>
               </CardContent>
             </Card>
 

@@ -525,3 +525,7 @@ main {
 .quill-content p:last-child {
   margin-bottom: 0;
 }
+.quill-content strong {
+  font-weight: 800;
+  color: inherit;
+}

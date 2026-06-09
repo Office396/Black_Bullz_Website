@@ -1,5 +1,4 @@
--- Add columns for Pre-installed and Installable download sections
-ALTER TABLE items ADD COLUMN IF NOT EXISTS pre_installed_downloads JSONB DEFAULT '[]';
+-- Add column for Installable download section (Pre-installed uses existing cloud_downloads column)
 ALTER TABLE items ADD COLUMN IF NOT EXISTS installable_downloads JSONB DEFAULT '[]';
 
 -- Enable RLS if needed (optional, depends on your setup)

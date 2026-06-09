@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { getUserByToken } from '@/lib/server/user-store'
+import { getUserByToken, sendNotification } from '@/lib/server/user-store'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -74,7 +74,12 @@ export async function PATCH(req: NextRequest) {
 
   // Admin status update
   if (status && reviewId && isAdmin) {
+    const { data: review } = await supabase.from('game_reviews').select('user_id, game_title').eq('id', reviewId).single()
     await supabase.from('game_reviews').update({ status }).eq('id', reviewId)
+    if (review?.user_id && !review.user_id.startsWith('auto_')) {
+      const statusText = status === 'approved' ? 'approved' : 'rejected'
+      await sendNotification({ user_id: review.user_id, title: `Review ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`, message: `Your review for ${review.game_title || 'a game'} has been ${statusText}`, type: status === 'approved' ? 'success' : 'warning' })
+    }
     return NextResponse.json({ success: true })
   }
   

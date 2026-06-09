@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { getUserByToken } from '@/lib/server/user-store'
+import { getUserByToken, sendNotification } from '@/lib/server/user-store'
 
 // GET - Get all delete requests (for admin)
 export async function GET(req: NextRequest) {
@@ -94,14 +94,19 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (action === 'approve') {
-    // Delete the comment
+    const { data: deleteReq } = await supabase.from('delete_requests').select('comment_id, user_id').eq('id', id).single()
     await supabase.from('comments').delete().eq('id', deleteReq.comment_id)
-    // Update request status
     await supabase.from('delete_requests').update({ status: 'approved' }).eq('id', id)
+    if (deleteReq?.user_id) {
+      await sendNotification({ user_id: deleteReq.user_id, title: 'Delete Request Approved', message: 'Your comment deletion request has been approved and the comment has been removed.', type: 'success' })
+    }
     return NextResponse.json({ success: true })
   } else if (action === 'reject') {
-    // Just update request status
+    const { data: deleteReq } = await supabase.from('delete_requests').select('user_id').eq('id', id).single()
     await supabase.from('delete_requests').update({ status: 'rejected' }).eq('id', id)
+    if (deleteReq?.user_id) {
+      await sendNotification({ user_id: deleteReq.user_id, title: 'Delete Request Rejected', message: 'Your comment deletion request has been reviewed but could not be approved.', type: 'warning' })
+    }
     return NextResponse.json({ success: true })
   }
 

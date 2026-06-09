@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getItems, addItem, updateItem, deleteItem, type Item } from '@/lib/server/items-store'
 import { supabase } from '@/lib/supabase'
 import { FAKE_USERNAMES, BADGES } from '@/lib/usernames'
+import { sendBroadcastNotification } from '@/lib/server/user-store'
 
 export async function GET() {
   try {
@@ -77,6 +78,8 @@ export async function POST(request: Request) {
         status: 'approved',
       })
     } catch (e) { console.error('Auto review error:', e) }
+
+    await sendBroadcastNotification('New Game Available', `${newItem.title} is now available on Bullz Games — check it out!`, 'success')
 
     return NextResponse.json({ success: true, data: newItem })
   } catch (error) {

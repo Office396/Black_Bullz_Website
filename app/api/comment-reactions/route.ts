@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { getUserByToken } from '@/lib/server/user-store'
+import { getUserByToken, sendNotification } from '@/lib/server/user-store'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -90,6 +90,14 @@ export async function POST(req: NextRequest) {
   } else {
     await supabase.rpc('increment_comment_dislikes', { p_comment_id: commentId })
   }
+
+  try {
+    const { data: comment } = await supabase.from('comments').select('user_id, author, item_name').eq('id', commentId).single()
+    if (comment?.user_id && comment.user_id !== user.id) {
+      const reactionText = reaction === 'like' ? 'liked' : 'disliked'
+      await sendNotification({ user_id: comment.user_id, title: `Comment ${reactionText}`, message: `${user.name} ${reactionText} your comment on ${comment.item_name || 'a game'}`, type: 'info' })
+    }
+  } catch {}
 
   return NextResponse.json({ success: true, action: 'added', reaction })
 }

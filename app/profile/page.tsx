@@ -5,13 +5,12 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
 import { useUser } from "@/lib/user-context"
-import { User, History, Star, Settings, Crown, Camera, Save, AlertTriangle, Bell, Eye, EyeOff, Trash2, ThumbsUp } from "lucide-react"
+import { User, History, Star, Settings, Crown, Camera, Save, AlertTriangle, Bell, Eye, EyeOff, Trash2, ThumbsUp, CheckCheck, Check } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { SafeImage } from "@/components/safe-image"
 
 function ProfileContent() {
-  const { user, token, logout, refreshUser } = useUser()
+  const { user, token, logout, refreshUser, notifications, unreadCount, markNotificationsRead, markNotificationRead, deleteAllNotifications } = useUser()
   const router = useRouter()
   const searchParams = useSearchParams()
   const tab = searchParams.get("tab") || "overview"
@@ -20,6 +19,7 @@ function ProfileContent() {
   const [historyGames, setHistoryGames] = useState<any[]>([])
   const [likedGames, setLikedGames] = useState<any[]>([])
   const [allGames, setAllGames] = useState<any[]>([])
+  const [notifLoading, setNotifLoading] = useState(false)
 
   // Profile edit
   const [name, setName] = useState("")
@@ -130,6 +130,7 @@ function ProfileContent() {
 
   const tabs = [
     { id: "overview", label: "Overview", icon: User },
+    { id: "notifications", label: "Notifications", icon: Bell, badge: unreadCount },
     { id: "history", label: "Watch History", icon: History },
     { id: "favourites", label: "Favourites", icon: Star },
     { id: "likes", label: "Likes", icon: ThumbsUp },
@@ -148,7 +149,7 @@ function ProfileContent() {
           const bgImg = bgGame?.landscapeImage || null
           return bgImg ? (
             <>
-              <SafeImage src={bgImg} alt="" fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" />
+              <img src={bgImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/55" style={{ backdropFilter: "blur(0.5px)" }} />
             </>
           ) : (
@@ -162,7 +163,7 @@ function ProfileContent() {
         <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12 mb-6">
           <div className="flex flex-col items-center gap-2">
             <div className="relative w-24 h-24 rounded-full ring-4 ring-[#090514] overflow-hidden bg-gradient-to-br from-[#9d4edd] to-[#7b2cbf] flex items-center justify-center text-white text-3xl font-black flex-shrink-0">
-              {user.avatar ? <SafeImage src={user.avatar} alt="" fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
+              {user.avatar ? <img src={user.avatar} alt="" className="absolute inset-0 w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
             </div>
             {/* Like/Dislike counts below avatar */}
             <div className="flex items-center gap-3">
@@ -212,10 +213,15 @@ function ProfileContent() {
         <div className="flex gap-1 border-b border-[#2d1b54] mb-6 overflow-x-auto scrollbar-hide">
           {tabs.map(t => (
             <Link key={t.id} href={`/profile?tab=${t.id}`}
-              className={cn("flex items-center gap-2 px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors",
+              className={cn("flex items-center gap-2 px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors relative",
                 tab === t.id ? "border-[#9d4edd] text-[#9d4edd]" : "border-transparent text-gray-400 hover:text-white")}>
               <t.icon className="w-4 h-4" />
               {t.label}
+              {'badge' in t && t.badge > 0 && (
+                <span className="ml-1 w-5 h-5 bg-red-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+                  {t.badge > 9 ? '9+' : t.badge}
+                </span>
+              )}
             </Link>
           ))}
         </div>
@@ -229,9 +235,9 @@ function ProfileContent() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                 {historyGames.slice(0, 6).map(g => (
-                  <Link key={g.id} href={`/game/${g.id}`} className="group">
+                  <Link key={g.id} href={`/game/${g.id}`} className="group block">
                     <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c] relative">
-                      <SafeImage src={g.image || "/placeholder.svg"} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <img src={g.image || "/placeholder.svg"} alt={g.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     </div>
                     <p className="text-gray-300 text-xs mt-1.5 line-clamp-1 group-hover:text-white transition-colors">{g.title}</p>
                     <div className="flex items-center gap-1 mt-0.5">
@@ -252,18 +258,12 @@ function ProfileContent() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {historyGames.map(g => (
-                  <div key={g.id} className="group">
-                    <Link href={`/game/${g.id}`}>
-                      <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                        <SafeImage src={g.image || "/placeholder.svg"} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      </div>
-                      <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
-                    </Link>
-                    <Link href={`/game/${g.id}#reviews`} className="flex items-center gap-1 mt-0.5 hover:opacity-80 transition-opacity">
-                      {[1,2,3,4,5].map(s => <Star key={s} className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />)}
-                      <span className="text-[#9d4edd] text-[10px] ml-1">Review</span>
-                    </Link>
-                  </div>
+                  <Link key={g.id} href={`/game/${g.id}`} className="group block">
+                    <div className="aspect-video rounded-xl overflow-hidden bg-[#1a103c] relative">
+                      <img src={g.image || "/placeholder.svg"} alt={g.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                    <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
+                  </Link>
                 ))}
               </div>
             )}
@@ -278,18 +278,12 @@ function ProfileContent() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {favouriteGames.map(g => (
-                  <div key={g.id} className="group">
-                    <Link href={`/game/${g.id}`}>
-                      <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                        <SafeImage src={g.image || "/placeholder.svg"} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      </div>
-                      <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
-                    </Link>
-                    <Link href={`/game/${g.id}#reviews`} className="flex items-center gap-1 mt-0.5 hover:opacity-80 transition-opacity">
-                      {[1,2,3,4,5].map(s => <Star key={s} className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />)}
-                      <span className="text-[#9d4edd] text-[10px] ml-1">Review</span>
-                    </Link>
-                  </div>
+                  <Link key={g.id} href={`/game/${g.id}`} className="group block">
+                    <div className="aspect-video rounded-xl overflow-hidden bg-[#1a103c] relative">
+                      <img src={g.image || "/placeholder.svg"} alt={g.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                    <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
+                  </Link>
                 ))}
               </div>
             )}
@@ -304,12 +298,63 @@ function ProfileContent() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {likedGames.map(g => (
-                  <Link key={g.id} href={`/game/${g.id}`} className="group">
-                    <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
-                      <SafeImage src={g.image || "/placeholder.svg"} alt={g.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <Link key={g.id} href={`/game/${g.id}`} className="group block">
+                    <div className="aspect-video rounded-xl overflow-hidden bg-[#1a103c] relative">
+                      <img src={g.image || "/placeholder.svg"} alt={g.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     </div>
                     <p className="text-gray-300 text-xs mt-1.5 line-clamp-2 group-hover:text-white transition-colors">{g.title}</p>
                   </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === "notifications" && (
+          <div className="pb-12 max-w-3xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-white font-bold">All Notifications</h2>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button onClick={() => markNotificationsRead()} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#9d4edd]/20 text-[#c77dff] hover:bg-[#9d4edd]/30 transition-colors">
+                    <CheckCheck className="w-3.5 h-3.5" /> Mark all as read
+                  </button>
+                )}
+                {notifications.length > 0 && (
+                  <button onClick={() => { if (confirm('Delete ALL notifications? This cannot be undone.')) deleteAllNotifications() }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" /> Delete All
+                  </button>
+                )}
+              </div>
+            </div>
+            {notifications.length === 0 ? (
+              <div className="text-center py-16">
+                <Bell className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">No notifications yet</p>
+                <p className="text-gray-600 text-xs mt-1">When something happens, you'll see it here</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {notifications.map(n => (
+                  <div key={n.id} onClick={() => !n.is_read && markNotificationRead(n.id)}
+                    className={cn("flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer hover:border-[#9d4edd]/30",
+                      n.is_read ? "bg-[#120b22] border-[#2d1b54]/50 opacity-70" : "bg-[#9d4edd]/5 border-[#9d4edd]/20")}>
+                    <div className={cn("w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0", n.type === 'success' ? 'bg-green-400' : n.type === 'error' ? 'bg-red-400' : 'bg-[#9d4edd]')} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-white text-sm font-semibold">{n.title}</p>
+                        {!n.is_read && <span className="w-2 h-2 bg-[#9d4edd] rounded-full flex-shrink-0" />}
+                      </div>
+                      <p className="text-gray-400 text-sm mt-0.5">{n.message}</p>
+                      <p className="text-gray-600 text-xs mt-1.5">{new Date(n.created_at).toLocaleString()}</p>
+                    </div>
+                    {!n.is_read && (
+                      <button onClick={(e) => { e.stopPropagation(); markNotificationRead(n.id) }}
+                        className="text-[#9d4edd] hover:text-[#c77dff] p-1 rounded-lg hover:bg-[#9d4edd]/10 transition-colors flex-shrink-0">
+                        <Check className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

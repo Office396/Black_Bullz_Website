@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Star } from "lucide-react"
+import { useRef, useCallback } from "react"
 
 interface GameItem {
     id: number
@@ -19,6 +20,11 @@ interface GameItem {
 interface FeaturedGameProps {
     game: GameItem | null
     trailerUrl?: string
+}
+
+function isValidUrl(str: string): boolean {
+    if (!str || str === 'null' || str === 'undefined') return false
+    try { new URL(str); return true } catch { return str.startsWith('/') }
 }
 
 // Helper function to detect video type and create proper embed
@@ -46,7 +52,7 @@ function getVideoEmbedConfig(url: string): { type: 'youtube' | 'video' | 'iframe
         if (videoId) {
             return {
                 type: 'youtube',
-                embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`
+                embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&end=0&version=3`
             }
         }
     }
@@ -73,6 +79,14 @@ export function FeaturedGame({ game, trailerUrl }: FeaturedGameProps) {
     if (!game) return null
     
     const videoConfig = trailerUrl ? getVideoEmbedConfig(trailerUrl) : null
+    const videoRef = useRef<HTMLVideoElement>(null)
+
+    const handleVideoEnded = useCallback(() => {
+        if (videoRef.current) {
+            videoRef.current.currentTime = 0
+            videoRef.current.play().catch(() => {})
+        }
+    }, [])
 
     const today = new Date().toLocaleDateString('en-US', {
         year: 'numeric',
@@ -82,17 +96,19 @@ export function FeaturedGame({ game, trailerUrl }: FeaturedGameProps) {
 
     return (
         <section className="py-6">
-            <div className="relative bg-[#120b22]/40 dark:bg-[#120b22]/40 border border-[#2d1b54]/50 rounded-2xl overflow-hidden backdrop-blur-sm min-h-[400px] keep-white">
+            <div className="relative bg-[#120b22]/40 dark:bg-[#120b22]/40 rounded-2xl overflow-hidden backdrop-blur-sm min-h-[500px] keep-white">
                 {/* Video Background - Supports YouTube, direct video files, and other platforms */}
                 {videoConfig && (
                     <div className="absolute inset-0 z-0">
                         {videoConfig.type === 'video' ? (
                             // Direct video file (MP4, WebM, etc.)
                             <video
+                                ref={videoRef}
                                 autoPlay
                                 loop
                                 muted
                                 playsInline
+                                onEnded={handleVideoEnded}
                                 className="absolute inset-0 w-full h-full object-cover"
                                 style={{
                                     width: '100%',
@@ -126,10 +142,10 @@ export function FeaturedGame({ game, trailerUrl }: FeaturedGameProps) {
                 )}
 
                 {/* Static background blur if no trailer */}
-                {!videoConfig && (
+                {!videoConfig && isValidUrl(game.image) && (
                     <div className="absolute top-0 right-0 w-1/2 h-full opacity-20">
                         <Image
-                            src={game.image || "/placeholder.svg"}
+                            src={game.image}
                             alt=""
                             fill
                             className="object-cover blur-2xl"
@@ -138,17 +154,21 @@ export function FeaturedGame({ game, trailerUrl }: FeaturedGameProps) {
                     </div>
                 )}
 
-                <div className="relative z-10 flex flex-col md:flex-row gap-6 p-6 md:p-8 min-h-[400px]">
+                <div className="relative z-10 flex flex-col md:flex-row gap-6 p-6 md:p-8 min-h-[500px]">
                     {/* Game Cover */}
-                    <div className="relative w-48 h-64 md:w-56 md:h-72 flex-shrink-0 mx-auto md:mx-0">
+                    <div className="relative w-48 h-64 md:w-60 md:h-80 flex-shrink-0 mx-auto md:mx-0">
                         <div className="relative w-full h-full rounded-xl overflow-hidden shadow-2xl shadow-black/40 ring-1 ring-white/10">
-                            <Image
-                                src={game.image || "/placeholder.svg"}
-                                alt={game.title}
-                                fill
-                                className="object-cover"
-                                sizes="224px"
-                            />
+                            {isValidUrl(game.image) ? (
+                                <Image
+                                    src={game.image}
+                                    alt={game.title}
+                                    fill
+                                    className="object-cover"
+                                    sizes="224px"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-[#1a103c] flex items-center justify-center text-gray-500 text-sm">No Image</div>
+                            )}
                             {/* Star badge */}
                             <div className="absolute top-2 right-2 w-8 h-8 bg-[#9d4edd] rounded-full flex items-center justify-center shadow-lg z-10">
                                 <Star className="w-4 h-4 text-white fill-white" />

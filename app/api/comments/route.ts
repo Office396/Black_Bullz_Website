@@ -9,6 +9,7 @@ import {
   reactToComment,
   setCommentStatus,
 } from "@/lib/server/data-store"
+import { sendNotification } from "@/lib/server/user-store"
 
 function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 })
@@ -60,6 +61,12 @@ export async function POST(req: NextRequest) {
         if (!itemId || !parentId || !itemName || !author || !content) return badRequest("Missing required fields")
         const isAdmin = adminToken === "authenticated"
         const updated = await addReply({ itemId: Number(itemId), parentId: Number(parentId), itemName, author, email, content, avatar, userBadge, userBadgeColor, isAdmin })
+        if (!isAdmin) {
+          const { data: parentComment } = await supabase.from('comments').select('user_id, author').eq('id', parentId).single()
+          if (parentComment?.user_id) {
+            await sendNotification({ user_id: parentComment.user_id, title: 'New Reply', message: `${author} replied to your comment on ${itemName}`, type: 'info' })
+          }
+        }
         return NextResponse.json({ success: true, data: updated })
       }
       case "react": {
@@ -86,7 +93,12 @@ export async function POST(req: NextRequest) {
         const { targetId, approvalStatus, adminToken } = body || {}
         if (adminToken !== "authenticated") return forbidden("Admin token required")
         if (!targetId) return badRequest("Missing targetId")
+        const { data: comment } = await supabase.from('comments').select('user_id, author, item_name').eq('id', targetId).single()
         await supabase.from('comments').update({ approval_status: approvalStatus }).eq('id', targetId)
+        if (comment?.user_id) {
+          const statusText = approvalStatus === 'approved' ? 'approved' : 'rejected'
+          await sendNotification({ user_id: comment.user_id, title: `Comment ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`, message: `Your comment on ${comment.item_name || 'a game'} has been ${statusText}`, type: approvalStatus === 'approved' ? 'success' : 'warning' })
+        }
         return NextResponse.json({ success: true })
       }
       default:
