@@ -39,10 +39,13 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const method = request.method
 
-  // Protect ALL /api/admin/* routes (GET, POST, PUT, DELETE)
+  // Protect /api/admin/* routes EXCEPT login (POST /api/admin) and get username (GET /api/admin)
   if (pathname.startsWith('/api/admin')) {
-    const denied = await requireAdminAuth(request)
-    if (denied) return denied
+    const isLoginOrGetAdmin = pathname === '/api/admin' && (method === 'POST' || method === 'GET')
+    if (!isLoginOrGetAdmin) {
+      const denied = await requireAdminAuth(request)
+      if (denied) return denied
+    }
   }
 
   // Protect /api/items for write operations (POST, PUT, PATCH, DELETE)
