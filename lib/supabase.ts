@@ -37,14 +37,6 @@ export interface Database {
               sound_card: string
             }
           }
-          android_requirements: {
-            recommended: {
-              os: string
-              ram: string
-              storage: string
-              processor: string
-            }
-          }
           shared_pin_code: string
           shared_rar_password: string | null
           cloud_downloads: Array<{
@@ -80,14 +72,6 @@ export interface Database {
               sound_card: string
             }
           }
-          android_requirements?: {
-            recommended: {
-              os: string
-              ram: string
-              storage: string
-              processor: string
-            }
-          }
           shared_pin_code: string
           shared_rar_password?: string | null
           cloud_downloads?: Array<{
@@ -119,14 +103,6 @@ export interface Database {
               memory: string
               graphics: string
               storage: string
-            }
-          }
-          android_requirements?: {
-            recommended: {
-              os: string
-              ram: string
-              storage: string
-              processor: string
             }
           }
           shared_pin_code?: string

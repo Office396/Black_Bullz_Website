@@ -10,8 +10,8 @@ import { BFCacheFix } from "@/components/bfcache-fix"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "BullzGamez - Free PC Games(Pre-Installed & Installable), Android Apps(Mode APKS)",
-  description: "Download the latest free PC games (Pre-Installed & Installable), Android apps(Mode APKS) for free. No registration required.",
+  title: "BullzGamez - Free PC Games (Pre-Installed & Installable)",
+  description: "Download the latest free PC games (Pre-Installed & Installable) for free. No registration required.",
   generator: "BullzGamez",
   icons: {
     icon: "/bull-logo.png",

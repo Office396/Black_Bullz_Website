@@ -16,7 +16,8 @@ import AdminDetailsAutomation from "@/components/admin-details-automation"
 import AdminPublishersPanel from "@/components/admin-publishers-panel"
 import AdminReportsPanel from "@/components/admin-reports-panel"
 import AdminGenresPanel from "@/components/admin-genres-panel"
-import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow, Heart, Users, Bell, GamepadIcon, Building2, Flag, Tag, Trash2 } from "lucide-react"
+import AdminOperationsDashboard from "@/components/admin-operations-dashboard"
+import { LogOut, Plus, List, Settings, Search, MessageSquare, Activity, Edit3, Workflow, Heart, Users, Bell, GamepadIcon, Building2, Flag, Tag, Trash2, Server } from "lucide-react"
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -128,6 +129,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <Tag className="h-4 w-4 flex-shrink-0" />
                 Genres
               </TabsTrigger>
+              <TabsTrigger value="operations" className="data-[state=active]:bg-[#9d4edd] data-[state=active]:text-white text-gray-400 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap">
+                <Server className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Operations</span>
+                <span className="sm:hidden">Ops</span>
+              </TabsTrigger>
             </TabsList>
             </div>
 
@@ -208,6 +214,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
           <TabsContent value="genres" className="mt-0 outline-none">
             <AdminGenresPanel />
+          </TabsContent>
+
+          <TabsContent value="operations" className="mt-0 outline-none">
+            <AdminOperationsDashboard />
           </TabsContent>
         </Tabs>
       </div>

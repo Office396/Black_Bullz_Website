@@ -39,14 +39,6 @@ export interface Item {
       storage: string
     }
   }
-  androidRequirements: {
-    recommended: {
-      os: string
-      ram: string
-      storage: string
-      processor: string
-    }
-  }
   sharedPinCode: string
   sharedRarPassword?: string
   cloudDownloads: Array<{
@@ -84,7 +76,6 @@ export async function getItems(): Promise<Item[]> {
       screenshots: item.screenshots || [],
       note: item.note || "",
       systemRequirements: item.system_requirements,
-      androidRequirements: item.android_requirements,
       sharedPinCode: item.shared_pin_code,
       sharedRarPassword: item.shared_rar_password,
       cloudDownloads: item.cloud_downloads || [],
@@ -139,7 +130,6 @@ export async function getItemById(id: number): Promise<Item | null> {
       screenshots: data.screenshots || [],
       note: data.note || "",
       systemRequirements: data.system_requirements,
-      androidRequirements: data.android_requirements,
       sharedPinCode: data.shared_pin_code,
       sharedRarPassword: data.shared_rar_password,
       cloudDownloads: data.cloud_downloads || [],
@@ -206,7 +196,7 @@ export async function getRelatedGames(category: string, excludeId: number): Prom
       steamUrl: "",
       edition: "",
       systemRequirements: { recommended: { os: "", processor: "", memory: "", graphics: "", storage: "" } },
-      androidRequirements: { recommended: { os: "", ram: "", storage: "", processor: "" } },
+
       sharedPinCode: "",
       sharedRarPassword: "",
       cloudDownloads: [],
@@ -281,7 +271,7 @@ export async function getItemsLight(): Promise<Item[]> {
       steamUrl: "",
       edition: "",
       systemRequirements: { recommended: { os: "", processor: "", memory: "", graphics: "", storage: "" } },
-      androidRequirements: { recommended: { os: "", ram: "", storage: "", processor: "" } },
+
       sharedPinCode: "",
       sharedRarPassword: "",
       cloudDownloads: [],
@@ -331,7 +321,6 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'update
     uploader_name: itemData.uploaderName,
     uploader_id: itemData.uploaderId,
     system_requirements: itemData.systemRequirements,
-    android_requirements: itemData.androidRequirements,
     shared_pin_code: itemData.sharedPinCode,
     shared_rar_password: itemData.sharedRarPassword,
     cloud_downloads: itemData.cloudDownloads,
@@ -394,7 +383,6 @@ export async function addItem(itemData: Omit<Item, 'id' | 'uploadDate' | 'update
     screenshots: cleanedScreenshots,
     note: data.note || "",
     systemRequirements: data.system_requirements,
-    androidRequirements: data.android_requirements,
     sharedPinCode: data.shared_pin_code,
     sharedRarPassword: data.shared_rar_password,
     cloudDownloads: data.cloud_downloads || [],
@@ -435,7 +423,6 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
   if (itemData.screenshots !== undefined) dbUpdate.screenshots = itemData.screenshots
   if (itemData.note !== undefined) dbUpdate.note = itemData.note
   if (itemData.systemRequirements !== undefined) dbUpdate.system_requirements = itemData.systemRequirements
-  if (itemData.androidRequirements !== undefined) dbUpdate.android_requirements = itemData.androidRequirements
   if (itemData.sharedPinCode !== undefined) dbUpdate.shared_pin_code = itemData.sharedPinCode
   if (itemData.sharedRarPassword !== undefined) dbUpdate.shared_rar_password = itemData.sharedRarPassword
   if (itemData.cloudDownloads !== undefined) dbUpdate.cloud_downloads = itemData.cloudDownloads
@@ -479,7 +466,6 @@ export async function updateItem(id: number, itemData: Partial<Item>): Promise<I
     screenshots: data.screenshots || [],
     note: data.note || "",
     systemRequirements: data.system_requirements,
-    androidRequirements: data.android_requirements,
     sharedPinCode: data.shared_pin_code,
     sharedRarPassword: data.shared_rar_password,
     cloudDownloads: data.cloud_downloads || [],

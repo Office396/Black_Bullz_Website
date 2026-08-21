@@ -35,30 +35,6 @@ const allGames = [
   },
   {
     id: 3,
-    title: "Adobe Photoshop 2024",
-    category: "Software",
-    image: "/adobe-photoshop-icon.jpg",
-    rating: 4.9,
-    size: "3.2 GB",
-    releaseDate: "2023-10-10",
-    description: "Professional image editing and graphic design software with AI features.",
-    tags: ["photoshop", "adobe", "design", "editing", "graphics", "photo", "creative", "ai"],
-    tab: "software",
-  },
-  {
-    id: 4,
-    title: "PUBG Mobile",
-    category: "Android Games",
-    image: "/pubg-mobile-game-cover.jpg",
-    rating: 4.3,
-    size: "2.1 GB",
-    releaseDate: "2018-03-19",
-    description: "Battle royale game for mobile devices with 100 players.",
-    tags: ["pubg", "battle royale", "mobile", "shooter", "survival", "multiplayer", "tencent"],
-    tab: "android-games",
-  },
-  {
-    id: 5,
     title: "Minecraft Java Edition",
     category: "PC Games",
     image: "/minecraft-game-cover.png",
@@ -74,8 +50,6 @@ const allGames = [
 const tabs = [
   { id: "all", label: "All" },
   { id: "pc-games", label: "PC Games" },
-  { id: "android-games", label: "Android Games" },
-  { id: "software", label: "Software" },
 ]
 
 interface SearchResultsProps {
@@ -109,7 +83,7 @@ export function SearchResults({ query }: SearchResultsProps) {
     ...serverItems.map((item: any) => ({
       ...item,
       rating: typeof item.rating === "string" ? parseFloat(item.rating) || 4.0 : typeof item.rating === "number" && !isNaN(item.rating) ? item.rating : 4.0,
-      tab: item.category === "PC Games" ? "pc-games" : item.category === "Android Games" ? "android-games" : "software",
+      tab: item.category === "PC Games" ? "pc-games" : "pc-games",
       tags: item.tags || [],
     })),
   ]
@@ -233,7 +207,7 @@ export function SearchResults({ query }: SearchResultsProps) {
       <div className="text-center py-12">
         <Search className="h-16 w-16 text-gray-600 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-white mb-2">Enter a search term</h2>
-        <p className="text-gray-400">Use the search bar above to find games and software</p>
+        <p className="text-gray-400">Use the search bar above to find games</p>
       </div>
     )
   }
@@ -267,7 +241,7 @@ export function SearchResults({ query }: SearchResultsProps) {
         <div className="text-center py-12">
           <Search className="h-16 w-16 text-gray-600 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-white mb-2">No results found</h2>
-          <p className="text-gray-400">No games or software found for "{query}". Try different keywords.</p>
+          <p className="text-gray-400">No games found for "{query}". Try different keywords.</p>
         </div>
       ) : (
         <div className="grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 max-w-[1400px] mx-auto">
@@ -285,8 +259,8 @@ export function SearchResults({ query }: SearchResultsProps) {
                   <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[13px] px-1 py-0 z-10 pointer-events-none">
                     {game.category}
                   </Badge>
-                  <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                    {game.category === "Android Games" ? "ANDROID" : "PC"}
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none bg-blue-500/90">
+                    PC
                   </div>
                 </div>
                 <CardContent className="p-1.5 pointer-events-none">

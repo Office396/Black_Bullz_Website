@@ -1,111 +1,99 @@
+// ============================================================
+// FULL DATABASE EXPORT
+// Exports ALL tables as a single JSON backup file
+// ============================================================
+
 import { NextResponse } from 'next/server'
-import { getItems } from '@/lib/server/items-store'
+import { supabase } from '@/lib/supabase'
+
+const TABLES_TO_EXPORT = [
+  'games',
+  'mirrors',
+  'repackers',
+  'genres',
+  'comments',
+  'comment_reactions',
+  'game_reviews',
+  'game_ratings',
+  'audit_logs',
+  'moderation_queue',
+  'bug_reports',
+  'video_ads',
+  'proxy_servers',
+  'discord_queue',
+  'ad_variants',
+  'version_history',
+  'discord_signals',
+  'affiliate_clicks',
+  'analytics_events',
+  'daily_stats',
+  'click_logs',
+  'request_logs',
+  'ip_whitelist',
+  'worker_status',
+  'sticky_sessions',
+  'download_pages',
+  'users',
+  'user_sessions',
+  'user_favourites',
+  'user_watch_history',
+  'notifications',
+  'contact_messages',
+  'delete_requests',
+  'page_modifiers',
+  'items',
+  'items_backup',
+]
 
 export async function GET() {
-    try {
-        const items = await getItems();
+  try {
+    const backup: Record<string, any[]> = {}
+    let totalRows = 0
 
-        // Format the items into a text string
-        let textContent = "========================================\n";
-        textContent += "BULLZGAMEZ - ALL GAMES EXPORT DATA\n";
-        textContent += `Generated: ${new Date().toISOString()}\n`;
-        textContent += `Total Items: ${items.length}\n`;
-        textContent += "========================================\n\n";
+    for (const table of TABLES_TO_EXPORT) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select('*')
 
-        items.forEach((item, index) => {
-            textContent += `========================================\n`;
-            textContent += `GAME [${index + 1}]: ${item.title}\n`;
-            textContent += `========================================\n`;
-            textContent += `ID: ${item.id}\n`;
-            textContent += `TITLE: ${item.title}\n`;
-            textContent += `CATEGORY: ${item.category}\n`;
-            textContent += `DEVELOPER: ${item.developer || 'N/A'}\n`;
-            textContent += `RELEASE DATE: ${item.releaseDate || 'N/A'}\n`;
-            textContent += `UPLOAD DATE: ${item.uploadDate || 'N/A'}\n`;
-            textContent += `SIZE: ${item.size || 'N/A'}\n`;
-            textContent += `RATING: ${item.rating || 'N/A'}\n`;
-            textContent += `TRENDING: ${item.trending ? 'YES' : 'NO'}\n`;
-            textContent += `LATEST: ${item.latest ? 'YES' : 'NO'}\n`;
-            textContent += `IMAGE URL: ${item.image || 'N/A'}\n`;
-            textContent += `SHARED PIN CODE: ${item.sharedPinCode || 'N/A'}\n`;
-            textContent += `SHARED RAR PASSWORD: ${item.sharedRarPassword || 'N/A'}\n`;
-            textContent += `NOTE: ${item.note || 'N/A'}\n`;
+        if (error) {
+          // Table might not exist, skip it
+          console.log(`[Export] Skipping ${table}: ${error.message}`)
+          continue
+        }
 
-            textContent += `\n--- SYSTEM REQUIREMENTS (RECOMMENDED) ---\n`;
-            if (item.systemRequirements && item.systemRequirements.recommended) {
-                const sr = item.systemRequirements.recommended;
-                textContent += `OS: ${sr.os || 'N/A'}\n`;
-                textContent += `PROCESSOR: ${sr.processor || 'N/A'}\n`;
-                textContent += `MEMORY: ${sr.memory || 'N/A'}\n`;
-                textContent += `GRAPHICS: ${sr.graphics || 'N/A'}\n`;
-                textContent += `STORAGE: ${sr.storage || 'N/A'}\n`;
-            } else {
-                textContent += `N/A\n`;
-            }
-
-            textContent += `\n--- ANDROID REQUIREMENTS (RECOMMENDED) ---\n`;
-            if (item.androidRequirements && item.androidRequirements.recommended) {
-                const ar = item.androidRequirements.recommended;
-                textContent += `OS: ${ar.os || 'N/A'}\n`;
-                textContent += `RAM: ${ar.ram || 'N/A'}\n`;
-                textContent += `STORAGE: ${ar.storage || 'N/A'}\n`;
-                textContent += `PROCESSOR: ${ar.processor || 'N/A'}\n`;
-            } else {
-                textContent += `N/A\n`;
-            }
-
-            textContent += `\n--- KEY FEATURES ---\n`;
-            if (item.keyFeatures && item.keyFeatures.length > 0) {
-                item.keyFeatures.forEach((feat, fi) => {
-                    textContent += `[${fi + 1}] ${feat}\n`;
-                });
-            } else {
-                textContent += `N/A\n`;
-            }
-
-            textContent += `\n--- SCREENSHOTS ---\n`;
-            if (item.screenshots && item.screenshots.length > 0) {
-                item.screenshots.forEach((ss, ssi) => {
-                    textContent += `[${ssi + 1}] ${ss}\n`;
-                });
-            } else {
-                textContent += `N/A\n`;
-            }
-
-            textContent += `\n--- CLOUD DOWNLOAD LINKS ---\n`;
-            if (item.cloudDownloads && item.cloudDownloads.length > 0) {
-                item.cloudDownloads.forEach((cloud) => {
-                    textContent += `PROVIDER: ${cloud.cloudName || 'Direct'}\n`;
-                    if (cloud.actualDownloadLinks && cloud.actualDownloadLinks.length > 0) {
-                        cloud.actualDownloadLinks.forEach((link) => {
-                            textContent += `  -> [${link.name || 'URL'}] ${link.url} ${link.size ? `(${link.size})` : ''}\n`;
-                        });
-                    }
-                });
-            } else {
-                textContent += `N/A\n`;
-            }
-
-            textContent += `\n--- SHORT DESCRIPTION ---\n`;
-            textContent += `${item.description || 'N/A'}\n`;
-
-            textContent += `\n--- LONG DESCRIPTION (HTML) ---\n`;
-            textContent += `${item.longDescription || 'N/A'}\n`;
-
-            textContent += `\n\n`;
-        });
-
-        const response = new NextResponse(textContent, {
-            status: 200,
-            headers: {
-                'Content-Type': 'text/plain',
-                'Content-Disposition': 'attachment; filename="bullzgamez_games_export.txt"'
-            }
-        });
-
-        return response;
-    } catch (error) {
-        console.error('Failed to export games:', error)
-        return NextResponse.json({ success: false, error: 'Failed to export games' }, { status: 500 })
+        backup[table] = data || []
+        totalRows += (data || []).length
+      } catch (e) {
+        // Table doesn't exist, skip
+      }
     }
+
+    const exportData = {
+      _meta: {
+        version: '2.0',
+        exportedAt: new Date().toISOString(),
+        site: process.env.NEXT_PUBLIC_SITE_NAME || 'BullzGamez',
+        totalTables: Object.keys(backup).length,
+        totalRows,
+        tables: Object.fromEntries(
+          Object.entries(backup).map(([table, rows]) => [table, rows.length])
+        ),
+      },
+      ...backup,
+    }
+
+    const json = JSON.stringify(exportData, null, 2)
+
+    return new NextResponse(json, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="bullzgamez-backup-${new Date().toISOString().split('T')[0]}.json"`,
+      },
+    })
+  } catch (error: any) {
+    console.error('[Export] Failed:', error)
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+  }
 }

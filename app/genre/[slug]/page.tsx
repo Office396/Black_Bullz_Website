@@ -74,8 +74,8 @@ export default async function GenrePage({ params }: GenrePageProps) {
                 <Link key={game.id} href={`/game/${game.id}`} className="group">
                   <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
                     <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                    <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                      {game.category === "Android Games" ? "ANDROID" : "PC"}
+                    <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none bg-blue-500/90">
+                      PC
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">

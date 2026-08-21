@@ -978,11 +978,8 @@ export function Header() {
                       <div className="flex-1 min-w-0">
                         <h4 className="text-white text-sm font-bold line-clamp-1 group-hover:text-[#9d4edd] transition-colors">{result.title}</h4>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className={cn(
-                            "text-[9px] font-bold px-1.5 py-0.5 rounded uppercase",
-                            result.category === "Android Games" ? "bg-green-500/20 text-green-400" : "bg-blue-500/20 text-blue-400"
-                          )}>
-                            {result.category === "Android Games" ? "ANDROID" : "PC"}
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase bg-blue-500/20 text-blue-400">
+                            PC
                           </span>
                           <span className="text-gray-500 text-xs">{result.category}</span>
                         </div>

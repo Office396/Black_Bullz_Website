@@ -31,7 +31,6 @@ interface FormData {
   genres?: string[]
   rating: string; latest: boolean; keyFeatures: string[]; screenshots: string[]; note?: string
   systemRequirements: { recommended: { os: string; processor: string; memory: string; graphics: string; storage: string; directx: string; sound_card: string } }
-  androidRequirements: { recommended: { os: string; ram: string; storage: string; processor: string } }
   sharedPinCode: string; sharedRarPassword?: string
   cloudDownloads: Array<{ cloudName: string; actualProvider?: string; customProvider?: string; partsNumber?: number; version?: string; actualDownloadLinks: Array<{ name: string; url: string; size: string }> }>
   installableDownloads: Array<{ cloudName: string; actualProvider?: string; customProvider?: string; partsNumber?: number; version?: string; actualDownloadLinks: Array<{ name: string; url: string; size: string }> }>
@@ -43,7 +42,6 @@ const initialFormData: FormData = {
   genres: [], rating: "4.0", latest: true, keyFeatures: [""],
   screenshots: [], note: "",
   systemRequirements: { recommended: { os: "", processor: "", memory: "", graphics: "", storage: "", directx: "", sound_card: "" } },
-  androidRequirements: { recommended: { os: "Android 12", ram: "8 GB", storage: "350 MB", processor: "Snapdragon / MediaTek (Average Processors)" } },
   sharedPinCode: "1234", sharedRarPassword: "",
   cloudDownloads: [{ cloudName: "", partsNumber: undefined, version: undefined, actualDownloadLinks: [{ name: "", url: "", size: "" }] }],
   installableDownloads: [{ cloudName: "", partsNumber: undefined, version: undefined, actualDownloadLinks: [{ name: "", url: "", size: "" }] }],
@@ -81,7 +79,6 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
         cloudDownloads: editItem.cloudDownloads || [{ cloudName: "", partsNumber: undefined, version: undefined, actualDownloadLinks: [{ name: "", url: "", size: "" }] }],
         installableDownloads: editItem.installableDownloads || [{ cloudName: "", partsNumber: undefined, version: undefined, actualDownloadLinks: [{ name: "", url: "", size: "" }] }],
         systemRequirements: editItem.systemRequirements || { recommended: { os: "", processor: "", memory: "", graphics: "", storage: "", directx: "", sound_card: "" } },
-        androidRequirements: editItem.androidRequirements || { recommended: { os: "Android 12", ram: "8 GB", storage: "350 MB", processor: "Snapdragon / MediaTek (Average Processors)" } },
       }
     }
     return { ...initialFormData, sharedPinCode: String(Math.floor(1000 + Math.random() * 9000)) }
@@ -190,9 +187,7 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
 
   const generateNewSharedPin = () => setFormData({ ...formData, sharedPinCode: String(Math.floor(1000 + Math.random() * 9000)) })
 
-  const showSystemRequirements = formData.category === "PC Games" || formData.category === "Software"
-  const showAndroidRequirements = formData.category === "Android Games"
-  const showKeyFeatures = formData.category === "Software"
+  const showSystemRequirements = formData.category === "PC Games"
 
   const [multiLinkMode, setMultiLinkMode] = useState<Record<number, boolean>>({})
   const [multiLinkSections, setMultiLinkSections] = useState<Record<number, Array<{ name: string; size: string; text: string }>>>({})
@@ -371,14 +366,11 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
                     <Label htmlFor="category" className="text-white text-sm">Category *</Label>
                     <Select value={formData.category} onValueChange={value => {
                       const u = { ...formData, category: value }
-                      if (value === "Android Games" && formData.cloudDownloads[0]?.cloudName === "") u.cloudDownloads = [{ ...formData.cloudDownloads[0], cloudName: "MediaFire" }]
                       setFormData(u)
                     }}>
                       <SelectTrigger className="bg-[#1a103c] border-[#2d1b54] text-white text-sm"><SelectValue placeholder="Select category" /></SelectTrigger>
                       <SelectContent className="bg-[#1a103c] border-[#2d1b54]">
                         <SelectItem value="PC Games">PC Games</SelectItem>
-                        <SelectItem value="Android Games">Android Games</SelectItem>
-                        <SelectItem value="Software">Software</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -506,9 +498,8 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
               </CardContent>
             </Card>
 
-            {/* Key Features (Software only) */}
-            {showKeyFeatures && (
-              <Card className="bg-[#120b22] border-[#2d1b54]">
+            {/* Key Features */}
+            <Card className="bg-[#120b22] border-[#2d1b54]">
                 <CardHeader className="pb-4"><CardTitle className="text-white text-lg">Key Features</CardTitle></CardHeader>
                 <CardContent className="space-y-4 px-4 md:px-6">
                   {formData.keyFeatures.map((feature, index) => (
@@ -520,7 +511,6 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
                   <Button type="button" onClick={addKeyFeature} variant="outline" className="bg-[#1a103c] border-[#2d1b54] text-white w-full md:w-auto"><Plus className="h-4 w-4 mr-2" />Add Feature</Button>
                 </CardContent>
               </Card>
-            )}
 
             {/* Screenshots */}
             <Card className="bg-[#120b22] border-[#2d1b54]">
@@ -540,7 +530,7 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
               </CardContent>
             </Card>
 
-            {/* System Requirements (PC/Software) */}
+            {/* System Requirements */}
             {showSystemRequirements && (
               <Card className="bg-[#120b22] border-[#2d1b54]">
                 <CardHeader className="pb-4">
@@ -572,28 +562,6 @@ export function AdminItemForm({ editItem, onSave, overrideApiUrl, overrideApiHea
                       ))}
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Android Requirements */}
-            {showAndroidRequirements && (
-              <Card className="bg-[#120b22] border-[#2d1b54]">
-                <CardHeader className="pb-4"><CardTitle className="text-white text-lg">Android Requirements</CardTitle></CardHeader>
-                <CardContent className="space-y-4 px-4 md:px-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      { key: "os", label: "Android Version", placeholder: "Android 12" },
-                      { key: "ram", label: "RAM", placeholder: "8 GB" },
-                      { key: "storage", label: "Storage", placeholder: "350 MB" },
-                      { key: "processor", label: "Processor", placeholder: "Snapdragon / MediaTek" },
-                    ].map(({ key, label, placeholder }) => (
-                      <div key={key}>
-                        <Label className="text-white text-sm">{label}</Label>
-                        <Input value={(formData.androidRequirements.recommended as any)[key] || ""} onChange={e => setFormData({ ...formData, androidRequirements: { ...formData.androidRequirements, recommended: { ...formData.androidRequirements.recommended, [key]: e.target.value } } })} className="bg-[#1a103c] border-[#2d1b54] text-white text-sm" placeholder={placeholder} />
-                      </div>
-                    ))}
-                  </div>
                 </CardContent>
               </Card>
             )}

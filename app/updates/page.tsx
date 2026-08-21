@@ -74,8 +74,8 @@ export default async function RecentUpdatesPage() {
                   <Link key={game.id} href={`/game/${game.id}`} className="flex items-center gap-4 p-4 bg-[#120b22] border border-[#2d1b54] rounded-xl hover:border-[#9d4edd]/50 transition-all group">
                     <div className="relative w-16 h-20 flex-shrink-0 rounded-lg overflow-hidden">
                       <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover" />
-                      <div className={`absolute top-1 left-1 px-1 py-0.5 rounded text-white text-[7px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                        {game.category === "Android Games" ? "APK" : "PC"}
+                      <div className="absolute top-1 left-1 px-1 py-0.5 rounded text-white text-[7px] font-bold uppercase shadow-lg z-10 bg-blue-500/90">
+                        PC
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">

@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getItems, addItem, updateItem, deleteItem, type Item } from '@/lib/server/items-store'
-import { supabase } from '@/lib/supabase'
-import { FAKE_USERNAMES, BADGES } from '@/lib/usernames'
 import { sendBroadcastNotification } from '@/lib/server/user-store'
 
 export async function GET() {
@@ -18,9 +16,7 @@ export async function POST(request: Request) {
   let itemData
   try {
     const text = await request.text()
-    console.log('POST /api/items raw:', { length: text.length, first200: text.slice(0, 200) })
     itemData = JSON.parse(text)
-    console.log('POST /api/items parsed:', { hasData: !!itemData, keys: Object.keys(itemData), title: itemData.title, category: itemData.category })
   } catch (e) {
     console.error('POST /api/items: Failed to parse JSON:', e)
     return NextResponse.json({ success: false, error: 'Invalid JSON in request body' }, { status: 400 })
@@ -61,24 +57,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Failed to add item to database' }, { status: 500 })
     }
 
-    // Auto-create a 4-5 star approved review with a random username
-    try {
-      const randomName = FAKE_USERNAMES[Math.floor(Math.random() * FAKE_USERNAMES.length)]
-      const randomBadge = BADGES[Math.floor(Math.random() * BADGES.length)]
-      const randomRating = Math.random() < 0.5 ? 4 : 5  // randomly 4 or 5
-      await supabase.from('game_reviews').insert({
-        game_id: newItem.id,
-        game_title: newItem.title,
-        user_id: `auto_${newItem.id}`,
-        user_name: randomName,
-        user_badge: randomBadge.label,
-        user_badge_color: randomBadge.color,
-        rating: randomRating,
-        content: null,
-        status: 'approved',
-      })
-    } catch (e) { console.error('Auto review error:', e) }
-
     await sendBroadcastNotification('New Game Available', `${newItem.title} is now available on Bullz Games — check it out!`, 'success')
 
     return NextResponse.json({ success: true, data: newItem })
@@ -97,12 +75,9 @@ export async function PATCH(request: Request) {
 }
 
 async function handleUpdate(request: Request) {
-  console.log('🔥🔥🔥 PUT/PATCH /api/items CALLED! 🔥🔥🔥')
   try {
     const body = await request.json()
     const { id, ...updateData } = body
-
-    console.log('UPDATE /api/items:', { id, idType: typeof id, hasBody: !!body, keys: Object.keys(body).slice(0, 5) })
 
     if (!id) {
       console.error('PUT /api/items: No ID provided')

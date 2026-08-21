@@ -31,13 +31,6 @@ const categories = [
     description: "Traditional installation",
     icon: "💿",
     color: "from-purple-500/20 to-purple-600/5"
-  },
-  {
-    name: "Android Mod APKs",
-    slug: "android-mod",
-    description: "Modded Android Games",
-    icon: "📱",
-    color: "from-orange-500/20 to-orange-600/5"
   }
 ]
 
@@ -59,12 +52,6 @@ export function CategoriesSection({ games }: CategoriesSectionProps) {
       if (categoryName === "Installable Games") {
         return Math.floor(games.length * 0.4) // Estimate
       }
-      if (categoryName === "Android Mod APKs") {
-        return games.filter(g => 
-          g.category?.toLowerCase().includes('android') ||
-          g.category?.toLowerCase().includes('apk')
-        ).length || Math.floor(games.length * 0.1)
-      }
       return games.length
     }
 
@@ -75,7 +62,7 @@ export function CategoriesSection({ games }: CategoriesSectionProps) {
                 Browse Categories
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {categories.map((cat) => (
                     <Link
                         key={cat.slug}

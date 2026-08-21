@@ -1,127 +1,102 @@
-# BullzGamez Website Clone
+# PC Games Repack Site
 
-A complete gaming and software download website built with Next.js, featuring a dark theme with red accents.
+A professional PC games repack download site built with Next.js, featuring automated scraping, mirror management, and monetization infrastructure.
 
 ## Features
 
 ### Core Functionality
-- **Homepage**: Displays 12 items by default (15 for Android games layout)
-- **Category Filtering**: PC Games, Android Games, Software with intelligent tab switching
-- **Search System**: Intelligent search with category filters
-- **Individual Game Pages**: Detailed information with category-specific requirements
-- **Admin Portal**: Full CRUD operations with login authentication
-- **Comments System**: User comments on individual game pages
-- **Responsive Design**: Mobile-first approach with optimized layouts
+- **Automated Scraping**: RSS feeds from FitGirl, DODI, OvaGames, ElAmigos with metadata enrichment
+- **Mirror Management**: Multi-host uploads (1fichier, GoFile, Pixeldrain, MediaFire, qBittorrent)
+- **Smart Link Rotation**: GeoIP-based mirror ranking with health checks and auto-failover
+- **Monetization Engine**: Pop-under ads, shortlink generators, affiliate links
+- **Content Moderation**: Auto-flagging, spam detection, admin approval queue
+- **Analytics**: Privacy-friendly tracking with Plausible/notrack.ai integration
 
-### Admin Portal Features
-- **Login System**: Secure admin authentication with changeable credentials
-- **Flexible Forms**: Category-specific fields (system requirements for PC/Software, Android requirements for mobile games, key features for software only)
-- **Item Management**: Add, edit, delete items with search functionality
-- **Trending Control**: Checkbox to control what appears in trending section
-- **Upload Date Tracking**: Automatic date tracking for new items
+### Admin Dashboard
+- **Worker Monitoring**: Real-time status of all background workers
+- **Earnings Tracking**: Revenue from ads, affiliates, and donations
+- **Link Health**: Monitor mirror uptime and auto-failover
+- **Moderation Queue**: Review flagged content, comments, and reports
+- **Audit Logs**: Track all admin actions
 
-### Design Features
-- **Custom Bull Logo**: Dangerous black bull with red horns
-- **Loading Animation**: Running black bull video for page transitions
-- **Dark Theme**: Gray/black background with red accent colors
-- **Responsive Grid**: Adaptive layouts for different screen sizes
-- **Visual Feedback**: Hover effects, transitions, and loading states
+### Download Page (Revenue Engine)
+- **Mirror Selection**: Ranked by health, speed, and GeoIP proximity
+- **Installation Notes**: Step-by-step guide with RAR password
+- **File Structure Preview**: Part count and file sizes
+- **Live Status Badges**: Active/dead/checking indicators
+- **Download Counter**: Social proof for downloads
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Database**: Supabase (PostgreSQL)
+- **Styling**: Tailwind CSS with dark theme
+- **Scraping**: Cheerio for HTML parsing
+- **Uploads**: Axios for file host APIs
+- **Analytics**: Plausible/notrack.ai (privacy-friendly)
 
 ## File Structure
 
 ### Core Components
-- `components/header.tsx` - Navigation header with logo and search
-- `components/sidebar.tsx` - Trending games and quick links
-- `components/game-grid.tsx` - Main grid display with pagination
-- `components/game-details.tsx` - Individual game page layout
-- `components/loading-screen.tsx` - Full-screen loading animation
-- `components/loading-spinner.tsx` - Component-level loading indicator
+- `components/game-details.tsx` - Game page with repacker profiles, ratings, comments
+- `components/download-page-content.tsx` - Revenue-optimized download page
+- `components/comments.tsx` - Threaded comment system
 
-### Admin Components
-- `components/admin-login.tsx` - Authentication form
-- `components/admin-dashboard.tsx` - Main admin interface
-- `components/admin-item-form.tsx` - Add/edit item form with category-specific fields
-- `components/admin-item-list.tsx` - Manage existing items with search
-- `components/admin-settings.tsx` - Change admin credentials
+### Backend Services
+- `lib/server/games-store.ts` - Game CRUD operations
+- `lib/server/repacker-store.ts` - Repacker profile management
+- `lib/server/comment-store.ts` - Threaded comments with spam detection
+- `lib/server/rating-store.ts` - Rating system with auto-flagging
 
-### Pages
-- `app/page.tsx` - Homepage with game grid
-- `app/categories/page.tsx` - Category overview with counts
-- `app/latest/page.tsx` - Latest releases
-- `app/contact/page.tsx` - Contact form
-- `app/search/page.tsx` - Search results with filters
-- `app/game/[id]/page.tsx` - Individual game pages
-- `app/admin/portal/page.tsx` - Admin portal entry
+### Workers
+- `lib/workers/rss-scraper.ts` - RSS feed scraper
+- `lib/workers/upload-workers.ts` - File host upload APIs
+- `lib/workers/link-health-checker.ts` - Mirror health monitoring
+- `lib/workers/orchestrator.ts` - Worker scheduling system
+- `lib/workers/mirror-rotation.ts` - GeoIP-based mirror ranking
+- `lib/workers/shortlink-generator.ts` - Affiliate link injection
+- `lib/workers/smart-redirect.ts` - Revenue engine middleware
+- `lib/workers/geo-blocker.ts` - Country-based access control
+- `lib/workers/captcha-bypass.ts` - Rate limiting with Turnstile
 
-### Search & Filter Components
-- `components/search-results.tsx` - Search results with category filters
-- `components/comments.tsx` - User comments system
+### Database
+- `database/repack-site-schema.sql` - Main production schema
+- `database/migrate-items-to-games.sql` - Migration from old items table
+- `database/indexes-and-optimization.sql` - Performance indexes
+- `database/audit-and-ratings-tables.sql` - Audit logs and ratings
+- `database/click-logs-table.sql` - Click tracking for analytics
 
-## How to Upload Items
+## Setup
 
-1. **Access Admin Portal**: Navigate to `/admin/portal`
-2. **Login**: Use admin credentials (default: admin/admin123)
-3. **Add New Item**: Click "Add New Item" button
-4. **Fill Form**: Complete category-specific fields:
-   - **All Categories**: Title, category, developer, description, rating, image URL
-   - **PC Games/Software**: System requirements (minimum/recommended)
-   - **Android Games**: Android requirements (OS version, RAM, storage, processor)
-   - **Software Only**: Key features list
-5. **Set Trending**: Check "Show in Trending" to display in sidebar
-6. **Add Downloads**: Provide download links with names and sizes
-7. **Save**: Click "Save Item" to add to website
+1. Install dependencies: `npm install`
+2. Set up Supabase project and run schema SQL files
+3. Configure environment variables (see `.env.example`)
+4. Run development server: `npm run dev`
 
-## Category-Specific Fields
+## Environment Variables
 
-### PC Games
-- System Requirements (OS, Processor, Memory, Graphics, Storage)
-- No key features section
-- Full system specifications for minimum and recommended
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-### Android Games
-- Android Requirements (OS version, RAM, Storage, Processor)
-- No system requirements or key features
-- Optimized for mobile specifications
+# File Host APIs
+ONEFICHIER_API_TOKEN=your_1fichier_token
+GOFILE_ACCOUNT_ID=your_gofile_account
 
-### Software
-- System Requirements (same as PC Games)
-- Key Features list (unique selling points)
-- Professional software specifications
+# Shortlink APIs
+GP_LINKS_API_TOKEN=your_gplinks_token
+V2_LINKS_API_TOKEN=your_v2links_token
 
-## Data Storage
+# Analytics
+PLAUSIBLE_API_KEY=your_plausible_key
+PLAUSIBLE_SITE_ID=your_site_id
 
-Items are stored in localStorage for demo purposes. In production, this would be replaced with a proper database system.
+# Ads
+MONETAG_ZONE_ID=your_monetag_zone
+PROPELLERADS_ZONE_ID=your_propellerads_zone
+```
 
-## Customization
+## License
 
-### Changing Item Display Count
-- Homepage: Modify `itemsPerPage` in `components/game-grid.tsx` (currently 12)
-- Android Layout: Automatically shows 15 items when Android Games tab is active
-
-### Modifying Admin Credentials
-- Use the Settings tab in admin portal
-- Default credentials: username: `admin`, password: `admin123`
-
-### Adding New Categories
-- Update category options in `components/admin-item-form.tsx`
-- Add corresponding logic for category-specific fields
-- Update tab filters in `components/game-grid.tsx`
-
-## Technical Details
-
-### Loading System
-- Full-screen loading animation on initial page load
-- Component-level loading for individual sections
-- Running bull video animation for visual appeal
-
-### Responsive Design
-- Mobile-first approach with breakpoints
-- Adaptive grid layouts (3-5 columns for Android, 2-4 for others)
-- Optimized touch interactions for mobile devices
-
-### Search Intelligence
-- Searches titles, descriptions, and tags
-- Category-specific filtering
-- Real-time results with debouncing
-
-This website provides a complete gaming and software download experience with professional admin management capabilities.
+Private - All rights reserved.

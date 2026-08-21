@@ -53,15 +53,21 @@ export default function DownloadPage() {
 
       // Get the game details
       try {
-        const response = await fetch('/api/items')
+        const response = await fetch(`/api/games?id=${downloadLink.gameId}`)
         const result = await response.json()
-        if (result.success) {
-          const items = result.data
-          const item = items.find((i: any) => i.id === downloadLink.gameId)
-          if (item) {
-            setDownloadItem(item)
-            setGpLinkUrl(downloadLink.gpLink)
-          }
+        if (result.success && result.data) {
+          setDownloadItem({
+            id: result.data.id,
+            title: result.data.title,
+            image: result.data.cover_image,
+            category: 'PC Games',
+            downloadLinks: (result.data.mirrors || []).map((m: any) => ({
+              name: m.file_name || m.host_name,
+              url: m.download_url,
+              size: m.file_size,
+            })),
+          })
+          setGpLinkUrl(downloadLink.gpLink)
         }
       } catch (error) {
         console.error("Error fetching game data:", error)

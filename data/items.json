@@ -29,14 +29,6 @@
         "storage": "100 GB available space"
       }
     },
-    "androidRequirements": {
-      "recommended": {
-        "os": "",
-        "ram": "",
-        "storage": "",
-        "processor": ""
-      }
-    },
     "sharedPinCode": "5502",
     "sharedRarPassword": "",
     "cloudDownloads": [

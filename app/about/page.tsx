@@ -74,25 +74,6 @@ export default function AboutPage() {
               </div>
             </div>
 
-            {/* Android Games */}
-            <div className="bg-[#0d0820]/50 border border-[#2d1b54]/40 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-[#9d4edd]/20 flex items-center justify-center">
-                  <Smartphone className="w-6 h-6 text-[#9d4edd]" />
-                </div>
-                <h3 className="text-white font-semibold text-lg">Free Android Games</h3>
-              </div>
-              <p className="text-gray-400 text-sm leading-relaxed mb-4">
-                Mobile gaming is also part of our collection. We provide free Android games that you can download and install on your phone or tablet. These include casual games, puzzles, arcade games, and more - all completely free to download and play.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-[#9d4edd]/20 text-[#c77dff] text-xs rounded-full">APK Files</span>
-                <span className="px-3 py-1 bg-[#9d4edd]/20 text-[#c77dff] text-xs rounded-full">Casual</span>
-                <span className="px-3 py-1 bg-[#9d4edd]/20 text-[#c77dff] text-xs rounded-full">Arcade</span>
-                <span className="px-3 py-1 bg-[#9d4edd]/20 text-[#c77dff] text-xs rounded-full">Puzzles</span>
-              </div>
-            </div>
-
             {/* Enhanced PC Games */}
             <div className="bg-[#0d0820]/50 border border-[#2d1b54]/40 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
@@ -108,24 +89,6 @@ export default function AboutPage() {
                 <span className="px-3 py-1 bg-[#9d4edd]/20 text-[#c77dff] text-xs rounded-full">Bonus Content</span>
                 <span className="px-3 py-1 bg-[#9d4edd]/20 text-[#c77dff] text-xs rounded-full">Unlocked DLC</span>
                 <span className="px-3 py-1 bg-[#9d4edd]/20 text-[#c77dff] text-xs rounded-full">Full Access</span>
-              </div>
-            </div>
-
-            {/* Enhanced Android Games */}
-            <div className="bg-[#0d0820]/50 border border-[#2d1b54]/40 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-[#9d4edd]/20 flex items-center justify-center">
-                  <Layers className="w-6 h-6 text-[#9d4edd]" />
-                </div>
-                <h3 className="text-white font-semibold text-lg">Enhanced Android Games</h3>
-              </div>
-              <p className="text-gray-400 text-sm leading-relaxed mb-4">
-                Similar to our enhanced PC games, we provide enhanced Android versions with premium features unlocked. These may include ad-free experience, unlimited in-game currency, unlocked characters, premium content, and other enhancements giving you the complete game experience.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-[#9d4edd]/20 text-[#c77dff] text-xs rounded-full">Ad-Free</span>
-                <span className="px-3 py-1 bg-[#9d4edd]/20 text-[#c77dff] text-xs rounded-full">Premium Unlocked</span>
-                <span className="px-3 py-1 bg-[#9d4edd]/20 text-[#c77dff] text-xs rounded-full">Full Version</span>
               </div>
             </div>
           </div>

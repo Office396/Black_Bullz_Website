@@ -14,7 +14,7 @@ export function AdminSettings() {
   const [credentials, setCredentials] = useState({ username: "", currentPassword: "", newPassword: "" })
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({ total: 0, pcGames: 0, software: 0 })
+  const [stats, setStats] = useState({ total: 0, pcGames: 0 })
 
   useEffect(() => {
     // Load current username and stats from server
@@ -36,8 +36,7 @@ export function AdminSettings() {
           const items = itemsResult.data
           const total = items.length
           const pcGames = items.filter((item: any) => item.category === "PC Games").length
-          const software = items.filter((item: any) => item.category === "Software").length
-          setStats({ total, pcGames, software })
+          setStats({ total, pcGames })
         }
       } catch (error) {
         console.error("Error fetching data:", error)
@@ -188,12 +187,6 @@ export function AdminSettings() {
                 {stats.pcGames}
               </div>
               <div className="text-gray-400 text-sm">PC Games</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">
-                {stats.software}
-              </div>
-              <div className="text-gray-400 text-sm">Software</div>
             </div>
           </div>
         </CardContent>

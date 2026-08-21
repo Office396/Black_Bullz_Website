@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
 import { validateCredentials, updateAdminCredentials, getAdminCredentials } from '@/lib/server/admin-store'
-
-// POST: Login - validate credentials
-// PUT: Update credentials
+import { signAdminToken, requireAdmin } from '@/lib/server/auth'
 
 export async function POST(request: Request) {
   try {
@@ -13,11 +11,23 @@ export async function POST(request: Request) {
     }
 
     const isValid = await validateCredentials(username, password)
-    if (isValid) {
-      return NextResponse.json({ success: true, message: 'Login successful' })
-    } else {
+    if (!isValid) {
       return NextResponse.json({ success: false, error: 'Invalid credentials' }, { status: 401 })
     }
+
+    const token = await signAdminToken(username)
+
+    const response = NextResponse.json({ success: true, token })
+
+    response.cookies.set('admin_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 8 * 60 * 60, // 8 hours
+    })
+
+    return response
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json({ success: false, error: 'Login failed' }, { status: 500 })
@@ -25,6 +35,9 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const auth = await requireAdmin(request)
+  if (!auth.ok) return auth.response
+
   try {
     const { currentUsername, currentPassword, newUsername, newPassword } = await request.json()
 
@@ -32,26 +45,21 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: 'All fields required' }, { status: 400 })
     }
 
-    // Validate current credentials
-    const isValid = await validateCredentials(currentUsername, currentPassword)
-    if (!isValid) {
-      return NextResponse.json({ success: false, error: 'Current credentials invalid' }, { status: 401 })
-    }
-
-    // Update credentials
-    await updateAdminCredentials({ username: newUsername, password: newPassword })
+    await updateAdminCredentials(currentUsername, currentPassword, newUsername, newPassword)
 
     return NextResponse.json({ success: true, message: 'Credentials updated successfully' })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update credentials error:', error)
-    return NextResponse.json({ success: false, error: 'Failed to update credentials' }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to update credentials' },
+      { status: 400 }
+    )
   }
 }
 
 export async function GET() {
   try {
     const credentials = await getAdminCredentials()
-    // Don't return password, just username for display
     return NextResponse.json({ success: true, username: credentials.username })
   } catch (error) {
     console.error('Get credentials error:', error)

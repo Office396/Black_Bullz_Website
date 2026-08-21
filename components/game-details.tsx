@@ -56,14 +56,6 @@ interface GameData {
     minimum?: SystemRequirements
     recommended?: SystemRequirements
   }
-  androidRequirements?: {
-    recommended?: {
-      os?: string
-      ram?: string
-      storage?: string
-      processor?: string
-    }
-  }
   features?: string[]
   keyFeatures?: string[]
   genres?: string[]
@@ -113,7 +105,6 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const [installTab, setInstallTab] = useState<"pre-installed" | "installable">("pre-installed")
   const [preinstalledActiveTab, setPreinstalledActiveTab] = useState<"downloads" | "updates">("downloads")
   const [installableActiveTab, setInstallableActiveTab] = useState<"downloads" | "updates">("downloads")
-  const [androidActiveTab, setAndroidActiveTab] = useState<"downloads" | "updates">("downloads")
   const [trailerOpen, setTrailerOpen] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
@@ -160,7 +151,6 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
   const token = userCtx?.token
 
   const isPCGame = game?.category === "PC Games"
-  const isAndroid = game?.category === "Android Games"
 
   const averageRating = typeof game?.rating === 'number' ? game.rating : parseFloat(String(game?.rating || '4.5'))
   const recommendPercent = Math.min(95, Math.max(70, averageRating * 20))
@@ -497,11 +487,11 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
         <div className="flex-1 space-y-4">
           {/* Category Badge */}
           <div className="flex items-center gap-2">
-            <Badge className={`text-white text-xs font-bold ${isAndroid ? 'bg-green-600' : 'bg-[#9d4edd]'}`}>
+            <Badge className="text-white text-xs font-bold bg-[#9d4edd]">
               {game.category}
             </Badge>
             <Badge className="bg-secondary text-secondary-foreground border-border text-xs uppercase">
-              {isAndroid ? "Android" : "PC"}
+              PC
             </Badge>
             {game.size && (
               <Badge className="bg-secondary text-secondary-foreground border-border text-xs">
@@ -769,7 +759,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
 
       {/* System Requirements - AFTER KEY FEATURES */}
       {
-        (game.systemRequirements?.recommended?.os || game.androidRequirements?.recommended?.os) && (
+        (game.systemRequirements?.recommended?.os) && (
           <div className="bg-card rounded-2xl">
             <div className="p-6 pb-0">
               <h3 className="text-foreground font-bold text-lg flex items-center gap-2">
@@ -877,7 +867,6 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
           <p className="text-muted-foreground text-sm mt-1">Step-by-step setup process</p>
         </div>
         <div className="p-0">
-          {isPCGame ? (
             <div>
               {/* Tabs */}
               <div className="flex border-b border-white/5">
@@ -1010,28 +999,8 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                 </div>
               )}
             </div>
-          ) : (
-            /* Android Installation Guide */
-            <div className="p-6 space-y-4">
-              {[
-                { step: 1, text: "Download the APK file from the links above." },
-                { step: 2, text: 'Go to your phone Settings → Security → Enable "Install from Unknown Sources" or "Allow from this source".' },
-                { step: 3, text: "Open your file manager and navigate to the downloaded APK file." },
-                { step: 4, text: "Tap on the APK file and select Install." },
-                { step: 5, text: "Wait for installation to complete, then launch the game." },
-                { step: 6, text: "If the game requires OBB data, extract the OBB folder to Android/obb/ on your device storage." },
-              ].map(({ step, text }) => (
-                <div key={step} className="flex items-start gap-4">
-                  <div className="w-9 h-9 rounded-full bg-[#9d4edd]/20 border border-[#9d4edd]/30 flex items-center justify-center flex-shrink-0">
-                    <span className="text-[#9d4edd] font-bold text-sm">{step}</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm pt-2">{text}</p>
-                </div>
-              ))}
-            </div>
-          )}
+          </div>
         </div>
-      </div>
 
       {/* ===== DOWNLOAD SECTION ===== - AFTER INSTALLATION GUIDE */}
       {
@@ -1045,9 +1014,8 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                 </h2>
               </div>
 
-              {/* PC game sections */}
-              {isPCGame ? (
-                <div className="space-y-5">
+              {/* Game sections */}
+              <div className="space-y-5">
                   {/* ========== PRE-INSTALLED VERSION ========== */}
                   {(preinstalledDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) || preinstalledUpdates.some(c => c.actualDownloadLinks?.some(l => l.url))) && (
                     <div className="bg-gradient-to-br from-green-900/60 via-green-900/40 to-emerald-900/30 border border-green-500/40 rounded-2xl overflow-hidden">
@@ -1322,137 +1290,6 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                     </div>
                   )}
                 </div>
-              ) : (
-                /* ========== ANDROID - SINGLE DOWNLOAD SECTION ========== */
-                (cloudDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) || cloudDownloads.some(c => c.cloudName === 'Update' && c.actualDownloadLinks?.some(l => l.url))) && (
-                  <div className="bg-gradient-to-br from-[#9d4edd]/40 via-[#9d4edd]/25 to-[#7b2cbf]/20 border border-[#9d4edd]/40 rounded-2xl overflow-hidden">
-                    <div className="flex items-center gap-3 p-4 border-b border-[#9d4edd]/20">
-                      <div className="w-10 h-10 rounded-xl bg-[#9d4edd]/20 flex items-center justify-center">
-                        <Download className="w-5 h-5 text-[#9d4edd]" />
-                      </div>
-                      <div>
-                        <h3 className="text-white font-bold text-lg">APK Download</h3>
-                        <p className="text-[#9d4edd]/70 text-xs">Modded Android Game</p>
-                      </div>
-                    </div>
-                    {/* Tabs */}
-                    <div className="flex border-b border-[#9d4edd]/10">
-                      <button
-                        onClick={() => setAndroidActiveTab('downloads')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all relative ${
-                          androidActiveTab === 'downloads'
-                            ? 'text-[#c77dff]'
-                            : 'text-gray-500 hover:text-gray-300'
-                        }`}
-                      >
-                        <Download className="w-4 h-4" />
-                        Download Links
-                        {preinstalledDownloads.some(c => c.actualDownloadLinks?.some(l => l.url)) && (
-                          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-[#9d4edd]/20 text-[#c77dff] text-[10px] font-bold">{preinstalledDownloads.filter(c => c.actualDownloadLinks?.some(l => l.url)).length}</span>
-                        )}
-                        {androidActiveTab === 'downloads' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c77dff] rounded-full" />}
-                      </button>
-                      <button
-                        onClick={() => setAndroidActiveTab('updates')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all relative ${
-                          androidActiveTab === 'updates'
-                            ? 'text-[#c77dff]'
-                            : 'text-gray-500 hover:text-gray-300'
-                        }`}
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                        Updates
-                        {cloudDownloads.filter(c => c.cloudName === 'Update').length > 0 && (
-                          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold">{cloudDownloads.filter(c => c.cloudName === 'Update' && c.actualDownloadLinks?.some(l => l.url)).length}</span>
-                        )}
-                        {androidActiveTab === 'updates' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c77dff] rounded-full" />}
-                      </button>
-                    </div>
-                    {/* Tab Content */}
-                    <div className="p-4">
-                      {androidActiveTab === 'downloads' ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {cloudDownloads.filter(c => c.cloudName !== 'Update').map((cloud, ci) => {
-                            const style = getCloudStyle(cloud.cloudName || '')
-                            const links = cloud.actualDownloadLinks || []
-                            const validLinks = links.filter(l => l.url)
-                            const isLoading = downloadingCloud === `pre-installed-${cloudDownloads.indexOf(cloud)}`
-                            if (validLinks.length === 0) return null
-                            return (
-                              <button
-                                key={ci}
-                                onClick={() => handleCloudDownload(cloudDownloads.indexOf(cloud), 'pre-installed')}
-                                disabled={isLoading}
-                                className={`group relative flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-[#9d4edd]/10 active:scale-[0.98] ${style.bg} ${isLoading ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
-                              >
-                                <div className="w-11 h-11 rounded-xl bg-black/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
-                                  {style.icon}
-                                </div>
-                                <div className="flex-1 text-left min-w-0">
-                                  <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Cloud'}</p>
-                                  <span className="text-gray-500 text-[11px]">{validLinks.length} link{validLinks.length > 1 ? 's' : ''}</span>
-                                </div>
-                                <div className="flex-shrink-0">
-                                  {isLoading ? (
-                                    <div className="w-5 h-5 border-2 border-[#9d4edd] border-t-transparent rounded-full animate-spin" />
-                                  ) : (
-                                    <Download className="w-5 h-5 text-[#9d4edd]/60 group-hover:text-[#c77dff] transition-colors" />
-                                  )}
-                                </div>
-                              </button>
-                            )
-                          })}
-                        </div>
-                      ) : (
-                        <div>
-                          {cloudDownloads.filter(c => c.cloudName === 'Update' && c.actualDownloadLinks?.some(l => l.url)).length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {cloudDownloads.filter(c => c.cloudName === 'Update').map((cloud, ci) => {
-                                const style = getCloudStyle(cloud.cloudName || '')
-                                const links = cloud.actualDownloadLinks || []
-                                const validLinks = links.filter(l => l.url)
-                                const isLoading = downloadingCloud === `pre-installed-${cloudDownloads.indexOf(cloud)}`
-                                if (validLinks.length === 0) return null
-                                return (
-                                  <button
-                                    key={ci}
-                                    onClick={() => handleCloudDownload(cloudDownloads.indexOf(cloud), 'pre-installed')}
-                                    disabled={isLoading}
-                                    className={`group relative flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-amber-500/10 active:scale-[0.98] ${style.bg} ${isLoading ? 'opacity-70 cursor-wait' : 'cursor-pointer'}`}
-                                  >
-                                    <div className="w-11 h-11 rounded-xl bg-black/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
-                                      {style.icon}
-                                    </div>
-                                    <div className="flex-1 text-left min-w-0">
-                                      <p className={`font-bold text-sm ${style.color}`}>{cloud.cloudName || 'Update'}</p>
-                                      <span className="text-gray-500 text-[11px]">{validLinks.length} link{validLinks.length > 1 ? 's' : ''}</span>
-                                    </div>
-                                    <div className="flex-shrink-0">
-                                      {isLoading ? (
-                                        <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                                      ) : (
-                                        <Download className="w-5 h-5 text-amber-400/60 group-hover:text-amber-300 transition-colors" />
-                                      )}
-                                    </div>
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center py-8 text-center">
-                              <div className="w-14 h-14 rounded-full bg-[#9d4edd]/10 border border-[#9d4edd]/20 flex items-center justify-center mb-3">
-                                <CheckCircle className="w-7 h-7 text-[#c77dff]" />
-                              </div>
-                              <p className="text-[#c77dff] font-semibold text-sm">Game is up to date!</p>
-                              <p className="text-gray-500 text-xs mt-1">No updates available for this APK</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              )}
             </div>
           </div>
         )
@@ -1552,8 +1389,8 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                     {index + 1}
                   </div>
                 )}
-                <div className={`absolute ${index !== undefined && index < 3 ? 'top-1.5 right-1.5' : 'top-1.5 left-1.5'} px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase shadow-lg z-10 ${g.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                  {g.category === "Android Games" ? "APK" : "PC"}
+                <div className="absolute top-1.5 left-1.5 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase shadow-lg z-10 bg-blue-500/90">
+                  PC
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -1582,7 +1419,7 @@ export function GameDetails({ game, allGames = [] }: GameDetailsProps) {
                 <div>
                   <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <span className="w-1 h-6 bg-yellow-500 rounded-full" />
-                    Top {gameCategory === "Android Games" ? "Android" : "PC"} Games
+                    Top PC Games
                   </h2>
                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {topInCategory.map((g, i) => <GameCard key={g.id} g={g} index={i} />)}

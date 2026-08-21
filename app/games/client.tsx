@@ -51,7 +51,6 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
 
     if (selectedCategory) {
       if (selectedCategory === "pc-games") filtered = filtered.filter(g => g.category === "PC Games")
-      else if (selectedCategory === "android-mod") filtered = filtered.filter(g => g.category === "Android Games")
       else if (selectedCategory === "pre-installed") filtered = filtered.filter(g => g.category === "PC Games")
       else if (selectedCategory === "installable") filtered = filtered.filter(g => g.category === "PC Games")
     }
@@ -120,14 +119,12 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
               {selectedCategory === "pre-installed" ? "Pre-installed PC Games" :
                selectedCategory === "installable" ? "Installable PC Games" :
                selectedCategory === "pc-games" ? "PC Games" :
-               selectedCategory === "android-mod" ? "Android Mod APKs" :
                "All Games"}
             </h1>
             <p className="text-gray-400 text-center">
               {selectedCategory === "pre-installed" ? "No installation needed — just extract & play" :
                selectedCategory === "installable" ? "Traditional setup with installer" :
                selectedCategory === "pc-games" ? "All PC games — pre-installed & installable" :
-               selectedCategory === "android-mod" ? "Modded Android games & APKs" :
                `Browse our collection of ${totalGames.toLocaleString()} games`}
             </p>
             {selectedCategory && (
@@ -229,8 +226,8 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
                     <Link key={game.id} href={`/game/${game.id}`} className="group">
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
                         <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 50vw, 20vw" className="object-cover transition-transform duration-300 group-hover:scale-110" />
-                        <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                          {game.category === "Android Games" ? "ANDROID" : "PC"}
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none bg-blue-500/90">
+                          PC
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -247,8 +244,8 @@ function AllGamesContent({ initialItems }: { initialItems: GameItem[] }) {
                     <Link key={game.id} href={`/game/${game.id}`} className="group flex items-center gap-4 p-4 bg-[#120b22] border border-[#2d1b54] rounded-xl hover:border-[#9d4edd]/50 transition-all">
                       <div className="relative w-20 h-28 flex-shrink-0 rounded-lg overflow-hidden">
                         <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="80px" className="object-cover" />
-                        <div className={`absolute top-1 left-1 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                          {game.category === "Android Games" ? "APK" : "PC"}
+                        <div className="absolute top-1 left-1 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase shadow-lg z-10 bg-blue-500/90">
+                          PC
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">

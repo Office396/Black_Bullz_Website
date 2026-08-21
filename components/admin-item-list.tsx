@@ -16,7 +16,6 @@ interface AdminItemListProps {
 const tabs = [
   { id: "all", label: "All" },
   { id: "pc-games", label: "PC Games" },
-  { id: "android-games", label: "Android Games" },
 ]
 
 export function AdminItemList({ searchQuery }: AdminItemListProps) {
@@ -84,7 +83,6 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
     if (activeTab !== "all") {
       const categoryMap: Record<string, string> = {
           "pc-games": "PC Games",
-          "android-games": "Android Games",
         }
         filtered = filtered.filter(item => item.category === categoryMap[activeTab])
     }
@@ -208,7 +206,6 @@ export function AdminItemList({ searchQuery }: AdminItemListProps) {
               : itemsWithCloudCount.filter((item) => {
                 const categoryMap: Record<string, string> = {
                   "pc-games": "PC Games",
-                  "android-games": "Android Games",
                 }
                 return item.category === categoryMap[tab.id]
               }).length

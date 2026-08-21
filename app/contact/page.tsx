@@ -420,7 +420,7 @@ export default function ContactPage() {
                       Interested in Similar Website Development?
                     </h3>
                     <p className="text-gray-300 mb-4 md:mb-6 leading-relaxed text-sm md:text-base px-2">
-                      If you're interested in this website or want to develop a similar gaming/software download platform, business partnerships, custom development, or any related inquiries, feel free to contact us. We're always open to new opportunities and collaborations.
+                      If you're interested in this website or want to develop a similar gaming download platform, business partnerships, custom development, or any related inquiries, feel free to contact us. We're always open to new opportunities and collaborations.
                     </p>
                   </div>
 
@@ -491,7 +491,7 @@ export default function ContactPage() {
                   {/* Note */}
                   <div className="bg-blue-900/20 border border-blue-600 p-3 md:p-4 rounded-lg">
                     <p className="text-blue-300 text-xs md:text-sm leading-relaxed">
-                      <strong>Note:</strong> For general game/software download questions, use the contact form above or the main contact information. This section is specifically for website development and business inquiries.
+                      <strong>Note:</strong> For general game download questions, use the contact form above or the main contact information. This section is specifically for website development and business inquiries.
                     </p>
                   </div>
                 </CardContent>

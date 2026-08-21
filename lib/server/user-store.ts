@@ -1,5 +1,6 @@
 ﻿import { supabase } from '../supabase'
-import { createHash, randomBytes } from 'crypto'
+import { randomBytes, createHash } from 'crypto'
+import { hashPassword as bcryptHash, verifyPassword } from './auth'
 
 export interface User {
   id: string
@@ -22,7 +23,8 @@ export interface User {
   creator_portal_password: string | null
 }
 
-function hashPassword(password: string): string {
+// Legacy SHA-256 hash for migration only
+function hashPasswordLegacy(password: string): string {
   return createHash('sha256').update(password + 'bullzgamez_salt').digest('hex')
 }
 
@@ -46,7 +48,7 @@ function sanitizeUser(u: any): User {
 export async function createUser(data: { name: string; username: string; email: string; password: string }): Promise<{ user: User; token: string } | { error: string }> {
   const { data: existing } = await supabase.from('users').select('id').or(`email.eq.${data.email},username.eq.${data.username}`).single()
   if (existing) return { error: 'Email or username already taken' }
-  const password_hash = hashPassword(data.password)
+  const password_hash = await bcryptHash(data.password)
   const { data: user, error } = await supabase.from('users').insert({ name: data.name, username: data.username, email: data.email, password_hash }).select().single()
   if (error || !user) return { error: 'Failed to create account' }
   const token = generateToken()
@@ -56,9 +58,25 @@ export async function createUser(data: { name: string; username: string; email: 
 }
 
 export async function loginUser(email: string, password: string): Promise<{ user: User; token: string } | { error: string }> {
-  const password_hash = hashPassword(password)
-  const { data: user } = await supabase.from('users').select('*').eq('email', email).eq('password_hash', password_hash).single()
+  const { data: user } = await supabase.from('users').select('*').eq('email', email).single()
   if (!user) return { error: 'Invalid email or password' }
+
+  // Try bcrypt verification first
+  let passwordValid = await verifyPassword(password, user.password_hash)
+
+  // Migration: if bcrypt fails, try legacy SHA-256
+  if (!passwordValid) {
+    const legacyHash = hashPasswordLegacy(password)
+    if (user.password_hash === legacyHash) {
+      passwordValid = true
+      // Migrate to bcrypt in background
+      const newHash = await bcryptHash(password)
+      supabase.from('users').update({ password_hash: newHash }).eq('id', user.id)
+    }
+  }
+
+  if (!passwordValid) return { error: 'Invalid email or password' }
+
   const token = generateToken()
   const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   await supabase.from('user_sessions').insert({ user_id: user.id, token, expires_at })
@@ -87,8 +105,17 @@ export async function updateUser(userId: string, updates: Partial<Pick<User, 'na
 
 export async function changePassword(userId: string, currentPassword: string, newPassword: string): Promise<{ error?: string }> {
   const { data: user } = await supabase.from('users').select('password_hash').eq('id', userId).single()
-  if (!user || user.password_hash !== hashPassword(currentPassword)) return { error: 'Current password is incorrect' }
-  await supabase.from('users').update({ password_hash: hashPassword(newPassword) }).eq('id', userId)
+  if (!user) return { error: 'User not found' }
+
+  // Verify against both bcrypt and legacy
+  let valid = await verifyPassword(currentPassword, user.password_hash)
+  if (!valid) {
+    const legacyHash = hashPasswordLegacy(currentPassword)
+    if (user.password_hash !== legacyHash) return { error: 'Current password is incorrect' }
+  }
+
+  const newHash = await bcryptHash(newPassword)
+  await supabase.from('users').update({ password_hash: newHash }).eq('id', userId)
   return {}
 }
 

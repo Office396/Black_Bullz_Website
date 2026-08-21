@@ -1,7 +1,7 @@
 import { Header } from "@/components/header"
 import { SiteFooter } from "@/components/site-footer"
 import { GameDetails } from "@/components/game-details"
-import { getItemById, getRelatedGames, getPopularGameIds } from "@/lib/server/items-store"
+import { getGameBySlug } from "@/lib/server/games-store"
 import Link from "next/link"
 
 export const dynamic = 'force-dynamic'
@@ -19,12 +19,12 @@ export default async function GamePage({ params }: GamePageProps) {
   const gameId = Number.parseInt(params.id)
 
   let game = null
-  let relatedGames: any[] = []
   try {
-    game = await getItemById(gameId)
-    
-    if (game) {
-      relatedGames = await getRelatedGames(game.category, gameId)
+    game = await getGameBySlug(params.id)
+    if (!game) {
+      // Fallback: try by ID
+      const { getGameById } = await import('@/lib/server/games-store')
+      game = await getGameById(gameId)
     }
   } catch (error) {
     console.error("Error fetching game:", error)
@@ -50,14 +50,60 @@ export default async function GamePage({ params }: GamePageProps) {
     )
   }
 
+  // Map new schema to GameDetails interface
+  const gameData = {
+    id: game.id,
+    title: game.title,
+    category: 'PC Games',
+    image: game.cover_image,
+    landscapeImage: game.landscape_image,
+    description: game.description,
+    longDescription: game.long_description,
+    releaseDate: game.release_date,
+    publishedDate: game.repack_date,
+    updatedDate: game.updated_date,
+    developer: game.developer,
+    publisher: game.publisher,
+    genres: game.genres,
+    screenshots: game.screenshots,
+    views: game.views,
+    downloads: game.downloads,
+    rating: game.rating,
+    version: game.version,
+    size: game.repack_size,
+    edition: game.edition,
+    systemRequirements: game.system_requirements,
+    features: game.features,
+    repackerName: game.repacker_name,
+    repackSize: game.repack_size,
+    originalSize: game.original_size,
+    installationNotes: game.installation_notes,
+    rarPassword: game.rar_password,
+    languages: game.languages,
+    magnetLink: game.magnet_link,
+    nfoContent: game.nfo_content,
+    trending: game.trending,
+    featured: game.featured,
+    cloudDownloads: (game.mirrors || []).map((m: any) => ({
+      cloudName: m.host_name,
+      version: m.version,
+      partsNumber: m.total_parts,
+      actualDownloadLinks: [{
+        name: m.file_name,
+        url: m.download_url,
+        size: m.file_size,
+      }],
+    })),
+  }
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Full page background image - visible in both modes */}
-      {game.landscapeImage && (
+      {gameData.landscapeImage && (
         <div 
           className="fixed inset-0 z-0"
           style={{
-            backgroundImage: `url(${game.landscapeImage})`,
+            backgroundImage: `url(${gameData.landscapeImage})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center top',
             backgroundRepeat: 'no-repeat',
@@ -73,7 +119,7 @@ export default async function GamePage({ params }: GamePageProps) {
         <Header />
         <div className="pt-16">
           <div className="max-w-full mx-auto px-4 lg:px-6 py-6">
-            <GameDetails game={game} allGames={relatedGames} />
+            <GameDetails game={gameData} />
           </div>
         </div>
         <SiteFooter />

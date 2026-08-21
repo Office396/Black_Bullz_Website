@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import Image from "next/image"
-import { Gamepad2, Smartphone, Monitor } from "lucide-react"
+import { Gamepad2, Monitor } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function CategoriesPage() {
@@ -20,44 +20,22 @@ export default function CategoriesPage() {
       image: "/pc-gaming-setup.jpg",
       color: "bg-blue-600",
     },
-    {
-      id: "android-games",
-      name: "Android Games",
-      description: "Free Mobile games for Android devices",
-      count: 0,
-      icon: Smartphone,
-      image: "/android-mobile-gaming.jpg",
-      color: "bg-green-600",
-    },
-    {
-      id: "software",
-      name: "Software",
-      description: "Free Productivity and utility software",
-      count: 0,
-      icon: Gamepad2,
-      image: "/software-applications.jpg",
-      color: "bg-purple-600",
-    },
   ])
 
   useEffect(() => {
     const adminItems = JSON.parse(localStorage.getItem("admin_items") || "[]")
     const defaultGames = [
       { category: "PC Games" },
-      { category: "Software" },
-      { category: "Android Games" },
     ]
 
     const combinedGames = [...defaultGames, ...adminItems]
 
-    const pcGamesCount = 1000 
-    const androidGamesCount = 1000
-    const softwareCount = 1000
+    const pcGamesCount = 1000
 
     setCategories((prev) =>
       prev.map((cat) => ({
         ...cat,
-        count: cat.id === "pc-games" ? pcGamesCount : cat.id === "android-games" ? androidGamesCount : softwareCount,
+        count: cat.id === "pc-games" ? pcGamesCount : 0,
       })),
     )
   }, [])
@@ -76,7 +54,7 @@ export default function CategoriesPage() {
             <div className="space-y-6">
               <div className="text-center">
                 <h1 className="text-3xl font-bold text-white mb-2">Browse Categories</h1>
-                <p className="text-gray-400">Choose from our collection of games and software</p>
+                <p className="text-gray-400">Choose from our collection of PC games</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

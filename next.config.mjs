@@ -19,6 +19,25 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30,
     dangerouslyAllowSVG: true,
   },
+  async headers() {
+    return [
+      {
+        source: '/api/download/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=300, s-maxage=300' },
+          { key: 'CDN-Cache-Control', value: 'max-age=300' },
+          { key: 'Cloudflare-CDN-Cache-Control', value: 'max-age=300' },
+        ],
+      },
+      {
+        source: '/api/games/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=60, s-maxage=60' },
+          { key: 'CDN-Cache-Control', value: 'max-age=60' },
+        ],
+      },
+    ]
+  },
   async redirects() {
     return [
       {

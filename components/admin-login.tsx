@@ -24,7 +24,6 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
   const [currentUsername, setCurrentUsername] = useState("admin")
 
   useEffect(() => {
-    // Fetch current username from server
     const fetchUsername = async () => {
       try {
         const response = await fetch("/api/admin")
@@ -47,16 +46,15 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
     try {
       const response = await fetch("/api/admin", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       })
 
       const result = await response.json()
 
-      if (response.ok && result.success) {
-        localStorage.setItem("admin_token", "authenticated")
+      if (response.ok && result.success && result.token) {
+        localStorage.setItem("admin_token", result.token)
+        document.cookie = `admin_token=${result.token}; path=/; httponly; secure; samesite=strict`
         onLogin()
       } else {
         setError(result.error || "Login failed")
@@ -72,11 +70,18 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
     setError("")
     setSuccessMessage("")
 
+    const token = localStorage.getItem("admin_token")
+    if (!token) {
+      setError("Not authenticated. Please login first.")
+      return
+    }
+
     try {
       const response = await fetch("/api/admin", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           currentUsername: credentials.username,
@@ -117,7 +122,6 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
         </CardHeader>
         <CardContent>
           {!isUpdateMode ? (
-            // Login Form
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-white">
@@ -182,7 +186,6 @@ export function AdminLogin({ onLogin }: AdminLoginProps) {
               </Button>
             </form>
           ) : (
-            // Update Credentials Form
             <form onSubmit={handleUpdateCredentials} className="space-y-4">
               <div className="space-y-4 mb-6">
                 <p className="text-white text-sm">Current Credentials</p>

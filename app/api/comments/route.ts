@@ -1,110 +1,84 @@
-import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+// ============================================================
+// COMMENTS API ROUTE
+// Nested comments with threading support
+// ============================================================
+
+import { NextRequest, NextResponse } from 'next/server'
 import {
+  getGameComments,
   addComment,
-  addReply,
-  deleteCommentOrReply,
-  flattenCommentsForAdmin,
-  getComments,
-  reactToComment,
-  setCommentStatus,
-} from "@/lib/server/data-store"
-import { sendNotification } from "@/lib/server/user-store"
+  replyToComment,
+  likeComment,
+  dislikeComment,
+  deleteComment,
+  getCommentCount,
+} from '@/lib/server/comment-store'
 
-function badRequest(message: string) {
-  return NextResponse.json({ error: message }, { status: 400 })
-}
+export const runtime = 'nodejs'
 
-function forbidden(message: string) {
-  return NextResponse.json({ error: message }, { status: 403 })
-}
-
-export async function GET(req: NextRequest) {
+// GET: Fetch comments for a game
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url)
-    const admin = searchParams.get("BullzGamez-Admin")
-    const itemIdStr = searchParams.get("itemId")
+    const url = new URL(request.url)
+    const gameId = url.searchParams.get('gameId')
+    const action = url.searchParams.get('action')
 
-    if (admin === "1") {
-      const rows = await flattenCommentsForAdmin()
-      return NextResponse.json({ success: true, data: rows })
+    if (!gameId) {
+      return NextResponse.json({ error: 'gameId required' }, { status: 400 })
     }
 
-    if (!itemIdStr) {
-      return badRequest("Missing itemId")
+    if (action === 'count') {
+      const count = await getCommentCount(parseInt(gameId))
+      return NextResponse.json({ success: true, count })
     }
 
-    const itemId = Number(itemIdStr)
-    if (!Number.isFinite(itemId)) return badRequest("Invalid itemId")
-
-    const list = await getComments(itemId)
-    return NextResponse.json({ success: true, data: list })
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e?.message || "Server error" }, { status: 500 })
+    const comments = await getGameComments(parseInt(gameId))
+    return NextResponse.json({ success: true, comments })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
-export async function POST(req: NextRequest) {
+// POST: Add comment or reply
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json()
-    const action = String(body?.action || "")
+    const body = await request.json()
+    const { gameId, parentId, author, email, content, action } = body
 
-    switch (action) {
-      case "add": {
-        const { itemId, itemName, author, email, content, avatar, userBadge, userBadgeColor } = body || {}
-        if (!itemId || !itemName || !author || !content) return badRequest("Missing required fields")
-        const updated = await addComment({ itemId: Number(itemId), itemName, author, email, content, avatar, userBadge, userBadgeColor })
-        return NextResponse.json({ success: true, data: updated })
-      }
-      case "reply": {
-        const { itemId, parentId, itemName, author, email, content, avatar, userBadge, userBadgeColor, adminToken } = body || {}
-        if (!itemId || !parentId || !itemName || !author || !content) return badRequest("Missing required fields")
-        const isAdmin = adminToken === "authenticated"
-        const updated = await addReply({ itemId: Number(itemId), parentId: Number(parentId), itemName, author, email, content, avatar, userBadge, userBadgeColor, isAdmin })
-        if (!isAdmin) {
-          const { data: parentComment } = await supabase.from('comments').select('user_id, author').eq('id', parentId).single()
-          if (parentComment?.user_id) {
-            await sendNotification({ user_id: parentComment.user_id, title: 'New Reply', message: `${author} replied to your comment on ${itemName}`, type: 'info' })
-          }
-        }
-        return NextResponse.json({ success: true, data: updated })
-      }
-      case "react": {
-        const { itemId, targetId, reaction } = body || {}
-        if (!itemId || !targetId || (reaction !== "like" && reaction !== "dislike")) return badRequest("Missing or invalid fields")
-        const updated = await reactToComment({ itemId: Number(itemId), targetId: Number(targetId), reaction })
-        return NextResponse.json({ success: true, data: updated })
-      }
-      case "delete": {
-        const { itemId, targetId, adminToken } = body || {}
-        if (adminToken !== "authenticated") return forbidden("Admin token required")
-        if (!itemId || !targetId) return badRequest("Missing itemId or targetId")
-        const { updated, deleted } = await deleteCommentOrReply(Number(itemId), Number(targetId))
-        return NextResponse.json({ success: true, deleted, data: updated })
-      }
-      case "status": {
-        const { itemId, targetId, status, adminToken } = body || {}
-        if (adminToken !== "authenticated") return forbidden("Admin token required")
-        if (!itemId || !targetId || (status !== "new" && status !== "read")) return badRequest("Missing or invalid fields")
-        const updated = await setCommentStatus(Number(itemId), Number(targetId), status)
-        return NextResponse.json({ success: true, data: updated })
-      }
-      case "approve": {
-        const { targetId, approvalStatus, adminToken } = body || {}
-        if (adminToken !== "authenticated") return forbidden("Admin token required")
-        if (!targetId) return badRequest("Missing targetId")
-        const { data: comment } = await supabase.from('comments').select('user_id, author, item_name').eq('id', targetId).single()
-        await supabase.from('comments').update({ approval_status: approvalStatus }).eq('id', targetId)
-        if (comment?.user_id) {
-          const statusText = approvalStatus === 'approved' ? 'approved' : 'rejected'
-          await sendNotification({ user_id: comment.user_id, title: `Comment ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`, message: `Your comment on ${comment.item_name || 'a game'} has been ${statusText}`, type: approvalStatus === 'approved' ? 'success' : 'warning' })
-        }
-        return NextResponse.json({ success: true })
-      }
-      default:
-        return badRequest("Unknown action")
+    if (!gameId || !content) {
+      return NextResponse.json({ error: 'gameId and content required' }, { status: 400 })
     }
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e?.message || "Server error" }, { status: 500 })
+
+    if (action === 'like') {
+      await likeComment(body.commentId)
+      return NextResponse.json({ success: true })
+    }
+
+    if (action === 'dislike') {
+      await dislikeComment(body.commentId)
+      return NextResponse.json({ success: true })
+    }
+
+    if (action === 'delete') {
+      await deleteComment(body.commentId)
+      return NextResponse.json({ success: true })
+    }
+
+    if (parentId) {
+      const reply = await replyToComment(parentId, gameId, author || 'Anonymous', content)
+      if (!reply) {
+        return NextResponse.json({ error: 'Failed to add reply' }, { status: 500 })
+      }
+      return NextResponse.json({ success: true, comment: reply })
+    }
+
+    const comment = await addComment({ gameId, author: author || 'Anonymous', email, content })
+    if (!comment) {
+      return NextResponse.json({ error: 'Failed to add comment (spam detected?)' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, comment })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

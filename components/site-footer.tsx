@@ -20,7 +20,7 @@ export function SiteFooter() {
                             </span>
                         </Link>
                         <p className="text-gray-500 text-sm leading-relaxed mb-4 max-w-sm">
-                            Free download pre-installed PC games, installable games, and Android mod APKs. No registration required. Fastest downloads with multiple cloud providers.
+                            Free download pre-installed PC games and installable games. No registration required. Fastest downloads with multiple cloud providers.
                         </p>
                         <div className="flex items-center gap-3">
                             <a
@@ -52,7 +52,6 @@ export function SiteFooter() {
                             <li><Link href="/games" className="text-gray-400 hover:text-[#9d4edd] text-sm transition-colors">All Games</Link></li>
                             <li><Link href="/games?category=pre-installed" className="text-gray-400 hover:text-[#9d4edd] text-sm transition-colors">Pre-installed PC Games</Link></li>
                             <li><Link href="/games?category=installable" className="text-gray-400 hover:text-[#9d4edd] text-sm transition-colors">Installable PC Games</Link></li>
-                            <li><Link href="/games?category=android-mod" className="text-gray-400 hover:text-[#9d4edd] text-sm transition-colors">Android Mod APKs</Link></li>
                         </ul>
                     </div>
 

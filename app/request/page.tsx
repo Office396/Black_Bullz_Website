@@ -141,7 +141,7 @@ export default function RequestPage() {
                 <div>
                   <label className="text-gray-400 text-sm mb-1 block">Platform</label>
                   <div className="flex gap-2">
-                    {["PC", "Android"].map(p => (
+                    {["PC"].map(p => (
                       <button key={p} type="button" onClick={() => setPlatform(p)}
                         className={cn("px-4 py-2 rounded-lg text-sm font-semibold transition-colors", platform === p ? "bg-[#9d4edd] text-white" : "bg-[#1a103c] text-gray-400 border border-[#2d1b54] hover:border-[#9d4edd]/50")}>
                         {p}

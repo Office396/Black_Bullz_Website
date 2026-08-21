@@ -88,8 +88,6 @@ interface GameItem {
 const tabs = [
   { id: "all", label: "All" },
   { id: "pc-games", label: "Free PC Games" },
-  { id: "android-games", label: "Free Android Apps" },
-  { id: "software", label: "Free Software" },
 ]
 
 interface GameGridProps {
@@ -105,7 +103,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
-  const itemsPerPage = activeTab === "android-games" ? 20 : 12 // Show 20 items per page for Android games, 12 for others
+  const itemsPerPage = 12
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -135,7 +133,7 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
   const allGames = useMemo(() =>
     adminItems.map((item) => ({
       ...item,
-      tab: item.category === "PC Games" ? "pc-games" : item.category === "Android Games" ? "android-games" : "software",
+      tab: item.category === "PC Games" ? "pc-games" : "pc-games",
     })),
     [adminItems]
   )
@@ -253,22 +251,15 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">
           {filterLatest
-            ? "Latest Items"
-            : activeTab === "all"
-              ? "Latest Games & Software"
+            ? "Latest Games"
               : activeTab === "pc-games"
                 ? "Free PC Games"
-                : activeTab === "android-games"
-                  ? "Free Android Apps"
-                  : "Free Software"}
+                : "All Games"}
         </h1>
       </div>
 
       <div
-        className={`grid gap-2 sm:gap-3 ${activeTab === "android-games"
-            ? "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5"
-            : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4"
-          } max-w-[1400px] mx-auto`}
+        className="grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 max-w-[1400px] mx-auto"
       >
         {paginatedGames.map((game) => (
           <Link key={game.id} href={`/game/${game.id}`}>
@@ -313,15 +304,14 @@ export function GameGrid({ filterLatest = false }: GameGridProps) {
                 <Badge className="absolute top-1 right-1 bg-red-600 text-white text-[13px] px-1 py-0 z-10">
                   {game.category}
                 </Badge>
-                <div className={`absolute top-2 left-2 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                  {game.category === "Android Games" ? "ANDROID" : "PC"}
+                <div className="absolute top-2 left-2 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded shadow-lg z-10 bg-blue-500/90">
+                  PC
                 </div>
               </div>
               <CardContent className="p-1.5">
                 <div className="flex flex-col gap-1">
                   <h3
-                    className={`text-white font-bold group-hover:text-red-400 transition-colors line-clamp-1 ${activeTab === "android-games" ? "text-xs" : "text-sm"
-                      }`}
+                    className={`text-white font-bold group-hover:text-red-400 transition-colors line-clamp-1 text-sm`}
                   >
                     {game.title}
                   </h3>

@@ -9,21 +9,35 @@ export default function AdminPortalPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Force dark mode on admin page regardless of user preference
     document.documentElement.classList.add("dark")
     document.documentElement.style.backgroundColor = "#090514"
     document.body.style.backgroundColor = "#090514"
     document.body.style.color = "#ffffff"
 
-    // Check if user is already logged in
     const adminToken = localStorage.getItem("admin_token")
-    if (adminToken === "authenticated") {
-      setIsAuthenticated(true)
+    if (adminToken && adminToken !== "authenticated") {
+      fetch("/api/admin", {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      })
+        .then((res) => {
+          if (res.ok) {
+            setIsAuthenticated(true)
+          } else {
+            localStorage.removeItem("admin_token")
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem("admin_token")
+        })
+        .finally(() => setIsLoading(false))
+    } else {
+      if (adminToken === "authenticated") {
+        localStorage.removeItem("admin_token")
+      }
+      setIsLoading(false)
     }
-    setIsLoading(false)
 
     return () => {
-      // Restore previous theme when leaving admin page
       document.documentElement.style.backgroundColor = ""
       document.body.style.backgroundColor = ""
       document.body.style.color = ""

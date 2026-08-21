@@ -26,8 +26,6 @@ export function Sidebar() {
   const [allGames, setAllGames] = useState<Array<{ category: string, tab: string }>>([])
   const [quickLinksData, setQuickLinksData] = useState<QuickLink[]>([
     { href: "/?tab=pc-games", label: "PC Games", count: 0 },
-    { href: "/?tab=android-games", label: "Android Games", count: 0 },
-    { href: "/?tab=software", label: "Software", count: 0 },
     { href: "/categories", label: "All Categories", count: 0 },
   ])
 
@@ -56,8 +54,6 @@ export function Sidebar() {
 
           // Get specific counts
           const pcGamesCount = counts["PC Games"] || 0
-          const androidGamesCount = counts["Android Games"] || 0
-          const softwareCount = counts["Software"] || 0
 
           // Calculate total valid items
           const totalCount = validAdminItems.length
@@ -65,8 +61,6 @@ export function Sidebar() {
           // Update quick links with accurate counts
           setQuickLinksData([
             { href: "/?tab=pc-games", label: "PC Games", count: pcGamesCount },
-            { href: "/?tab=android-games", label: "Android Games", count: androidGamesCount },
-            { href: "/?tab=software", label: "Software", count: softwareCount },
             { href: "/categories", label: "All Categories", count: totalCount },
           ])
         }
@@ -164,8 +158,8 @@ export function Sidebar() {
                       }
                     }}
                   />
-                  <div className={`absolute top-0.5 left-0.5 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                    {game.category === "Android Games" ? "AND" : "PC"}
+                  <div className="absolute top-0.5 left-0.5 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase shadow-lg z-10 bg-blue-500/90">
+                    PC
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -182,10 +176,10 @@ export function Sidebar() {
           )}
         </CardContent>
       </Card>
-      {/* How to downlaod games and softwares video */}
+      {/* How to download games video */}
       <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-white text-lg">How to Download games and softwares</CardTitle>
+          <CardTitle className="text-white text-lg">How to Download Games</CardTitle>
         </CardHeader>
       </Card>
     </div>

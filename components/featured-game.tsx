@@ -174,8 +174,8 @@ export function FeaturedGame({ game, trailerUrl }: FeaturedGameProps) {
                                 <Star className="w-4 h-4 text-white fill-white" />
                             </div>
                             {/* Platform badge */}
-                            <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                                {game.category === "Android Games" ? "ANDROID" : "PC"}
+                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 bg-blue-500/90">
+                                PC
                             </div>
                         </div>
                     </div>

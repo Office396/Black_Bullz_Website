@@ -34,7 +34,7 @@ function SearchPageContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingAll, setIsLoadingAll] = useState(true)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [activeCategory, setActiveCategory] = useState<"all" | "pc" | "android">("all")
+  const [activeCategory, setActiveCategory] = useState<"all" | "pc">("all")
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
 
@@ -83,12 +83,10 @@ function SearchPageContent() {
   // Filter by category tab
   const displayResults = results.filter(item => {
     if (activeCategory === "pc") return item.category === "PC Games"
-    if (activeCategory === "android") return item.category === "Android Games"
     return true
   })
 
   const pcCount = results.filter(i => i.category === "PC Games").length
-  const androidCount = results.filter(i => i.category === "Android Games").length
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && query.trim()) {
@@ -179,7 +177,6 @@ function SearchPageContent() {
                     {[
                       { id: "all", label: `All (${results.length})` },
                       { id: "pc", label: `PC (${pcCount})` },
-                      { id: "android", label: `Android (${androidCount})` },
                     ].map(tab => (
                       <button
                         key={tab.id}
@@ -243,8 +240,8 @@ function SearchPageContent() {
                     <Link key={game.id} href={`/game/${game.id}`} className="group">
                       <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1a103c]">
                         <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                        <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                          {game.category === "Android Games" ? "APK" : "PC"}
+                        <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg bg-blue-500/90">
+                          PC
                         </div>
                         {game.trending && (
                           <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-orange-500/90 flex items-center justify-center">
@@ -273,8 +270,8 @@ function SearchPageContent() {
                     >
                       <div className="relative w-16 h-20 flex-shrink-0 rounded-lg overflow-hidden shadow-lg">
                         <SafeImage src={game.image || "/placeholder.svg"} alt={game.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                        <div className={`absolute top-1 left-1 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                          {game.category === "Android Games" ? "APK" : "PC"}
+                        <div className="absolute top-1 left-1 px-1 py-0.5 rounded text-white text-[8px] font-bold uppercase bg-blue-500/90">
+                          PC
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
@@ -358,7 +355,6 @@ function SearchPageContent() {
                       { href: "/updates", label: "New Updates" },
                       { href: "/collections", label: "Epic Collections" },
                       { href: "/games?category=pc-games", label: "PC Games" },
-                      { href: "/games?category=android-mod", label: "Android APKs" },
                     ].map(link => (
                       <Link key={link.href} href={link.href} className="block text-gray-400 text-sm hover:text-[#9d4edd] transition-colors">
                         {link.label} →

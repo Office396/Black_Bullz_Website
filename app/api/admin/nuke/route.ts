@@ -1,20 +1,52 @@
+// ============================================================
+// NUKE ALL DATA
+// Deletes ALL data from ALL tables
+// ============================================================
+
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+// Foreign key order - children first, parents last
 const TABLES_TO_CLEAR = [
-  'items',
+  // New system tables
+  'bug_reports',
+  'video_ads',
+  'discord_queue',
+  'discord_signals',
+  'ad_variants',
+  'version_history',
+  'affiliate_clicks',
+  'analytics_events',
+  'daily_stats',
+  'click_logs',
+  'request_logs',
+  'ip_whitelist',
+  'worker_status',
+  'sticky_sessions',
+  'moderation_queue',
+  'audit_logs',
+  'comment_reactions',
   'comments',
-  'download_pages',
   'game_reviews',
+  'game_ratings',
+  'mirrors',
+  'downloads',
+  'games',
+  'repackers',
+  'genres',
+  // Old system tables
+  'items',
+  'items_backup',
+  'download_pages',
   'contact_messages',
   'delete_requests',
-  'comment_reactions',
   'page_modifiers',
-  'users',
-  'user_sessions',
+  'notifications',
   'user_favourites',
   'user_watch_history',
-  'notifications',
+  'user_sessions',
+  'users',
+  'proxy_servers',
 ]
 
 export async function POST() {

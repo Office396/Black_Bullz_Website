@@ -76,8 +76,8 @@ export default async function TopGamesPage() {
               <div className="flex flex-col lg:flex-row gap-6 p-6 lg:p-8">
                 <div className="relative w-48 h-64 lg:w-56 lg:h-72 flex-shrink-0 mx-auto lg:mx-0">
                   <SafeImage src={featuredGame.image || "/placeholder.svg"} alt={featuredGame.title} fill sizes="(max-width: 768px) 100vw, 300px" className="w-full h-full object-cover rounded-xl shadow-2xl" />
-                  <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 ${featuredGame.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                    {featuredGame.category === "Android Games" ? "ANDROID" : "PC"}
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none bg-blue-500/90">
+                    PC
                   </div>
                 </div>
                 <div className="flex-1 flex flex-col justify-center text-center lg:text-left">
@@ -112,8 +112,8 @@ export default async function TopGamesPage() {
                           {index + 1}
                         </div>
                       )}
-                      <div className={`absolute ${index < 3 ? 'top-2 right-2' : 'top-2 left-2'} px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                        {game.category === "Android Games" ? "ANDROID" : "PC"}
+                      <div className={`absolute ${index < 3 ? 'top-2 right-2' : 'top-2 left-2'} px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase shadow-lg z-10 pointer-events-none bg-blue-500/90`}>
+                        PC
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>

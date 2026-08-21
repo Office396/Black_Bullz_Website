@@ -162,9 +162,6 @@ export default function AdminDetailsAutomation() {
                             sound_card: merged.systemRequirements?.sound_card || ''
                         }
                     },
-                    androidRequirements: {
-                        recommended: { os: '', ram: '', storage: '', processor: '' }
-                    },
                     sharedPinCode: Math.floor(1000 + Math.random() * 9000).toString(),
                     sharedRarPassword: '',
                     cloudDownloads: merged.downloadLinks?.length ? merged.downloadLinks.map(provider => ({
@@ -223,8 +220,6 @@ export default function AdminDetailsAutomation() {
                         <label className="block text-sm font-medium mb-2">Category</label>
                         <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full p-2 border rounded-md bg-gray-800 text-white">
                             <option value="PC Games">PC Games</option>
-                            <option value="Android Games">Android Games</option>
-                            <option value="Software">Software</option>
                         </select>
                     </div>
 

@@ -173,7 +173,7 @@ export function HeroCarousel({ games, modifiers = [] }: HeroCarouselProps) {
                             {(game as GameItem).category}
                         </span>
                         <span className="px-2.5 py-0.5 bg-[#1a103c] text-gray-300 text-xs rounded border border-[#2d1b54] uppercase">
-                            {(game as GameItem).category === "Android Games" ? "Android" : "PC"}
+                            PC
                         </span>
                         {(game as GameItem).size && (
                             <span className="text-gray-400 text-xs">{(game as GameItem).size}</span>

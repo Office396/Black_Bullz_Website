@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Database, Server, Globe, AlertTriangle, CheckCircle, XCircle, Trash2 } from 'lucide-react'
+import { RefreshCw, Database, Server, Globe, AlertTriangle, CheckCircle, XCircle, Trash2, Download, Upload } from 'lucide-react'
 
 interface SystemStatus {
   supabase: {
@@ -47,6 +47,9 @@ export default function AdminSystemStatus() {
   const [nukeLoading, setNukeLoading] = useState(false)
   const [nukeResult, setNukeResult] = useState<string | null>(null)
   const [nukeStep, setNukeStep] = useState(0)
+  const [importLoading, setImportLoading] = useState(false)
+  const [importResult, setImportResult] = useState<string | null>(null)
+  const [importMeta, setImportMeta] = useState<any>(null)
 
   const fetchStatus = async () => {
     try {
@@ -94,6 +97,51 @@ export default function AdminSystemStatus() {
     } finally {
       setNukeLoading(false)
       setNukeStep(0)
+    }
+  }
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImportLoading(true)
+    setImportResult(null)
+    setImportMeta(null)
+
+    try {
+      const text = await file.text()
+      const backup = JSON.parse(text)
+
+      if (!backup._meta || !backup._meta.version) {
+        setImportResult('Error: Invalid backup file format')
+        return
+      }
+
+      setImportMeta(backup._meta)
+
+      const response = await fetch('/api/admin/import-backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backup }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setImportResult(`Successfully restored ${result.totalInserted} records from backup`)
+        fetchStatus()
+      } else {
+        const errors = Object.entries(result.results || {})
+          .filter(([_, r]: [string, any]) => !r.success)
+          .map(([table, r]: [string, any]) => `${table}: ${r.error}`)
+          .join(', ')
+        setImportResult(`Partial restore. Errors: ${errors}`)
+      }
+    } catch (err: any) {
+      setImportResult(`Error: ${err.message}`)
+    } finally {
+      setImportLoading(false)
+      e.target.value = ''
     }
   }
 
@@ -188,7 +236,7 @@ export default function AdminSystemStatus() {
           <div className="grid grid-cols-3 gap-4 pt-4 border-t">
             <div className="text-center">
               <div className="text-2xl font-bold">{status.database.itemCount}</div>
-              <div className="text-sm text-gray-600">Games/Software</div>
+              <div className="text-sm text-gray-600">Games</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{status.database.commentCount}</div>
@@ -200,12 +248,56 @@ export default function AdminSystemStatus() {
             </div>
           </div>
 
-          <div className="pt-4 border-t mt-4 flex justify-between items-center">
-            <span className="text-sm text-gray-400">Export your entire game library database</span>
-            <Button onClick={() => window.open('/api/export-games', '_blank')} className="bg-[#9d4edd] hover:bg-[#7b2cbf] text-white">
-              <Database className="w-4 h-4 mr-2" />
-              Export All Games Details to Text File
-            </Button>
+          <div className="pt-4 border-t mt-4">
+            <div className="flex flex-col gap-3">
+              <span className="text-sm text-gray-400">Backup & Restore your entire database</span>
+              <div className="flex gap-3">
+                <Button onClick={() => window.open('/api/export-games', '_blank')} className="bg-[#9d4edd] hover:bg-[#7b2cbf] text-white flex-1">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Backup (JSON)
+                </Button>
+                <label className="flex-1">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImport}
+                    className="hidden"
+                    disabled={importLoading}
+                  />
+                  <Button
+                    asChild
+                    className={`w-full cursor-pointer ${importLoading ? 'bg-yellow-600' : 'bg-green-600 hover:bg-green-700'} text-white`}
+                    disabled={importLoading}
+                  >
+                    <span>
+                      {importLoading ? (
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                      )}
+                      {importLoading ? 'Restoring...' : 'Import Backup (JSON)'}
+                    </span>
+                  </Button>
+                </label>
+              </div>
+            </div>
+
+            {importMeta && (
+              <div className="mt-3 bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
+                <p className="text-blue-300 text-xs font-semibold mb-1">Backup Info:</p>
+                <p className="text-blue-200/70 text-xs">
+                  {importMeta.totalTables} tables, {importMeta.totalRows} rows, exported {new Date(importMeta.exportedAt).toLocaleString()}
+                </p>
+              </div>
+            )}
+
+            {importResult && (
+              <Alert className={`mt-3 ${importResult.includes('Error') ? 'border-red-500/50 bg-red-500/10' : 'border-green-500/50 bg-green-500/10'}`}>
+                <AlertDescription className={importResult.includes('Error') ? 'text-red-300' : 'text-green-300'}>
+                  {importResult}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           <div className="pt-4 border-t mt-4 flex justify-between items-center">
@@ -354,17 +446,18 @@ export default function AdminSystemStatus() {
                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-4">
                   <p className="text-red-300 text-sm font-semibold mb-2">This will permanently delete:</p>
                   <ul className="text-red-200/70 text-xs space-y-1">
-                    <li>• All games & software items</li>
+                    <li>• All games & mirrors</li>
+                    <li>• All repackers & genres</li>
                     <li>• All comments & reactions</li>
                     <li>• All reviews & ratings</li>
-                    <li>• All download pages & tokens</li>
-                    <li>• All user accounts & sessions</li>
-                    <li>• All favourites & watch history</li>
-                    <li>• All notifications</li>
-                    <li>• All contact messages</li>
-                    <li>• All page modifiers</li>
+                    <li>• All bug reports & moderation queue</li>
+                    <li>• All analytics & click logs</li>
+                    <li>• All worker status & sticky sessions</li>
+                    <li>• All users, favourites & history</li>
+                    <li>• All notifications & contact messages</li>
+                    <li>• All old items data</li>
                   </ul>
-                  <p className="text-green-300/70 text-xs mt-2">✓ Admin credentials will be kept</p>
+                  <p className="text-yellow-300/70 text-xs mt-2">⚠ Export a backup first if you want to keep your data</p>
                 </div>
                 <div className="flex gap-3">
                   <Button onClick={() => setShowNukeConfirm(false)} variant="outline" className="flex-1 border-[#2d1b54] text-gray-400 hover:bg-white/5">

@@ -58,8 +58,8 @@ export function LatestSection({ games }: { games: GameItem[] }) {
                                 sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 11vw"
                             />
                             {/* Platform badge */}
-                            <div className={`absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[9px] font-bold uppercase shadow-lg z-10 ${game.category === "Android Games" ? "bg-green-500/90" : "bg-blue-500/90"}`}>
-                                {game.category === "Android Games" ? "ANDROID" : "PC"}
+                            <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-white text-[9px] font-bold uppercase shadow-lg z-10 bg-blue-500/90">
+                                PC
                             </div>
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                             <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex justify-center">
